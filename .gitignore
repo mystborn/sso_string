@@ -1,1 +1,3 @@
 build
+.clang_complete
+tests/main.c
