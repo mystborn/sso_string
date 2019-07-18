@@ -1,4 +1,4 @@
-project('prc_string', 'c')
+project('sso_string', 'c')
 
 c_comp = meson.get_compiler('c')
 check_location = get_option('check_location')

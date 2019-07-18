@@ -31,10 +31,4 @@ string_tests = executable('string_tests',
     link_args: link_args
 )
 
-main = executable('prc_string',
-    'main.c',
-    include_directories: include_files,
-    link_args: link_args
-)
-
 test('String Tests', string_tests)

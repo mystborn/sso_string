@@ -2,7 +2,7 @@
 
 #include <stdio.h>
 
-#include "../include/prc_string.h"
+#include "../include/sso_string.h"
 
 static String small;
 static String large;
