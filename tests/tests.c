@@ -27,12 +27,12 @@ static void string_reset(void) {
 
 
 START_TEST(short_string_has_short_flag) {
-    ck_assert(!___string_is_long(&small));
+    ck_assert(!___sso_string_is_long(&small));
 }
 END_TEST
 
 START_TEST(large_string_has_long_flag) {
-    ck_assert(___string_is_long(&large));
+    ck_assert(___sso_string_is_long(&large));
 }
 END_TEST
 
@@ -71,7 +71,7 @@ START_TEST(string_size_long) {
 END_TEST
 
 START_TEST(string_capacity_short) {
-    ck_assert(string_capacity(&small) == ___string_min_cap);
+    ck_assert(string_capacity(&small) == ___sso_string_min_cap);
 }
 END_TEST
 
@@ -128,7 +128,7 @@ END_TEST
 START_TEST(string_reserve_short_to_short) {
     String str = string_create("hello");
     string_reserve(&str, 1);
-    ck_assert(!___string_is_long(&str));
+    ck_assert(!___sso_string_is_long(&str));
     string_free_resources(&str);
 }
 END_TEST
@@ -136,7 +136,7 @@ END_TEST
 START_TEST(string_reserve_short_to_long) {
     String str = string_create("hello");
     string_reserve(&str, 26);
-    ck_assert(___string_is_long(&str));
+    ck_assert(___sso_string_is_long(&str));
     ck_assert(string_capacity(&str) >= 26);
     string_free_resources(&str);
 }
@@ -157,7 +157,7 @@ START_TEST(string_shrink_long_to_long) {
     ck_assert(string_capacity(&str) != size);
     string_shrink_to_fit(&str);
     ck_assert(string_capacity(&str) == size);
-    ck_assert(___string_is_long(&str));
+    ck_assert(___sso_string_is_long(&str));
     string_free_resources(&str);
 }
 END_TEST
@@ -165,9 +165,9 @@ END_TEST
 START_TEST(string_shrink_long_to_short) {
     String str = string_create("hello");
     string_reserve(&str, 26);
-    ck_assert(___string_is_long(&str));
+    ck_assert(___sso_string_is_long(&str));
     string_shrink_to_fit(&str);
-    ck_assert(!___string_is_long(&str));
+    ck_assert(!___sso_string_is_long(&str));
     ck_assert(strcmp(string_cstr(&str), "hello") == 0);
     string_free_resources(&str);
 }
@@ -185,7 +185,7 @@ START_TEST(string_clear_long) {
     String str = string_create(ALPHABET);
     string_clear(&str);
     ck_assert(strcmp(string_cstr(&str), "") == 0);
-    ck_assert(___string_is_long(&str));
+    ck_assert(___sso_string_is_long(&str));
     string_free_resources(&str);
 }
 END_TEST
@@ -194,7 +194,7 @@ START_TEST(string_insert_cstr_small_to_small) {
     String str = string_create("rok");
     string_insert(&str, "c", 2);
     ck_assert(strcmp(string_cstr(&str), "rock") == 0);
-    ck_assert(!___string_is_long(&str));
+    ck_assert(!___sso_string_is_long(&str));
     string_free_resources(&str);
 }
 END_TEST
@@ -203,7 +203,7 @@ START_TEST(string_insert_cstr_small_to_large) {
     String str = string_create("abz");
     string_insert(&str, "cdefghijklmnopqrstuvwxy", 2);
     ck_assert(strcmp(string_cstr(&str), ALPHABET) == 0);
-    ck_assert(___string_is_long(&str));
+    ck_assert(___sso_string_is_long(&str));
     string_free_resources(&str);
 }
 END_TEST
@@ -212,7 +212,7 @@ START_TEST(string_insert_cstr_large_to_large) {
     String str = string_create("abcdefghijklmnopqrstuvyz");
     string_insert(&str, "wx", 22);
     ck_assert(strcmp(string_cstr(&str), ALPHABET) == 0);
-    ck_assert(___string_is_long(&str));
+    ck_assert(___sso_string_is_long(&str));
     string_free_resources(&str);
 }
 END_TEST
@@ -222,7 +222,7 @@ START_TEST(string_insert_string_small_to_small) {
     String value = string_create("c");
     string_insert_string(&str, &value, 2);
     ck_assert(strcmp(string_cstr(&str), "rock") == 0);
-    ck_assert(!___string_is_long(&str));
+    ck_assert(!___sso_string_is_long(&str));
     string_free_resources(&str);
     string_free_resources(&value);
 }
@@ -233,7 +233,7 @@ START_TEST(string_insert_string_small_to_large) {
     String value = string_create("defghijklmnopqrstuvwxy");
     string_insert_string(&str, &value, 3);
     ck_assert(strcmp(string_cstr(&str), ALPHABET) == 0);
-    ck_assert(___string_is_long(&str));
+    ck_assert(___sso_string_is_long(&str));
     string_free_resources(&str);
     string_free_resources(&value);
 }
@@ -244,7 +244,7 @@ START_TEST(string_insert_string_large_to_large) {
     String value = string_create("bc");
     string_insert_string(&str, &value, 1);
     ck_assert(strcmp(string_cstr(&str), ALPHABET) == 0);
-    ck_assert(___string_is_long(&str));
+    ck_assert(___sso_string_is_long(&str));
     string_free_resources(&str);
     string_free_resources(&value);
 }
@@ -288,7 +288,7 @@ START_TEST(string_push_back_small_to_large) {
         string_push_back(&str, ('a' + i));
     }
     ck_assert(strcmp(string_cstr(&str), ALPHABET) == 0);
-    ck_assert(___string_is_long(&str));
+    ck_assert(___sso_string_is_long(&str));
     string_free_resources(&str);
 }
 END_TEST
@@ -335,7 +335,7 @@ START_TEST(string_append_cstr_small_to_large) {
     String str = string_create("abc");
     string_append(&str, "defghijklmnopqrstuvwxyz");
     ck_assert(strcmp(string_cstr(&str), ALPHABET) == 0);
-    ck_assert(___string_is_long(&str));
+    ck_assert(___sso_string_is_long(&str));
     string_free_resources(&str);
 }
 END_TEST
@@ -365,7 +365,7 @@ START_TEST(string_append_string_small_to_large) {
     String value = string_create("defghijklmnopqrstuvwxyz");
     string_append_string(&str, &value);
     ck_assert(strcmp(string_cstr(&str), ALPHABET) == 0);
-    ck_assert(___string_is_long(&str));
+    ck_assert(___sso_string_is_long(&str));
     string_free_resources(&str);
     string_free_resources(&value);
 }
@@ -502,7 +502,7 @@ START_TEST(string_replace_cstr_small_to_large) {
     String str = string_create("abcabc");
     string_replace(&str, 3, 3, "defghijklmnopqrstuvwxyz");
     ck_assert(strcmp(string_cstr(&str), ALPHABET) == 0);
-    ck_assert(___string_is_long(&str));
+    ck_assert(___sso_string_is_long(&str));
     string_free_resources(&str);
 }
 END_TEST
@@ -547,7 +547,7 @@ START_TEST(string_replace_string_small_to_large) {
     String value = string_create("defghijklmnopqrstuvwxyz");
     string_replace_string(&str, 3, 3, &value);
     ck_assert(strcmp(string_cstr(&str), ALPHABET) == 0);
-    ck_assert(___string_is_long(&str));
+    ck_assert(___sso_string_is_long(&str));
     string_free_resources(&str);
 }
 END_TEST
