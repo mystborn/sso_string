@@ -76,9 +76,11 @@ START_TEST(string_capacity_short) {
 END_TEST
 
 START_TEST(string_capacity_long) {
-    ck_assert(string_capacity(&large) == 32);
+    ck_assert(string_capacity(&large) == 26);
     String str = string_create(ALPHABET ALPHABET);
-    ck_assert(string_capacity(&str) == 64);
+    ck_assert(string_capacity(&str) == 52);
+    string_append(&str, "z");
+    ck_assert(string_capacity(&str) > 52);
     string_free_resources(&str);
 }
 END_TEST
@@ -153,6 +155,7 @@ END_TEST
 
 START_TEST(string_shrink_long_to_long) {
     String str = string_create(ALPHABET);
+    string_append(&str, ALPHABET);
     size_t size = string_size(&str);
     ck_assert(string_capacity(&str) != size);
     string_shrink_to_fit(&str);

@@ -81,7 +81,7 @@ typedef union String {
 static inline size_t ___sso_string_next_cap(size_t current, size_t desired) {
     if(current >= desired)
         return current;
-    current = (size_t)ceil(desired / 16.0) * 16;
+    current = (size_t)max(current * 2, desired);
     return current < STRING_MAX ? current : STRING_MAX;
 }
 
