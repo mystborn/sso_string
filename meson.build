@@ -6,7 +6,6 @@ check_location = get_option('check_location')
 include_files = include_directories(['include'])
 
 # This allows for other projects to use this as a subproject.
-
 sso_string_dep = declare_dependency(
     include_directories: include_files
 )
