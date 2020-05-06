@@ -28,11 +28,6 @@
     any extra memory, at the cost of a little speed. It's implementation 
     closely mirrors parts of libc++'s basic_string<char> type.
 
-    This library is contained in a single header because originally many of 
-    the functions were going to be inlined anyways, and the platform specific
-    requirements related to integer endianness made this implementation seem
-    like the correct choice.
-
     The type is small enough to pass by value, but you should not do that
     at all if you plan to modify the string's size in any way. If you want
     the string to be mutable, always pass by reference.
