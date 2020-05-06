@@ -136,6 +136,278 @@ typedef union String {
     struct ___sso_string_short s;
 } String;
 
+/*
+    Initializes a string from a c-string.
+
+    str - A pointer to the string to initialize.
+    cstr - The contents to initialize the string with. Cannot be NULL.
+ */
+void string_init(String* str, const char* cstr);
+
+/*
+    Initializes a string from a subsection of a c-string.
+
+    str - A pointer to the string to initialize.
+    cstr - The contents to initialize the string with. Cannot be NULL.
+    len - The number of characters to copy into str.
+          Be careful to make sure this does not go past the end of
+          the cstr, as that's only checked via assert.
+*/
+void string_init_size(String* str, const char* cstr, size_t length);
+
+/*
+    Creates and initializes a new string value.
+
+    cstr - The contents to initialize the string with. Cannot be NULL.
+
+    return - The initialized String value.
+*/
+static inline String string_create(const char* cstr);
+
+/*
+    Allocates and initializes a new string.
+
+    cstr - The contents to initialize the string with. Cannot be NULL.
+
+    return - The initialized String reference. Must be manually freed.
+*/
+static inline String* string_create_ref(const char* cstr);
+
+/*
+    Frees any resources used by a string, but does not free
+    the string itself.
+
+    str - The string to clean up.
+*/
+static inline void string_free_resources(String* str);
+
+/*
+    Frees any resources used by a string, then frees the string itself.
+*/
+static inline void string_free(String* str);
+
+/*
+    Gets the character data held by a string. This data cannot be altered.
+*/
+static inline const char* string_data(const String* str);
+
+/*
+    Gets the character data held by a string. This data should be altered carefully.
+*/
+static inline char* string_cstr(String* str);
+
+/*
+    Gets the number of characters in a string, ignoring any terminating characters.
+*/
+static inline size_t string_size(const String* str);
+
+/*
+    Gets the number of characters a string can potential hold without resizing.
+*/
+static inline size_t string_capacity(const String* str);
+
+/*
+    Gets the character at the specified index in a string.
+*/
+static inline char string_get(const String* str, size_t index);
+
+/*
+    Sets the character at the specified index in a string.
+*/
+static inline void string_set(String* set, size_t index, char value);
+
+/*
+    Determines if a string has no characters.
+*/
+static inline bool string_empty(const String* str);
+
+/*
+    Ensures that a string has a capacity large enough to hold a specified number of characters.
+
+    str - The string to potentially enlarge.
+    reserve - The desired minimum capacity.
+*/
+static inline void string_reserve(String* str, size_t reserve);
+
+/*
+    Removes any excess memory not being used by a string.
+*/
+void string_shrink_to_fit(String* str);
+
+/*
+    Clears the contents of a string, but does not free any allocated memory.
+*/
+void string_clear(String* str);
+
+/*
+    Inserts a c-string into a string at the specified index.
+*/
+void string_insert_cstr(String* str, const char* value, size_t index);
+
+/*
+    Inserts a string into another string at the specified index.
+*/
+void string_insert_string(String* str, const String* value, size_t index);
+
+/*
+    Removes a section from a string.
+*/
+void string_erase(String* str, size_t index, size_t count);
+
+/*
+    Appends a character to the end of a string.
+*/
+void string_push_back(String* str, char value);
+
+/*
+    Removes a character from the end of a string and returns
+    the characters value.
+*/
+char string_pop_back(String* str);
+
+/*
+    Appends a c-string to the end of a string.
+*/
+static inline void string_append_cstr(String* str, const char* value);
+
+/*
+    Appends a string to the end of another string.
+*/
+static inline void string_append_string(String* str, const String* value);
+
+/*
+    Compares a string and a c-string in the same fashion as strcmp.
+*/
+static inline int string_compare_cstr(const String* str, const char* value);
+
+/*
+    Compares two strings in the same fashion as strcmp.
+*/
+static inline int string_compate_string(const String* str, const String* value);
+
+/*
+    Determines if a string starts with the characters in a c-string.
+*/
+static inline bool string_starts_with_cstr(const String* str, const char* value);
+
+/*
+    Determines if a string starts with the characters in another string.
+*/
+static inline bool string_starts_with_string(const String* str, const String* value);
+
+/*
+    Determines if a string ends with the characters in a c-string.
+*/
+static inline bool string_ends_with_cstr(const String* str, const char* value);
+
+/*
+    Determines if a string ends with the characters in another string.
+*/
+static inline bool string_ends_with_string(const String* str, const String* value);
+
+/*
+    Replaces a section of a string with the characters in a c-string.
+*/
+static inline void string_replace_cstr(String* str, size_t pos, size_t count, const char* value);
+
+/*
+    Replaces a section of a string with the characters in another string.
+*/
+static inline void string_replace_string(String* str, size_t pos, size_t count, const String* value);
+
+/*
+    Initializes a string with the data from a slice of another string.
+*/
+static inline void string_substring(const String* str, size_t pos, size_t count, String* out_value);
+
+/*
+    Copies the data from a slice of a string into a c-string, overwriting any 
+    previous data. Does not add a terminating character at the end.
+*/
+static inline void string_copy_to(const String* str, char* cstr, size_t pos, size_t count);
+
+/*
+    Resizes a string, adding the specified character to fill any new spots. 
+    Removes trailing characters if the new size is smaller than the current 
+    size.
+*/
+void string_resize(String* str, size_t count, char ch);
+
+/*
+    Swaps the contents of two strings.
+*/
+static inline void string_swap(String* left, String* right);
+
+/*
+    Finds the starting index of the first occurrence of a c-string in a string. 
+    Returns SIZE_MAX if the c-string could not be found.
+*/
+static inline size_t string_find_cstr(const String* str, size_t pos, const char* value);
+
+/*
+    Finds the starting index of the first occurrence of a string in another 
+    string. Returns SIZE_MAX if the string could not be found.
+*/
+static inline size_t string_find_string(const String* str, size_t pos, const String* value);
+
+/*
+    Finds the starting index of the first occurrence of part of a c-string in 
+    a string. Returns SIZE_MAX if the section could not be found.
+*/
+static inline size_t string_find_substr_cstr(const String* str, size_t pos, const char* value, size_t length);
+
+/*
+    Finds the starting index of the first occurrence of part of a string in 
+    another string. Returns SIZE_MAX if the section could not be found.
+*/
+static inline size_t string_find_substr_string(const String* str, size_t pos, const String* value, size_t start, size_t length);
+
+/*
+    Finds the starting index of the last occurrence of a c-string in a string.
+    Returns SIZE_MAX if the c-string could not be found.
+*/
+static inline size_t string_rfind_cstr(const String* str, size_t pos, const char* value);
+
+/*
+    Finds the starting index of the last occurrence of a string in another 
+    string. Returns SIZE_MAX if the c-string could not be found.
+*/
+static inline size_t string_rfind_string(const String* str, size_t pos, const String* value);
+
+/*
+    Finds the starting index of the last occurrence of part of a c-string in
+    a string. Returns SIZE_MAX if the section could not be found.
+*/
+static inline size_t string_rfind_substr_cstr(const String* str, size_t pos, const char* value, size_t length);
+
+/*
+    Finds the starting index of the last occurrence of part of a string in
+    another string. Returns SIZE_MAX if the section could not be found.
+*/
+static inline size_t string_rfind_substr_string(const String* str, size_t pos, const String* value, size_t start, size_t length);
+
+// Internal Functions
+
+static inline size_t ___sso_string_next_cap(size_t current, size_t desired);
+static inline bool ___sso_string_is_long(const String* str);
+static inline size_t ___sso_string_short_size(const String* str);
+static inline size_t ___sso_string_short_cap(const String* str);
+static inline size_t ___sso_string_long_size(const String* str);
+static inline size_t ___sso_string_long_cap(const String* str);
+static inline void ___sso_string_long_set_cap(String* str, size_t cap);
+static inline void ___sso_string_long_set_size(String* str, size_t size);
+static inline void ___sso_string_short_set_size(String* str, size_t size);
+void ___sso_string_long_reserve(String* str, size_t reserve);
+bool ___sso_string_short_reserve(String* str, size_t reserve);
+void ___sso_string_ensure_capacity(String* str, size_t cap);
+void ___sso_string_insert_impl(String* str, const char* value, size_t length, size_t index);
+void ___sso_string_append_impl(String* str, const char* value, size_t length);
+void ___sso_string_replace_impl(String* str, size_t pos, size_t count, const char* value, size_t length);
+size_t ___sso_string_find_impl(const String* str, size_t pos, const char* value);
+size_t ___sso_string_find_substr_impl(const String* str, size_t pos, const char* value, size_t length);
+size_t ___sso_string_rfind_impl(const String* str, size_t pos, const char* value, size_t length);
+
+
 static inline size_t ___sso_string_next_cap(size_t current, size_t desired) {
     if(current >= desired)
         return current;
@@ -192,88 +464,12 @@ static inline void ___sso_string_short_set_size(String* str, size_t size) {
 #endif
 }
 
-static inline char* ___sso_string_long_data(const String* str) {
-    return str->l.data;
-}
-
-static inline char* ___sso_string_short_data(const String* str) {
-    return str->s.data;
-}
-
-static inline char* ___sso_string_data(const String* str) {
-    return ___sso_string_is_long(str) ? ___sso_string_long_data(str) : ___sso_string_short_data(str);
-}
-
-/*
-    Initializes a string from a c-string.
-
-    str - A pointer to the string to initialize.
-    cstr - The contents to initialize the string with. Cannot be NULL.
- */
-static inline void string_init(String* str, const char* cstr) {
-    size_t len = strlen(cstr);
-    if (len < ___sso_string_min_cap) {
-        memcpy(str->s.data, cstr, len);
-        str->s.data[len] = 0;
-
-        ___sso_string_short_set_size(str, len);
-    } else {
-        size_t cap = ___sso_string_next_cap(0, len);
-        assert((str->l.data = malloc(cap + 1)));
-        memcpy(str->l.data, cstr, len);
-        str->l.data[len] = 0;
-        str->l.size = len;
-        ___sso_string_long_set_cap(str, cap);
-    }
-}
-
-/*
-    Initializes a string from a subsection of a c-string.
-
-    str - A pointer to the string to initialize.
-    cstr - The contents to initialize the string with. Cannot be NULL.
-    len - The number of characters to copy into str.
-          Be careful to make sure this does not go past the end of
-          the cstr, as that's only checked via assert.
-*/
-
-static inline void string_init_size(String* str, const char* cstr, size_t len) {
-    assert(len <= strlen(cstr));
-    if (len < ___sso_string_min_cap) {
-        memcpy(str->s.data, cstr, len);
-        str->s.data[len] = 0;
-
-        ___sso_string_short_set_size(str, len);
-    } else {
-        size_t cap = ___sso_string_next_cap(0, len);
-        str->l.data = malloc(cap + 1);
-        memcpy(str->l.data, cstr, len);
-        str->l.data[len] = 0;
-        str->l.size = len;
-        ___sso_string_long_set_cap(str, cap);
-    }
-}
-
-/*
-    Creates and initializes a new string value.
-
-    cstr - The contents to initialize the string with. Cannot be NULL.
-
-    return - The initialized String value.
-*/
 static inline String string_create(const char* cstr) {
     String str;
     string_init(&str, cstr);
     return str;
 }
 
-/*
-    Allocates and initializes a new string.
-
-    cstr - The contents to initialize the string with. Cannot be NULL.
-
-    return - The initialized String reference. Must be manually freed.
-*/
 static inline String* string_create_ref(const char* cstr) {
     String* str = malloc(sizeof(String));
     assert(str);
@@ -281,50 +477,33 @@ static inline String* string_create_ref(const char* cstr) {
     return str;
 }
 
-/*
-    Frees any resources used by a string, but does not free
-    the string itself.
-
-    str - The string to clean up.
-*/
 static inline void string_free_resources(String* str) {
     if(___sso_string_is_long(str)) {
         free(str->l.data);
     }
 }
 
-/*
-    Frees any resources used by a string, then frees the string itself.
-*/
 static inline void string_free(String* str) {
     string_free_resources(str);
     free(str);
 }
 
-/*
-    Gets the character data held by a string. This data cannot be altered.
-*/
-static inline const char* string_cstr(const String* str) {
-    return ___sso_string_data(str);
+static inline char* string_cstr(String* str) {
+    return ___sso_string_is_long(str) ? str->l.data : str->s.data;
 }
 
-/*
-    Gets the number of characters in a string, ignoring any terminating characters.
-*/
+static inline const char* string_data(const String* str) {
+    return ___sso_string_is_long(str) ? str->l.data : str->s.data;
+}
+
 static inline size_t string_size(const String* str) {
     return ___sso_string_is_long(str) ? ___sso_string_long_size(str) : ___sso_string_short_size(str);
 }
 
-/*
-    Gets the number of characters a string can potential hold without resizing.
-*/
 static inline size_t string_capacity(const String* str) {
     return ___sso_string_is_long(str) ? ___sso_string_long_cap(str) : ___sso_string_short_cap(str);
 }
 
-/*
-    Gets the character at the specified index in a string.
-*/
 static inline char string_get(const String* str, size_t index) {
     if(___sso_string_is_long(str)) {
         // assert(index < ___sso_string_long_size(str));
@@ -335,9 +514,6 @@ static inline char string_get(const String* str, size_t index) {
     }
 }
 
-/*
-    Sets the character at the specified index in a string.
-*/
 static inline void string_set(String* str, size_t index, char value) {
     if(___sso_string_is_long(str)) {
         // assert(index < ___sso_string_long_size(str));
@@ -348,49 +524,12 @@ static inline void string_set(String* str, size_t index, char value) {
     }
 }
 
-/*
-    Determines if a string is empty.
-*/
+
 static inline bool string_empty(const String* str) {
     return ___sso_string_is_long(str) ? (___sso_string_long_size(str) == 0) 
-                                  : (___sso_string_short_size(str) == 0);
+                                      : (___sso_string_short_size(str) == 0);
 }
 
-static inline void ___sso_string_long_reserve(String* str, size_t reserve) {
-    if(reserve <= ___sso_string_long_cap(str))
-        return;
-
-    reserve = ___sso_string_next_cap(0, reserve);
-    str->l.data = realloc(str->l.data, reserve + 1);
-    str->l.data[reserve] = 0;
-
-    ___sso_string_long_set_cap(str, reserve);
-}
-
-// returns true if it had to switch to a large string.
-static inline bool ___sso_string_short_reserve(String* str, size_t reserve) {
-    if(reserve < ___sso_string_min_cap)
-        return false;
-
-    reserve = ___sso_string_next_cap(0, reserve);
-    char* data = malloc(sizeof(char) * (reserve + 1));
-    memmove(data, str->s.data, ___sso_string_short_size(str));
-    data[reserve] = 0;
-
-    str->l.size = ___sso_string_short_size(str);
-    str->l.data = data;
-
-    ___sso_string_long_set_cap(str, reserve);
-
-    return true;
-}
-
-/*
-    Ensures that a string has a capacity large enough to hold a specified number of characters.
-
-    str - The string to potentially enlarge.
-    reserve - The desired minimum capacity.
-*/
 static inline void string_reserve(String* str, size_t reserve) {
     if(___sso_string_is_long(str)) {
         ___sso_string_long_reserve(str, reserve);
@@ -399,163 +538,20 @@ static inline void string_reserve(String* str, size_t reserve) {
     }
 }
 
-/*
-    Removes any excess memory not being used by a string.
-*/
-static inline void string_shrink_to_fit(String* str) {
-    if(!___sso_string_is_long(str))
-        return;
-
-    size_t s = ___sso_string_long_size(str);
-
-    if(s == ___sso_string_long_cap(str))
-        return;
-
-    if(s < ___sso_string_min_cap) {
-        memmove(str->s.data, str->l.data, s);
-        str->s.data[s] = 0;
-        // This will clear the long flag.
-        ___sso_string_short_set_size(str, s);
-    } else {
-        str->l.data = realloc(str->l.data, s + 1);
-        str->l.data[s] = 0;
-        ___sso_string_long_set_cap(str, s);
-    }
-}
-
-/*
-    Clears the contents of a string, but does not free any allocated memory.
-*/
-static inline void string_clear(String* str) {
-    if(___sso_string_is_long(str)) {
-        str->l.data[0] = 0;
-        ___sso_string_long_set_size(str, 0);
-    } else {
-        str->s.data[0] = 0;
-        ___sso_string_short_set_size(str, 0);
-    }
-}
-
-static inline void ___sso_string_ensure_capacity(String* str, size_t cap) {
-    size_t current_size = string_capacity(str);
-    if(cap <= current_size)
-        return;
-    cap = ___sso_string_next_cap(current_size, cap);
-    string_reserve(str, cap);
-}
-
-static inline void ___sso_string_insert_impl(String* str, const char* value, size_t length, size_t index) {
-    size_t current_size = string_size(str);
-    assert(current_size + length < STRING_MAX);
-    ___sso_string_ensure_capacity(str, current_size + length);
-    char* data = ___sso_string_data(str);
-    data[current_size + length] = 0;
-    if(index != current_size)
-        memmove(data + index + length, data + index, current_size - index);
-    memmove(data + index, value, length);
-}
-
-/*
-    Inserts a c-string into a string at the specified index.
-*/
 static inline void string_insert_cstr(String* str, const char* value, size_t index) {
     ___sso_string_insert_impl(str, value, strlen(value), index);
 }
 
-/*
-    Inserts a string into another string at the specified index.
-*/
-static inline void string_insert_string(String* str, String* value, size_t index) {
-    ___sso_string_insert_impl(str, string_cstr(value), string_size(value), index);
+static inline void string_insert_string(String* str, const String* value, size_t index) {
+    ___sso_string_insert_impl(str, string_data(value), string_size(value), index);
 }
 
-/*
-    Removes a section from a string.
-*/
-static inline void string_erase(String* str, size_t index, size_t count) {
-    size_t current_size = string_size(str);
-    assert(index + count <= current_size);
-    char* data = ___sso_string_data(str);
-    memmove(data + index, data + index + count, current_size - index - count);
-    current_size -= count;
-    if(___sso_string_is_long(str)) {
-        ___sso_string_long_set_size(str, current_size);
-        str->l.data[current_size] = 0;
-    } else {
-        ___sso_string_short_set_size(str, current_size);
-        str->s.data[current_size] = 0;
-    }
-}
-
-/*
-    Appends a character to the end of a string.
-*/
-static inline void string_push_back(String* str, char value) {
-    size_t size;
-    char* data;
-
-    if(___sso_string_is_long(str)) {
-        size = ___sso_string_long_size(str) + 1;
-        ___sso_string_long_reserve(str, size);
-        ___sso_string_long_set_size(str, size);
-        data = str->l.data;
-    } else {
-        size = ___sso_string_short_size(str) + 1;
-        if(___sso_string_short_reserve(str, size)) {
-            ___sso_string_long_set_size(str, size);
-            data = str->l.data;
-        } else {
-            ___sso_string_short_set_size(str, size);
-            data = str->s.data;
-        }
-    }
-    data[size-1] = value;
-    data[size] = 0;
-}
-
-/*
-    Removes a character from the end of a string and returns
-    the characters value.
-*/
-static inline char string_pop_back(String* str) {
-    size_t size;
-    if(___sso_string_is_long(str)) {
-        size = ___sso_string_long_size(str) - 1;
-        if(size == -1)
-            return 0;
-        ___sso_string_long_set_size(str, size);
-    } else {
-        size = ___sso_string_short_size(str) - 1;
-        if(size == -1)
-            return 0;
-        ___sso_string_short_set_size(str, size);
-    }
-    char* data = ___sso_string_data(str);
-    char result = data[size];
-    data[size] = 0;
-    return result;
-}
-
-static inline void ___sso_string_append_impl(String* str, const char* value, size_t length) {
-    size_t size = string_size(str);
-    ___sso_string_ensure_capacity(str, size + length);
-    char* data = ___sso_string_data(str);
-    memmove(data + size, value, length);
-    data[size + length] = 0;
-}
-
-/*
-    Appends a c-string to the end of a string.
-*/
 static inline void string_append_cstr(String* str, const char* value) {
     ___sso_string_append_impl(str, value, strlen(value));
 }
 
-/*
-    Appends a string to the end of another string.
-*/
-static inline void string_append_string(String* str, String* value) {
-    ___sso_string_append_impl(str, string_cstr(value), string_size(value));
+static inline void string_append_string(String* str, const String* value) {
+    ___sso_string_append_impl(str, string_data(value), string_size(value));
 }
 
 static inline int ___sso_string_compare_impl(const String* str, const char* value, size_t length) {
@@ -563,21 +559,15 @@ static inline int ___sso_string_compare_impl(const String* str, const char* valu
     if(size != length)
         return size < length ? -1 : 1;
 
-    return strncmp(string_cstr(str), value, length);
+    return strncmp(string_data(str), value, length);
 }
 
-/*
-    Compares a string and a c-string in the same fashion as strcmp.
-*/
 static inline int string_compare_cstr(const String* str, const char* value) {
     return ___sso_string_compare_impl(str, value, strlen(value));
 }
 
-/*
-    Compares two strings in the same fashion as strcmp.
-*/
-static inline int string_compare_string(const String* str, String* value) {
-    return ___sso_string_compare_impl(str, string_cstr(value), string_size(value));
+static inline int string_compare_string(const String* str, const String* value) {
+    return ___sso_string_compare_impl(str, string_data(value), string_size(value));
 }
 
 static inline bool ___sso_string_starts_with_impl(const String* str, const char* value, size_t length) {
@@ -585,21 +575,16 @@ static inline bool ___sso_string_starts_with_impl(const String* str, const char*
     if(length > size)
         return false;
 
-    return strncmp(string_cstr(str), value, length) == 0;
+    return strncmp(string_data(str), value, length) == 0;
 }
 
-/*
-    Determines if a string starts with the characters in a c-string.
-*/
+
 static inline bool string_starts_with_cstr(const String* str, const char* value) {
     return ___sso_string_starts_with_impl(str, value, strlen(value));
 }
 
-/*
-    Determines if a string starts with the characters in another string.
-*/
-static inline bool string_starts_with_string(const String* str, String* value) {
-    return ___sso_string_starts_with_impl(str, string_cstr(value), string_size(value));
+static inline bool string_starts_with_string(const String* str, const String* value) {
+    return ___sso_string_starts_with_impl(str, string_data(value), string_size(value));
 }
 
 static inline bool ___sso_string_ends_with_impl(const String* str, const char* value, size_t length) {
@@ -607,219 +592,78 @@ static inline bool ___sso_string_ends_with_impl(const String* str, const char* v
     if(length > size)
         return false;
 
-    return strncmp(string_cstr(str) + (size - length), value, length) == 0;
+    return strncmp(string_data(str) + (size - length), value, length) == 0;
 }
 
-/*
-    Determines if a string ends with the characters in a c-string.
-*/
 static inline bool string_ends_with_cstr(const String* str, const char* value) {
     return ___sso_string_ends_with_impl(str, value, strlen(value));
 }
 
-/*
-    Determines if a string ends with the characters in another string.
-*/
-static inline bool string_ends_with_string(const String* str, String* value) {
-    return ___sso_string_ends_with_impl(str, string_cstr(value), string_size(value));
+static inline bool string_ends_with_string(const String* str, const String* value) {
+    return ___sso_string_ends_with_impl(str, string_data(value), string_size(value));
 }
 
-static inline void ___sso_string_replace_impl(String* str, size_t pos, size_t count, const char* value, size_t length) {
-    size_t size = string_size(str);
-    assert(pos + count <= size);
-    char* data;
-    if(count == length) {
-        data = (char*)string_cstr(str);
-        memmove(data + pos, value, length);
-    } else if(count > length) {
-        data = (char*)string_cstr(str);
-        size_t offset = count - length;
-        memmove(data + pos + length, data + (size - offset), offset);
-        memmove(data + pos, value, length);
-        data[size-offset] = 0;
-        if(___sso_string_is_long(str))
-            ___sso_string_long_set_size(str, size - offset);
-        else
-            ___sso_string_short_set_size(str, size - offset);
-    } else {
-        size_t offset = length - count;
-        ___sso_string_ensure_capacity(str, size + offset);
-        data = (char*)string_cstr(str);
-        memmove(data + pos + length, data + pos + count, size-count);
-        memmove(data + pos, value, length);
-        data[size+offset] = 0;
-        if(___sso_string_is_long(str))
-            ___sso_string_long_set_size(str, size + offset);
-        else
-            ___sso_string_short_set_size(str, size + offset);
-    }
-}
 
-/*
-    Replaces a section of a string with the characters in a c-string.
-*/
 static inline void string_replace_cstr(String* str, size_t pos, size_t count, const char* value) {
     ___sso_string_replace_impl(str, pos, count, value, strlen(value));
 }
 
-/*
-    Replaces a section of a string with the characters in another string.
-*/
-static inline void string_replace_string(String* str, size_t pos, size_t count, String* value) {
-    ___sso_string_replace_impl(str, pos, count, string_cstr(value), string_size(value));
+
+static inline void string_replace_string(String* str, size_t pos, size_t count, const String* value) {
+    ___sso_string_replace_impl(str, pos, count, string_data(value), string_size(value));
 }
 
-/*
-    Initializes a string with the data from a slice of another string.
-*/
 static inline void string_substring(const String* str, size_t pos, size_t count, String* value) {
     assert(pos + count <= string_size(str));
-    string_init_size(value, string_cstr(str) + pos, count);
+    string_init_size(value, string_data(str) + pos, count);
 }
 
-/*
-    Copies the data from a slice of a string into a c-string, overwriting any 
-    previous data. Does not add a terminating character at the end.
-*/
 static inline void string_copy_to(const String* str, char* cstr, size_t pos, size_t count) {
     assert(pos + count <= string_size(str));
-    memmove(cstr, string_cstr(str) + pos, count);
+    memmove(cstr, string_data(str) + pos, count);
 }
 
-/*
-    Resizes a string, adding the specified character to fill any new spots. 
-    Removes trailing characters if the new size is smaller than the current 
-    size.
-*/
-static inline void string_resize(String* str, size_t count, char ch) {
-    assert(count < STRING_MAX);
-    ___sso_string_ensure_capacity(str, count);
-    char* data = ___sso_string_data(str);
-
-    size_t size;
-
-    if(___sso_string_is_long(str)) {
-        size = ___sso_string_long_size(str);
-        ___sso_string_long_set_size(str, count);
-    } else {
-        size = ___sso_string_short_size(str);
-        ___sso_string_short_set_size(str, count);
-    }
-    
-    for(size_t i = size; i < count; i++)
-        data[i] = ch;
-
-    data[count] = 0;
-}
-
-/*
-    Swaps the contents of two strings.
-*/
 static inline void string_swap(String* left, String* right) {
     String temp = *right;
     memmove(right, left, sizeof(String));
     memmove(left, &temp, sizeof(String));
 }
-static inline size_t ___sso_string_find_impl(const String* str, size_t pos, const char* value) {
-    assert(pos < string_size(str));
-    char* data = ___sso_string_data(str);
-    char* result = strstr(data + pos, value);
-    if(result == NULL)
-        return SIZE_MAX;
-    return result - data;
-}
 
-/*
-    Finds the starting index of the first occurrence of a c-string in a string. 
-    Returns SIZE_MAX if the c-string could not be found.
-*/
 static inline size_t string_find_cstr(const String* str, size_t pos, const char* value) {
     return ___sso_string_find_impl(str, pos, value);
 }
 
-/*
-    Finds the starting index of the first occurrence of a string in another 
-    string. Returns SIZE_MAX if the string could not be found.
-*/
-static inline size_t string_find_string(const String* str, size_t pos, String* value) {
-    return ___sso_string_find_impl(str, pos, string_cstr(value));
+static inline size_t string_find_string(const String* str, size_t pos, const String* value) {
+    return ___sso_string_find_impl(str, pos, string_data(value));
 }
 
-static inline size_t ___sso_string_find_substr_impl(const String* str, size_t pos, const char* value, size_t length) {
-    size_t size = string_size(str) - length;
-    assert(pos < size);
-    const char* data = string_cstr(str);
-    for(size_t i = pos; i < size; i++) {
-        if(strncmp(data + i, value, length) == 0)
-            return i;
-    }
 
-    return SIZE_MAX;
-}
-
-/*
-    Finds the starting index of the first occurrence of part of a c-string in 
-    a string. Returns SIZE_MAX if the section could not be found.
-*/
 static inline size_t string_find_substr_cstr(const String* str, size_t pos, const char* value, size_t length) {
     assert(length <= strlen(value));
     return ___sso_string_find_substr_impl(str, pos, value, length);
 }
 
-/*
-    Finds the starting index of the first occurrence of part of a string in 
-    another string. Returns SIZE_MAX if the section could not be found.
-*/
-static inline size_t string_find_substr_string(const String* str, size_t pos, String* value, size_t start, size_t length) {
+static inline size_t string_find_substr_string(const String* str, size_t pos, const String* value, size_t start, size_t length) {
     assert(start + length <= string_size(value));
-    return ___sso_string_find_substr_impl(str, pos, string_cstr(value) + start, length);
+    return ___sso_string_find_substr_impl(str, pos, string_data(value) + start, length);
 }
 
-static inline size_t ___sso_string_rfind_impl(const String* str, size_t pos, const char* value, size_t length) {
-    assert(pos < string_size(str));
-    const char* data = string_cstr(str);
-    size_t i = pos + 1;
-    
-    while(i != 0) {
-        if(strncmp(data + --i, value, length) == 0)
-            return i;
-    }
-
-    return SIZE_MAX;
-}
-
-/*
-    Finds the starting index of the last occurrence of a c-string in a string.
-    Returns SIZE_MAX if the c-string could not be found.
-*/
 static inline size_t string_rfind_cstr(const String* str, size_t pos, const char* value) {
     return ___sso_string_rfind_impl(str, pos, value, strlen(value));
 }
 
-/*
-    Finds the starting index of the last occurrence of a string in another 
-    string. Returns SIZE_MAX if the c-string could not be found.
-*/
-static inline size_t string_rfind_string(const String* str, size_t pos, String* value) {
-    return ___sso_string_rfind_impl(str, pos, string_cstr(value), string_size(value));
+static inline size_t string_rfind_string(const String* str, size_t pos, const String* value) {
+    return ___sso_string_rfind_impl(str, pos, string_data(value), string_size(value));
 }
 
-/*
-    Finds the starting index of the last occurrence of part of a c-string in
-    a string. Returns SIZE_MAX if the section could not be found.
-*/
 static inline size_t string_rfind_substr_cstr(const String* str, size_t pos, const char* value, size_t length) {
     assert(length <= strlen(value));
     return ___sso_string_rfind_impl(str, pos, value, length);
 }
 
-/*
-    Finds the starting index of the last occurrence of part of a string in
-    another string. Returns SIZE_MAX if the section could not be found.
-*/
-static inline size_t string_rfind_substr_string(const String* str, size_t pos, String* value, size_t start, size_t length) {
+static inline size_t string_rfind_substr_string(const String* str, size_t pos, const String* value, size_t start, size_t length) {
     assert(start + length <= string_size(value));
-    return ___sso_string_rfind_impl(str, pos, string_cstr(value) + start, length);
+    return ___sso_string_rfind_impl(str, pos, string_data(value) + start, length);
 }
 
 // If C11 is available, use the _Generic macro to select the correct

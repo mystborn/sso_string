@@ -28,6 +28,7 @@ string_tests = executable('string_tests',
     'tests.c',
     include_directories: test_inc,
     dependencies: deps,
+    link_with: sso_string_shared,
     link_args: link_args
 )
 
