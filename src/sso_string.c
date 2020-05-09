@@ -1,6 +1,13 @@
 #include <sso_string.h>
 
-void string_init(String* str, const char* cstr) {
+static inline void ___sso_string_set_size(String* str, size_t size) {
+    if(___sso_string_is_long(str))
+        ___sso_string_long_set_size(str, size);
+    else
+        ___sso_string_short_set_size(str, size);
+}
+
+bool string_init(String* str, const char* cstr) {
     size_t len = strlen(cstr);
     if (len < ___sso_string_min_cap) {
         memcpy(str->s.data, cstr, len);
@@ -9,15 +16,19 @@ void string_init(String* str, const char* cstr) {
         ___sso_string_short_set_size(str, len);
     } else {
         size_t cap = ___sso_string_next_cap(0, len);
-        assert((str->l.data = malloc(cap + 1)));
+        str->l.data = malloc(cap + 1);
+        if(!str->l.data)
+            return false;
         memcpy(str->l.data, cstr, len);
         str->l.data[len] = 0;
         str->l.size = len;
         ___sso_string_long_set_cap(str, cap);
     }
+
+    return true;
 }
 
-void string_init_size(String* str, const char* cstr, size_t len) {
+bool string_init_size(String* str, const char* cstr, size_t len) {
     assert(len <= strlen(cstr));
     if (len < ___sso_string_min_cap) {
         memcpy(str->s.data, cstr, len);
@@ -27,11 +38,15 @@ void string_init_size(String* str, const char* cstr, size_t len) {
     } else {
         size_t cap = ___sso_string_next_cap(0, len);
         str->l.data = malloc(cap + 1);
+        if(!str->l.data)
+            return false;
         memcpy(str->l.data, cstr, len);
         str->l.data[len] = 0;
         str->l.size = len;
         ___sso_string_long_set_cap(str, cap);
     }
+
+    return true;
 }
 
 void string_shrink_to_fit(String* str) {
@@ -111,6 +126,7 @@ void ___sso_string_insert_impl(String* str, const char* value, size_t length, si
     if(index != current_size)
         memmove(data + index + length, data + index, current_size - index);
     memmove(data + index, value, length);
+    ___sso_string_set_size(str, current_size + length);
 }
 
 void ___sso_string_append_impl(String* str, const char* value, size_t length) {
@@ -119,6 +135,7 @@ void ___sso_string_append_impl(String* str, const char* value, size_t length) {
     char* data = string_cstr(str);
     memmove(data + size, value, length);
     data[size + length] = 0;
+    ___sso_string_set_size(str, size + length);
 }
 
 void ___sso_string_replace_impl(String* str, size_t pos, size_t count, const char* value, size_t length) {
@@ -141,8 +158,9 @@ void ___sso_string_replace_impl(String* str, size_t pos, size_t count, const cha
     } else {
         size_t offset = length - count;
         ___sso_string_ensure_capacity(str, size + offset);
+        size_t cap = string_capacity(str);
         data = (char*)string_cstr(str);
-        memmove(data + pos + length, data + pos + count, size-count);
+        memmove(data + pos + length, data + pos + count, size - (pos + count));
         memmove(data + pos, value, length);
         data[size+offset] = 0;
         if(___sso_string_is_long(str))

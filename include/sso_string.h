@@ -137,7 +137,7 @@ typedef union String {
     str - A pointer to the string to initialize.
     cstr - The contents to initialize the string with. Cannot be NULL.
  */
-void string_init(String* str, const char* cstr);
+bool string_init(String* str, const char* cstr);
 
 /*
     Initializes a string from a subsection of a c-string.
@@ -148,7 +148,7 @@ void string_init(String* str, const char* cstr);
           Be careful to make sure this does not go past the end of
           the cstr, as that's only checked via assert.
 */
-void string_init_size(String* str, const char* cstr, size_t length);
+bool string_init_size(String* str, const char* cstr, size_t length);
 
 /*
     Creates and initializes a new string value.
@@ -467,8 +467,12 @@ static inline String string_create(const char* cstr) {
 
 static inline String* string_create_ref(const char* cstr) {
     String* str = malloc(sizeof(String));
-    assert(str);
-    string_init(str, cstr);
+    if(!str)
+        return NULL;
+    if(!string_init(str, cstr)) {
+        free(str);
+        return NULL;
+    }
     return str;
 }
 

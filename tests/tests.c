@@ -156,6 +156,7 @@ END_TEST
 START_TEST(string_shrink_long_to_long) {
     String str = string_create(ALPHABET);
     string_append(&str, ALPHABET);
+    string_erase(&str, 23, 2);
     size_t size = string_size(&str);
     ck_assert(string_capacity(&str) != size);
     string_shrink_to_fit(&str);
