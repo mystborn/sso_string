@@ -111,7 +111,7 @@ bool ___sso_string_short_reserve(String* str, size_t reserve) {
 
 void ___sso_string_ensure_capacity(String* str, size_t cap) {
     size_t current_size = string_capacity(str);
-    if(cap <= current_size)
+    if(cap < current_size)
         return;
     cap = ___sso_string_next_cap(current_size, cap);
     string_reserve(str, cap);
