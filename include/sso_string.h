@@ -131,6 +131,8 @@ typedef union String {
     struct ___sso_string_short s;
 } String;
 
+typedef uint32_t Char32;
+
 /*
     Initializes a string from a c-string.
 
@@ -197,6 +199,11 @@ static inline char* string_cstr(String* str);
 static inline size_t string_size(const String* str);
 
 /*
+    Gets the number of codepoints in a string.
+*/
+size_t string_u8_codepoints(const String* str);
+
+/*
     Gets the number of characters a string can potential hold without resizing.
 */
 static inline size_t string_capacity(const String* str);
@@ -205,6 +212,23 @@ static inline size_t string_capacity(const String* str);
     Gets the character at the specified index in a string.
 */
 static inline char string_get(const String* str, size_t index);
+
+/*
+    Gets the unicode character at the specified byte index.
+*/
+Char32 string_u8_get(const String* str, size_t index);
+
+/*
+    Gets the unicode character at the specified byte index, 
+    optionally getting the number of bytes that the character
+    takes in the string.
+*/
+Char32 string_u8_get_with_size(const String* str, size_t index, int* out_size);
+
+/*
+    Gets the unicode character size at the specified byte index in bytes. 
+*/
+int string_u8_codepoint_size(const String* str, size_t index);
 
 /*
     Sets the character at the specified index in a string.
@@ -222,7 +246,7 @@ static inline bool string_empty(const String* str);
     str - The string to potentially enlarge.
     reserve - The desired minimum capacity.
 */
-static inline void string_reserve(String* str, size_t reserve);
+static inline bool string_reserve(String* str, size_t reserve);
 
 /*
     Removes any excess memory not being used by a string.
@@ -237,12 +261,12 @@ void string_clear(String* str);
 /*
     Inserts a c-string into a string at the specified index.
 */
-void string_insert_cstr(String* str, const char* value, size_t index);
+bool string_insert_cstr(String* str, const char* value, size_t index);
 
 /*
     Inserts a string into another string at the specified index.
 */
-void string_insert_string(String* str, const String* value, size_t index);
+bool string_insert_string(String* str, const String* value, size_t index);
 
 /*
     Removes a section from a string.
@@ -252,7 +276,12 @@ void string_erase(String* str, size_t index, size_t count);
 /*
     Appends a character to the end of a string.
 */
-void string_push_back(String* str, char value);
+bool string_push_back(String* str, char value);
+
+/*
+    Appends a unicode character to the end of a string.
+*/
+bool string_u8_push_back(String* str, Char32 value);
 
 /*
     Removes a character from the end of a string and returns
@@ -261,14 +290,38 @@ void string_push_back(String* str, char value);
 char string_pop_back(String* str);
 
 /*
+    Removes a unicode character from the end of a string and
+    returns the characters value.
+*/
+Char32 string_u8_pop_back(String* str);
+
+/*
     Appends a c-string to the end of a string.
 */
-static inline void string_append_cstr(String* str, const char* value);
+static inline bool string_append_cstr(String* str, const char* value);
 
 /*
     Appends a string to the end of another string.
 */
-static inline void string_append_string(String* str, const String* value);
+static inline bool string_append_string(String* str, const String* value);
+
+/*
+    Appends a section of a c-string to the end of a string.
+*/
+static inline bool string_append_cstr_part(
+    String* str, 
+    const char* value, 
+    size_t start, 
+    size_t count);
+
+/*
+    Appends a section of a string to the end of another string.
+*/
+static inline bool string_append_string_part(
+    String* str, 
+    const String* value, 
+    size_t start, 
+    size_t count);
 
 /*
     Compares a string and a c-string in the same fashion as strcmp.
@@ -278,7 +331,7 @@ static inline int string_compare_cstr(const String* str, const char* value);
 /*
     Compares two strings in the same fashion as strcmp.
 */
-static inline int string_compate_string(const String* str, const String* value);
+static inline int string_compare_string(const String* str, const String* value);
 
 /*
     Determines if a string starts with the characters in a c-string.
@@ -303,17 +356,17 @@ static inline bool string_ends_with_string(const String* str, const String* valu
 /*
     Replaces a section of a string with the characters in a c-string.
 */
-static inline void string_replace_cstr(String* str, size_t pos, size_t count, const char* value);
+static inline bool string_replace_cstr(String* str, size_t pos, size_t count, const char* value);
 
 /*
     Replaces a section of a string with the characters in another string.
 */
-static inline void string_replace_string(String* str, size_t pos, size_t count, const String* value);
+static inline bool string_replace_string(String* str, size_t pos, size_t count, const String* value);
 
 /*
     Initializes a string with the data from a slice of another string.
 */
-static inline void string_substring(const String* str, size_t pos, size_t count, String* out_value);
+static inline bool string_substring(const String* str, size_t pos, size_t count, String* out_value);
 
 /*
     Copies the data from a slice of a string into a c-string, overwriting any 
@@ -326,7 +379,7 @@ static inline void string_copy_to(const String* str, char* cstr, size_t pos, siz
     Removes trailing characters if the new size is smaller than the current 
     size.
 */
-void string_resize(String* str, size_t count, char ch);
+bool string_resize(String* str, size_t count, char ch);
 
 /*
     Swaps the contents of two strings.
@@ -381,7 +434,84 @@ static inline size_t string_rfind_substr_cstr(const String* str, size_t pos, con
 */
 static inline size_t string_rfind_substr_string(const String* str, size_t pos, const String* value, size_t start, size_t length);
 
+/*
+    Simple helper to determine if the string is NULL or has a size of zero.
+*/
+static inline bool string_is_null_or_empty(const String* str);
+
+/*
+    Working with ASCII or UTF-8 strings, determines if the string is NULL,
+    empty, or comprised of only whitespace characters.
+*/
+bool string_u8_is_null_or_whitespace(const String* str);
+
+/*
+    Reverses the bytes in-place in a string.
+*/
+void string_reverse_bytes(String* str);
+
+/*
+    Reverses the contents of a string based on UTF-8 codepoints.
+*/
+void string_u8_reverse_codepoints(String* str);
+
+/*
+    Joins an array of strings together into a single string with a
+    common separator in between each of them.
+
+    str - The string that stores the result. If it has a value,
+          the result is appended to the end. It needs to be initialized.
+
+    separator - A string to separate each array value in the result.
+    values - An array of strings to combine.
+    value_count - The number of strings in the values array.
+*/
+bool string_join(
+    String* str, 
+    const String* separator,
+    const String* values,
+    size_t value_count);
+
+/*
+    Joins an array of strings together into a single string with a
+    common separator in between each of them.
+
+    str - The string that stores the result. If it has a value,
+          the result is appended to the end. It needs to be initialized.
+
+    separator - A string to separate each array value in the result.
+    values - An array of string references to combine.
+    value_count - The number of strings in the values array.
+*/
+bool string_join_refs(
+    String* str,
+    const String* separator,
+    const String** values,
+    size_t value_count);
+
+#define STRING_SPLIT_ALLOCATE -1
+
+int string_split(
+    const String* str,
+    const String* seperator,
+    String* results,
+    int results_count,
+    bool skip_empty,
+    bool init_results);
+
+int string_split_refs(
+    const String* str,
+    const String* seperator,
+    String** results,
+    int results_count,
+    bool skip_empty,
+    bool init_results);
+
 // Internal Functions
+
+#define ___SSO_STRING_SHORT_RESERVE_FAIL 0
+#define ___SSO_STRING_SHORT_RESERVE_SUCCEED 1
+#define ___SSO_STRING_SHORT_RESERVE_RESIZE 2
 
 static inline size_t ___sso_string_next_cap(size_t current, size_t desired);
 static inline bool ___sso_string_is_long(const String* str);
@@ -392,12 +522,12 @@ static inline size_t ___sso_string_long_cap(const String* str);
 static inline void ___sso_string_long_set_cap(String* str, size_t cap);
 static inline void ___sso_string_long_set_size(String* str, size_t size);
 static inline void ___sso_string_short_set_size(String* str, size_t size);
-void ___sso_string_long_reserve(String* str, size_t reserve);
-bool ___sso_string_short_reserve(String* str, size_t reserve);
-void ___sso_string_ensure_capacity(String* str, size_t cap);
-void ___sso_string_insert_impl(String* str, const char* value, size_t length, size_t index);
-void ___sso_string_append_impl(String* str, const char* value, size_t length);
-void ___sso_string_replace_impl(String* str, size_t pos, size_t count, const char* value, size_t length);
+bool ___sso_string_long_reserve(String* str, size_t reserve);
+int ___sso_string_short_reserve(String* str, size_t reserve);
+bool ___sso_string_ensure_capacity(String* str, size_t cap);
+bool ___sso_string_insert_impl(String* str, const char* value, size_t length, size_t index);
+bool ___sso_string_append_impl(String* str, const char* value, size_t length);
+bool ___sso_string_replace_impl(String* str, size_t pos, size_t count, const char* value, size_t length);
 size_t ___sso_string_find_impl(const String* str, size_t pos, const char* value);
 size_t ___sso_string_find_substr_impl(const String* str, size_t pos, const char* value, size_t length);
 size_t ___sso_string_rfind_impl(const String* str, size_t pos, const char* value, size_t length);
@@ -529,28 +659,46 @@ static inline bool string_empty(const String* str) {
                                       : (___sso_string_short_size(str) == 0);
 }
 
-static inline void string_reserve(String* str, size_t reserve) {
+static inline bool string_reserve(String* str, size_t reserve) {
     if(___sso_string_is_long(str)) {
-        ___sso_string_long_reserve(str, reserve);
+        return ___sso_string_long_reserve(str, reserve);
     } else {
-        ___sso_string_short_reserve(str, reserve);
+        return ___sso_string_short_reserve(str, reserve) != ___SSO_STRING_SHORT_RESERVE_FAIL;
     }
 }
 
-static inline void string_insert_cstr(String* str, const char* value, size_t index) {
-    ___sso_string_insert_impl(str, value, strlen(value), index);
+static inline bool string_insert_cstr(String* str, const char* value, size_t index) {
+    return ___sso_string_insert_impl(str, value, strlen(value), index);
 }
 
-static inline void string_insert_string(String* str, const String* value, size_t index) {
-    ___sso_string_insert_impl(str, string_data(value), string_size(value), index);
+static inline bool string_insert_string(String* str, const String* value, size_t index) {
+    return ___sso_string_insert_impl(str, string_data(value), string_size(value), index);
 }
 
-static inline void string_append_cstr(String* str, const char* value) {
-    ___sso_string_append_impl(str, value, strlen(value));
+static inline bool string_append_cstr(String* str, const char* value) {
+    return ___sso_string_append_impl(str, value, strlen(value));
 }
 
-static inline void string_append_string(String* str, const String* value) {
-    ___sso_string_append_impl(str, string_data(value), string_size(value));
+static inline bool string_append_string(String* str, const String* value) {
+    return ___sso_string_append_impl(str, string_data(value), string_size(value));
+}
+
+static inline bool string_append_cstr_part(
+    String* str, 
+    const char* value, 
+    size_t start, 
+    size_t count)
+{
+    return ___sso_string_append_impl(str, value + start, count);
+}
+
+static inline bool string_append_string_part(
+    String* str, 
+    const String* value, 
+    size_t start, 
+    size_t count)
+{
+    return ___sso_string_append_impl(str, string_data(value) + start, count);
 }
 
 static inline int ___sso_string_compare_impl(const String* str, const char* value, size_t length) {
@@ -603,18 +751,18 @@ static inline bool string_ends_with_string(const String* str, const String* valu
 }
 
 
-static inline void string_replace_cstr(String* str, size_t pos, size_t count, const char* value) {
-    ___sso_string_replace_impl(str, pos, count, value, strlen(value));
+static inline bool string_replace_cstr(String* str, size_t pos, size_t count, const char* value) {
+    return ___sso_string_replace_impl(str, pos, count, value, strlen(value));
 }
 
 
-static inline void string_replace_string(String* str, size_t pos, size_t count, const String* value) {
-    ___sso_string_replace_impl(str, pos, count, string_data(value), string_size(value));
+static inline bool string_replace_string(String* str, size_t pos, size_t count, const String* value) {
+    return ___sso_string_replace_impl(str, pos, count, string_data(value), string_size(value));
 }
 
-static inline void string_substring(const String* str, size_t pos, size_t count, String* value) {
+static inline bool string_substring(const String* str, size_t pos, size_t count, String* value) {
     assert(pos + count <= string_size(str));
-    string_init_size(value, string_data(str) + pos, count);
+    return string_init_size(value, string_data(str) + pos, count);
 }
 
 static inline void string_copy_to(const String* str, char* cstr, size_t pos, size_t count) {
@@ -665,19 +813,79 @@ static inline size_t string_rfind_substr_string(const String* str, size_t pos, c
     return ___sso_string_rfind_impl(str, pos, string_data(value) + start, length);
 }
 
+static inline bool string_is_null_or_empty(const String* str) {
+    return !str || string_size(str) == 0;
+}
+
 // If C11 is available, use the _Generic macro to select the correct
 // string function, otherwise just default to using cstrings.
 
 #if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 201112L
 
-#define string_insert(str, value, index) _Generic((value), char*: string_insert_cstr, String*: string_insert_string)((str), (value), (index))
-#define string_append(str, value) _Generic((value), char*: string_append_cstr, String*: string_append_string)((str), (value))
-#define string_compare(str, value) _Generic((value), char*: string_compare_cstr, String*: string_compare_string)((str), (value))
-#define string_starts_with(str, value) _Generic((value), char*: string_starts_with_cstr, String*: string_starts_with_string)((str), (value))
-#define string_ends_with(str, value) _Generic((value), char*: string_ends_with_cstr, String*: string_ends_with_string)((str), (value))
-#define string_replace(str, pos, count, value) _Generic((value), char*: string_replace_cstr, String*: string_replace_string)((str), (pos), (count), (value))
-#define string_find(str, pos, value) _Generic((value), char*: string_find_cstr, String*: string_find_string)((str), (pos), (value))
-#define string_rfind(str, pos, value) _Generic((value), char*: string_rfind_cstr, String*: string_rfind_string)((str), (pos), (value))
+#define string_insert(str, value, index) \
+    _Generic((value), \
+        char*: string_insert_cstr, \
+        const char*: string_insert_cstr, \
+        String*: string_insert_string, \
+        const String*: string_insert_string) \
+    ((str), (value), (index)) 
+
+
+#define string_append(str, value)  \
+    _Generic((value), \
+        char*: string_append_cstr, \
+        const char*: string_append_cstr, \
+        String*: string_append_string, \
+        const String*: string_append_string) \
+    ((str), (value))
+
+#define string_compare(str, value) \
+    _Generic((value), \
+        char*: string_compare_cstr, \
+        const char*: string_compare_cstr, \
+        String*: string_compare_string, \
+        const String*: string_compare_string) \
+    ((str), (value))
+
+#define string_starts_with(str, value)  \
+    _Generic((value),  \
+        char*: string_starts_with_cstr,  \
+        const char*: string_starts_with_cstr,  \
+        String*: string_starts_with_string, \
+        const String*: string_starts_with_string) \
+    ((str), (value))
+
+#define string_ends_with(str, value)  \
+    _Generic((value),  \
+        char*: string_ends_with_cstr,  \
+        const char*: string_ends_with_cstr,  \
+        String*: string_ends_with_string, \
+        const String*: string_ends_with_string) \
+    ((str), (value))
+
+#define string_replace(str, pos, count, value)  \
+    _Generic((value),  \
+        char*: string_replace_cstr,  \
+        const char*: string_replace_cstr,  \
+        String*: string_replace_string, \
+        const String*: string_replace_string) \
+    ((str), (pos), (count), (value))
+
+#define string_find(str, pos, value)  \
+    _Generic((value),  \
+        char*: string_find_cstr,  \
+        const char*: string_find_cstr,  \
+        String*: string_find_string, \
+        const String*: string_find_string) \
+    ((str), (pos), (value))
+
+#define string_rfind(str, pos, value) \
+    _Generic((value),  \
+        char*: string_rfind_cstr,  \
+        const char*: string_rfind_cstr,  \
+        String*: string_rfind_string, \
+        const String*: string_rfind_string) \
+    ((str), (pos), (value))
 
 #else
 
