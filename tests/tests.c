@@ -25,7 +25,6 @@ static void string_reset(void) {
     string_free_resources(&large);
 }
 
-
 START_TEST(short_string_has_short_flag) {
     ck_assert(!___sso_string_is_long(&small));
 }
