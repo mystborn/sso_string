@@ -1,6 +1,6 @@
 # sso_string
 
-sso_string is a header only, mutable string library in C that uses the short string optimization to avoid unnecessary allocations at the cost of a small amount of speed. It was primarily modelled after the libc++ std::string class, and it's api mostly mirrors the C++ std::string api. It has been tested using MSVC and gcc (via WSL).
+sso_string is a header only, mutable string library in C that uses the short string optimization to avoid unnecessary allocations at the cost of a small amount of speed. It was primarily modelled after the libc++ std::string class, and its api mostly mirrors the C++ std::string api. It has been tested using MSVC and gcc (via WSL).
 
 # Using
 

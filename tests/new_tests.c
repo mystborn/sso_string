@@ -1441,10 +1441,10 @@ START_TEST(string_join_many) {
     String comma = string_create(", ");
     String result = string_create("List: ");
     ck_assert(string_init(&segments[0], "Milk"));
-    ck_assert(string_init(&segments[0], "Apples"));
-    ck_assert(string_init(&segments[0], "Bananas"));
-    ck_assert(string_init(&segments[0], "Sandwich Meat"));
-    ck_assert(string_init(&segments[0], "Bread"));
+    ck_assert(string_init(&segments[1], "Apples"));
+    ck_assert(string_init(&segments[2], "Bananas"));
+    ck_assert(string_init(&segments[3], "Sandwich Meat"));
+    ck_assert(string_init(&segments[4], "Bread"));
     ck_assert(string_join(&result, &comma, segments, 5));
     ck_assert(string_equals(&result, "List: Milk, Apples, Bananas, Sandwich Meat, Bread"));
 
@@ -1455,6 +1455,34 @@ START_TEST(string_join_many) {
     string_free_resources(&result);
 }
 END_TEST
+
+START_TEST(string_format_string_new) {
+    String format = string_create("%d");
+    String* result = string_format_string(NULL, &format, 152);
+    ck_assert(result != NULL);
+    ck_assert(string_equals(result, "152"));
+    string_free(result);
+}
+END_TEST
+
+START_TEST(string_format_string_existing) {
+    String format = string_create("%u");
+    String result = string_create("");
+    ck_assert(string_format_string(&result, &format, UINT_MAX) != NULL);
+    ck_assert(string_equals(&result, "4294967295"));
+    string_free_resources(&result);
+}
+END_TEST
+
+START_TEST(string_format_string_append) {
+    String format = string_create("%d");
+    String result = string_create("My age is ");
+    ck_assert(string_format_string(&result, &format, 23) != NULL);
+    ck_assert(string_equals(&result, "My age is 23"));
+    string_free_resources(&result);
+}
+END_TEST
+
 
 int main(void) {
     int number_failed;
@@ -1596,6 +1624,12 @@ int main(void) {
     tcase_add_test(tc, string_reverse_bytes_utf8);
     tcase_add_test(tc, string_u8_reverse_codepoints_ascii);
     tcase_add_test(tc, string_u8_reverse_codepoints_utf8);
+    tcase_add_test(tc, string_join_none);
+    tcase_add_test(tc, string_join_two);
+    tcase_add_test(tc, string_join_many);
+    tcase_add_test(tc, string_format_string_new);
+    tcase_add_test(tc, string_format_string_existing);
+    tcase_add_test(tc, string_format_string_append);
 
 
     suite_add_tcase(s, tc);

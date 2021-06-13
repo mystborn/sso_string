@@ -1,3 +1,4 @@
 build
 .clang_complete
+.vscode
 tests/main.c

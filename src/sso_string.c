@@ -1125,55 +1125,6 @@ bool string_resize(String* str, size_t count, char ch) {
     return true;
 }
 
-static size_t string_next_format_spec(const char* format, size_t start) {
-    while(true) {
-        switch(format[start])
-        {
-            case '%':
-                return start;
-            case '\0':
-                return SIZE_MAX;
-            default:
-                break;
-        }
-
-        start++;
-    }
-
-    return SIZE_MAX;
-}
-
-static size_t string_format_spec_end(const char* format, size_t start) {
-    while(true) {
-        switch(format[start]) {
-            case 'd':
-            case 'i':
-            case 'u':
-            case 'o':
-            case 'x':
-            case 'X':
-            case 'f':
-            case 'F':
-            case 'e':
-            case 'E':
-            case 'g':
-            case 'G':
-            case 'a':
-            case 'A':
-            case 'c':
-            case 's':
-            case 'p':
-            case 'n':
-            case '%':
-                return start;
-        }
-
-        start++;
-    }
-
-    return SIZE_MAX;
-}
-
 String* string_format_string(String* result, const String* format, ...) {
     va_list argp;
 
@@ -1208,12 +1159,10 @@ String* string_format_args_cstr(String* result, const char* format, va_list argp
     #ifdef SSO_THREAD_LOCAL
 
     static SSO_THREAD_LOCAL char buffer[___SSO_STRING_FORMAT_BUFFER_SIZE];
-    static SSO_THREAD_LOCAL char format_buffer[40];
 
     #else
 
     char buffer[___SSO_STRING_FORMAT_BUFFER_SIZE];
-    char format_buffer[40];
 
     #endif
 
@@ -1222,57 +1171,45 @@ String* string_format_args_cstr(String* result, const char* format, va_list argp
         result = string_create_ref("");
         if(!result)
             return NULL;
+        
     } else {
         original_size = string_size(result);
     }
 
-    size_t start_index = 0;
+    // argp may have to be used again (if the result of vsnprint is > 256), so
+    // make a copy of it to be used with the initial format.
+    va_list copy;
+    va_copy(copy, argp);
 
-    while(true) {
-        size_t end_index = string_next_format_spec(format + start_index, start_index);
-        if(end_index == -1) {
-            if(!string_append_cstr(result, format + start_index))
-                goto error;
-            break;
-        } else {
-            if(!string_append_cstr_part(result, format, start_index, end_index - start_index - 1))
-                goto error;
+    int written = vsnprintf(buffer, ___SSO_STRING_FORMAT_BUFFER_SIZE, format, copy);
+    va_end(copy);
 
-            start_index = end_index;
-            end_index = string_format_spec_end(format, start_index + 1);
-            if(end_index == -1) {
-                if(!string_append_cstr(result, format + start_index))
-                    goto error;
-                break;
-            } else {
-                va_list copy;
-                va_copy(copy, argp);
-                strncpy(format_buffer, format + start_index, end_index - start_index - 1);
-                int count = vsnprintf(buffer, ___SSO_STRING_FORMAT_BUFFER_SIZE, format_buffer, argp);
-                if(count < 0) {
-                    va_end(copy);
-                    goto error;
-                } else if(count >= ___SSO_STRING_FORMAT_BUFFER_SIZE) {
-                    char* allocated_buffer = malloc(count + 1);
-                    if(!allocated_buffer) {
-                        va_end(copy);
-                        goto error;
-                    }
+    if(written < 0) {
+        goto error;
+    } else if(written < ___SSO_STRING_FORMAT_BUFFER_SIZE) {
+        if(!string_append_cstr(result, buffer))\
+            goto error;
+        return result;
+    } else {
+        if(!string_reserve(result, string_size(result) + written))
+            goto error;
 
-                    if(vsnprintf(allocated_buffer, count + 1, format_buffer, copy) < 0) {
-                        va_end(copy);
-                        goto error;
-                    }
+        written = vsnprintf(
+            string_cstr(result),
+            written + 1,
+            format,
+            argp);
 
-                    free(allocated_buffer);
-                }
+        if(written < 0)
+            goto error;
 
-                va_end(copy);
+        size_t new_size = original_size == SIZE_MAX ? written : original_size + written;
 
-                if(!string_append_cstr(result, buffer))
-                    goto error;
-            }
-        }
+        // The string should always be long at this point, but do the check just in case.
+        if(___sso_string_is_long(result))
+            ___sso_string_long_set_size(result, new_size);
+        else
+            ___sso_string_short_set_size(result, new_size);
     }
 
     return result;
@@ -1281,7 +1218,7 @@ String* string_format_args_cstr(String* result, const char* format, va_list argp
         if(original_size == SIZE_MAX)
             string_free_resources(result);
         else
-            string_erase(result, original_size, string_size(result) - original_size);
+            string_cstr(result)[original_size] = '\0';
 
         return NULL;
 }
