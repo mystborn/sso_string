@@ -1456,6 +1456,52 @@ START_TEST(string_join_many) {
 }
 END_TEST
 
+START_TEST(string_join_refs_none) {
+    ck_assert(string_join_refs(NULL, NULL, NULL, 0));
+}
+END_TEST
+
+START_TEST(string_join_refs_two) {
+    String* segments[2];
+    String comma = string_create(", ");
+    String result = string_create("");
+    ck_assert((segments[0] = string_create_ref("Hello")));
+    ck_assert((segments[1] = string_create_ref("my name is ...")));
+    ck_assert(string_join_refs(&result, &comma, segments, 2));
+    ck_assert(string_equals(&result, "Hello, my name is ..."));
+    string_free(&segments[0]);
+    string_free(&segments[1]);
+    string_free_resources(&comma);
+    string_free_resources(&result);
+}
+END_TEST
+
+START_TEST(string_join_many) {
+    String* segments[5];
+    String comma = string_create(", ");
+    String result = string_create("List: ");
+    ck_assert((&segments[0] = string_create_ref("Milk")));
+    ck_assert((&segments[1] = string_create_ref("Apples")));
+    ck_assert((&segments[2] = string_create_ref("Bananas")));
+    ck_assert((&segments[3] = string_create_ref("Sandwich Meat")));
+    ck_assert((&segments[4] = string_create_ref("Bread")));
+    ck_assert(string_join(&result, &comma, segments, 5));
+    ck_assert(string_equals(&result, "List: Milk, Apples, Bananas, Sandwich Meat, Bread"));
+
+    for(int i = 0; i < 5; i++)
+        string_free(&segments[i]);
+
+    string_free_resources(&comma);
+    string_free_resources(&result);
+}
+END_TEST
+
+START_TEST(string_split_init_into_existing_less_than_size) {
+    String results[2];
+    
+}
+END_TEST
+
 START_TEST(string_format_string_new) {
     String format = string_create("%d");
     String* result = string_format_string(NULL, &format, 152);
@@ -1483,6 +1529,29 @@ START_TEST(string_format_string_append) {
 }
 END_TEST
 
+START_TEST(string_format_cstr_new) {
+    String* result = string_format_cstr(NULL, "%d", 152);
+    ck_assert(result != NULL);
+    ck_assert(string_equals(result, "152"));
+    string_free(result);
+}
+END_TEST
+
+START_TEST(string_format_cstr_existing) {
+    String result = string_create("");
+    ck_assert(string_format_cstr(&result, "%u", UINT_MAX) != NULL);
+    ck_assert(string_equals(&result, "4294967295"));
+    string_free_resources(&result);
+}
+END_TEST
+
+START_TEST(string_format_cstr_append) {
+    String result = string_create("My age is ");
+    ck_assert(string_format_cstr(&result, "%d", 23) != NULL);
+    ck_assert(string_equals(&result, "My age is 23"));
+    string_free_resources(&result);
+}
+END_TEST
 
 int main(void) {
     int number_failed;
@@ -1630,6 +1699,9 @@ int main(void) {
     tcase_add_test(tc, string_format_string_new);
     tcase_add_test(tc, string_format_string_existing);
     tcase_add_test(tc, string_format_string_append);
+    tcase_add_test(tc, string_format_cstr_new);
+    tcase_add_test(tc, string_format_cstr_existing);
+    tcase_add_test(tc, string_format_cstr_append);
 
 
     suite_add_tcase(s, tc);
