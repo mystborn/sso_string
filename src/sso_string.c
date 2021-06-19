@@ -530,10 +530,10 @@ void string_u8_reverse_codepoints(String* str) {
 
     start = NULL;
 
-    // Fix up utf8 characters
-    // Code adapted from here:
+    // Todo: Speed this up
+    // Fix up utf8 characters.
     for (size_t i = 0; i < size; i++) {
-        switch((*(data + i)) & 0xC0) {
+        switch((*(data + i)) & 0xF8) {
             case 0xC0:
                 string_reverse_bytes_impl(start, data + i);
                 start = NULL;
