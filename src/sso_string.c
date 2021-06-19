@@ -57,8 +57,10 @@ bool string_init(String* str, const char* cstr) {
 }
 
 bool string_init_size(String* str, const char* cstr, size_t len) {
+    if(cstr == NULL)
+        cstr = "";
+
     assert(str);
-    assert(cstr);
     assert(len <= strlen(cstr));
 
     if (len <= ___sso_string_min_cap) {
@@ -494,6 +496,14 @@ bool string_u8_is_null_or_whitespace(const String* str) {
 
 // Todo: Attempt to use intrinsic bswap
 
+static inline void string_reverse_bytes_impl(char* start, char* end) {
+    while (start < end) {
+        char tmp = *start;
+        *start++ = *end;
+        *end-- = tmp;
+    }
+}
+
 void string_reverse_bytes(String* str) {
     assert(str);
 
@@ -501,12 +511,10 @@ void string_reverse_bytes(String* str) {
     char* start = string_cstr(str);
     char* end = start + size - 1;
 
-    while(start < end) {
-        char tmp = *start;
-        *start++ = *end;
-        *end-- = tmp;
-    }
+    string_reverse_bytes_impl(start, end);
 }
+
+#include <stdio.h>
 
 void string_u8_reverse_codepoints(String* str) {
     assert(str);
@@ -518,43 +526,21 @@ void string_u8_reverse_codepoints(String* str) {
     char tmp;
 
     // Reverse string bytewise
-    while(start < end) {
-        tmp = *start;
-        *start++ = *end;
-        *end-- = tmp;
-    }
+    string_reverse_bytes_impl(start, end);
 
-    start = data;
+    start = NULL;
 
     // Fix up utf8 characters
     // Code adapted from here:
-    // https://stackoverflow.com/a/198264
-    for(size_t i = size - 1; i >= 0; --i) {
-        data = start + i;
-        switch((*data & 0xF0) >> 4) {
-            case 0xC:
-            case 0XD:
-                tmp = *data;
-                *(data) = *(data - 1);
-                *(data - 1) = tmp;
-                i--;
+    for (size_t i = 0; i < size; i++) {
+        switch((*(data + i)) & 0xC0) {
+            case 0xC0:
+                string_reverse_bytes_impl(start, data + i);
+                start = NULL;
                 break;
-            case 0xE:
-                tmp = *data;
-                *(data) = *(data - 2);
-                *(data - 2) = tmp;
-                i -= 2;
-                break;
-            case 0xF:
-                tmp = *data;
-                *(data) = *(data - 3);
-                *(data - 3) = tmp;
-                tmp = *(data - 1);
-                *(data - 1) = *(data - 2);
-                *(data - 2) = tmp;
-                i -= 3;
-                break;
-            default: 
+            case 0x80:
+                if(!start)
+                    start = data + i;
                 break;
         }
     }
@@ -650,8 +636,8 @@ String* string_split(
     const String* str,
     const String* separator,
     String* results,
-    size_t results_count,
-    size_t* results_filled,
+    int results_count,
+    int* results_filled,
     bool skip_empty,
     bool init_results)
 {
@@ -686,7 +672,7 @@ String* string_split(
         init_results = true;
     }
 
-    size_t count = 0;
+    int count = 0;
     size_t start = 0;
     size_t size = string_size(str);
 
@@ -746,8 +732,8 @@ String** string_split_refs(
     const String* str,
     const String* separator,
     String** results,
-    size_t results_count,
-    size_t* results_filled,
+    int results_count,
+    int* results_filled,
     bool skip_empty,
     bool init_results) 
 {
@@ -782,7 +768,7 @@ String** string_split_refs(
         init_results = true;
     }
 
-    size_t count = 0;
+    int count = 0;
     size_t start = 0;
     size_t size = string_size(str);
 
@@ -844,50 +830,6 @@ String** string_split_refs(
         return NULL;
 }
 
-/*
-int string_split_refs(
-    const String* str,
-    const String* separator,
-    String** results,
-    int results_count,
-    bool skip_empty,
-    bool init_results)
-{
-    assert(str);
-    assert(separator);
-    assert(results);
-
-    if(results_count <= 0)
-        return 0;
-
-    size_t start = 0;
-    int count = 0;
-    while(true) {
-        size_t next = string_find_string(str, start, separator);
-        if(start == SIZE_MAX)
-            return count;
-
-        size_t offset = next - start;
-        if(offset != 0 || !skip_empty) {
-            if(init_results) {
-                if(!string_init_size(results[count], string_data(str) + start, offset))
-                    return -1;
-            } else {
-                if(!string_append_string_part(results[count], str, start, offset))
-                    return -1;
-            }
-
-            start = next + string_size(separator);
-
-            if(++count == results_count)
-                return count;
-        }
-    }
-
-    return count;
-}
-*/
-
 size_t ___sso_string_find_impl(const String* str, size_t pos, const char* value, size_t length) {
     assert(str);
     assert(value);
@@ -907,9 +849,13 @@ size_t ___sso_string_find_substr_impl(const String* str, size_t pos, const char*
     assert(str);
     assert(value);
 
-    size_t size = string_size(str) - length;
+    // If the length of the find string is bigger than the search string,
+    // early exit.
+    size_t size = string_size(str);
+    if(pos + length > size)
+        return SIZE_MAX;
 
-    assert(pos < size);
+    size -= length;
 
     const char* data = string_data(str);
     for(size_t i = pos; i < size; i++) {
@@ -924,27 +870,26 @@ size_t ___sso_string_rfind_impl(const String* str, size_t pos, const char* value
     assert(str);
     assert(value);
 
-    // Allow pos == string_size for convenience.
-    size_t size = string_size(str);
-    assert(pos <= size);
-
     // If the length of the find string is bigger than the search string,
     // early exit.
-    if(length > size)
+    size_t size = string_size(str);
+
+    if(pos > size || length > size)
         return SIZE_MAX;
 
-    // Adjust the position to the first possible location that the 
-    // string could be found. Ensures that no garbage is accidentally read.
-    if(size - pos < length)
-        pos = size - length;
+    if(pos < length)
+        pos = length;
+
+    // Turn the negative offset into a normal offset.
+    pos = size - pos;
 
     const char* data = string_data(str);
-    size_t i = pos + 1;
-    
-    while(i != 0) {
-        if(strncmp(data + --i, value, length) == 0)
-            return i;
-    }
+
+    do {
+        if (strncmp(data + pos, value, length) == 0)
+            return pos;
+    } 
+    while (pos-- != 0);
 
     return SIZE_MAX;
 }
