@@ -34,14 +34,14 @@ static void string_reset(void) {
 
 START_TEST(string_small_has_small_flag) {
     String str = string_create("");
-    ck_assert(!___sso_string_is_long(&str));
+    ck_assert(!sso_string_is_long(&str));
     string_free_resources(&str);
 }
 END_TEST
 
 START_TEST(string_long_has_long_flag) {
     String str = string_create(ALPHABET);
-    ck_assert(___sso_string_is_long(&str));
+    ck_assert(sso_string_is_long(&str));
     string_free_resources(&str);
 }
 END_TEST
@@ -57,11 +57,11 @@ START_TEST(string_switches_size) {
     int cap = string_capacity(&str);
 
     while(string_size(&str) <= cap) {
-        ck_assert(!___sso_string_is_long(&str));
+        ck_assert(!sso_string_is_long(&str));
         string_push_back(&str, 'a');
     }
 
-    ck_assert(___sso_string_is_long(&str));
+    ck_assert(sso_string_is_long(&str));
 
     cap = string_capacity(&str);
 
@@ -527,9 +527,9 @@ END_TEST
 
 START_TEST(string_shrink_large_to_small) {
     string_clear(&large);
-    ck_assert(___sso_string_is_long(&large));
+    ck_assert(sso_string_is_long(&large));
     string_shrink_to_fit(&large);
-    ck_assert(!___sso_string_is_long(&large));
+    ck_assert(!sso_string_is_long(&large));
 
     // Make sure the string is functional after switching sizes
     string_append_cstr(&large, HELLO);
@@ -880,10 +880,10 @@ END_TEST
 
 START_TEST(string_append_cstr_small_to_large) {
     String str = string_create("");
-    ck_assert(!___sso_string_is_long(&str));
+    ck_assert(!sso_string_is_long(&str));
     ck_assert(string_append_cstr(&str, ALPHABET));
     ck_assert(string_equals_cstr(&str, ALPHABET));
-    ck_assert(___sso_string_is_long(&str));
+    ck_assert(sso_string_is_long(&str));
 
     string_free_resources(&str);
 }
@@ -914,10 +914,10 @@ END_TEST
 START_TEST(string_append_string_small_to_large) {
     String str = string_create("");
     String value = string_create(ALPHABET);
-    ck_assert(!___sso_string_is_long(&str));
+    ck_assert(!sso_string_is_long(&str));
     ck_assert(string_append_string(&str, &value));
     ck_assert(string_equals_cstr(&str, ALPHABET));
-    ck_assert(___sso_string_is_long(&str));
+    ck_assert(sso_string_is_long(&str));
 
     string_free_resources(&str);
     string_free_resources(&value);

@@ -126,7 +126,7 @@
 #define SSO_STRING_ASSERT_BOUNDS assert
 #endif
 
-struct ___sso_string_long {
+struct sso_string_long {
     size_t cap;
     size_t size;
     char* data;
@@ -134,32 +134,32 @@ struct ___sso_string_long {
 
 #ifdef SSO_STRING_LITTLE_ENDIAN
 
-enum { ___sso_string_long_flag = 0x01 };
+enum { SSO_STRING_LONG_FLAG = 0x01 };
 
 #else
 
-enum { ___sso_string_long_flag = 0xF0 };
+enum { SSO_STRING_LONG_FLAG = 0xF0 };
 
 #endif
 
 enum {
-    ___sso_string_min_cap = ((sizeof(struct ___sso_string_long) - 1)/sizeof(char) > 2 ?
-                        (sizeof(struct ___sso_string_long) - 1)/sizeof(char) : 2) - 1
+    SSO_STRING_MIN_CAP = ((sizeof(struct sso_string_long) - 1)/sizeof(char) > 2 ?
+                        (sizeof(struct sso_string_long) - 1)/sizeof(char) : 2) - 1
 };
 
 #define STRING_MAX (SIZE_MAX >> 1)
 
-struct ___sso_string_short {
+struct sso_string_short {
     union {
         unsigned char size;
         char lx;
     };
-    char data[___sso_string_min_cap + 1];
+    char data[SSO_STRING_MIN_CAP + 1];
 };
 
 typedef union String {
-    struct ___sso_string_long l;
-    struct ___sso_string_short s;
+    struct sso_string_long l;
+    struct sso_string_short s;
 } String;
 
 /**
@@ -983,27 +983,27 @@ SSO_STRING_EXPORT uint32_t string_hash(String* str);
 // using the api, and the size can be safely updated by the caller. WARNING: make sure
 // the buffer is big enough using string_reserve when performing this type of operation.
 
-#define ___SSO_STRING_SHORT_RESERVE_FAIL 0
-#define ___SSO_STRING_SHORT_RESERVE_SUCCEED 1
-#define ___SSO_STRING_SHORT_RESERVE_RESIZE 2
+#define SSO_STRING_SHORT_RESERVE_FAIL 0
+#define SSO_STRING_SHORT_RESERVE_SUCCEED 1
+#define SSO_STRING_SHORT_RESERVE_RESIZE 2
 
-static inline size_t ___sso_string_next_cap(size_t current, size_t desired);
-static inline bool ___sso_string_is_long(const String* str);
-static inline size_t ___sso_string_short_size(const String* str);
-static inline size_t ___sso_string_short_cap(const String* str);
-static inline size_t ___sso_string_long_size(const String* str);
-static inline size_t ___sso_string_long_cap(const String* str);
-static inline void ___sso_string_long_set_cap(String* str, size_t cap);
-static inline void ___sso_string_long_set_size(String* str, size_t size);
-static inline void ___sso_string_short_set_size(String* str, size_t size);
-SSO_STRING_EXPORT bool ___sso_string_long_reserve(String* str, size_t reserve);
-SSO_STRING_EXPORT int ___sso_string_short_reserve(String* str, size_t reserve);
-SSO_STRING_EXPORT bool ___sso_string_insert_impl(String* str, const char* value, size_t index, size_t length);
-SSO_STRING_EXPORT bool ___sso_string_append_impl(String* str, const char* value, size_t length);
-SSO_STRING_EXPORT bool ___sso_string_replace_impl(String* str, size_t pos, size_t count, const char* value, size_t length);
-SSO_STRING_EXPORT size_t ___sso_string_find_impl(const String* str, size_t pos, const char* value, size_t length);
-SSO_STRING_EXPORT size_t ___sso_string_find_substr_impl(const String* str, size_t pos, const char* value, size_t length);
-SSO_STRING_EXPORT size_t ___sso_string_rfind_impl(const String* str, size_t pos, const char* value, size_t length);
+static inline size_t sso_string_next_cap(size_t current, size_t desired);
+static inline bool sso_string_is_long(const String* str);
+static inline size_t sso_string_short_size(const String* str);
+static inline size_t sso_string_short_cap(const String* str);
+static inline size_t sso_string_long_size(const String* str);
+static inline size_t sso_string_long_cap(const String* str);
+static inline void sso_string_long_set_cap(String* str, size_t cap);
+static inline void sso_string_long_set_size(String* str, size_t size);
+static inline void sso_string_short_set_size(String* str, size_t size);
+SSO_STRING_EXPORT bool sso_string_long_reserve(String* str, size_t reserve);
+SSO_STRING_EXPORT int sso_string_short_reserve(String* str, size_t reserve);
+SSO_STRING_EXPORT bool sso_string_insert_impl(String* str, const char* value, size_t index, size_t length);
+SSO_STRING_EXPORT bool sso_string_append_impl(String* str, const char* value, size_t length);
+SSO_STRING_EXPORT bool sso_string_replace_impl(String* str, size_t pos, size_t count, const char* value, size_t length);
+SSO_STRING_EXPORT size_t sso_string_find_impl(const String* str, size_t pos, const char* value, size_t length);
+SSO_STRING_EXPORT size_t sso_string_find_substr_impl(const String* str, size_t pos, const char* value, size_t length);
+SSO_STRING_EXPORT size_t sso_string_rfind_impl(const String* str, size_t pos, const char* value, size_t length);
 
 
 
@@ -1011,7 +1011,7 @@ SSO_STRING_EXPORT size_t ___sso_string_rfind_impl(const String* str, size_t pos,
 
 // The following functions have a size small enough to be inlined, so they are defined here in the header.
 
-static inline size_t ___sso_string_next_cap(size_t current, size_t desired) {
+static inline size_t sso_string_next_cap(size_t current, size_t desired) {
     if(current > desired)
         return current;
     current *= 2;
@@ -1019,11 +1019,11 @@ static inline size_t ___sso_string_next_cap(size_t current, size_t desired) {
     return current < STRING_MAX ? current : STRING_MAX;
 }
 
-static inline bool ___sso_string_is_long(const String* str) {
-    return str->s.size & ___sso_string_long_flag;
+static inline bool sso_string_is_long(const String* str) {
+    return str->s.size & SSO_STRING_LONG_FLAG;
 }
 
-static inline size_t ___sso_string_short_size(const String* str) {
+static inline size_t sso_string_short_size(const String* str) {
 #ifdef SSO_STRING_LITTLE_ENDIAN
     return str->s.size >> 1;
 #else
@@ -1031,36 +1031,36 @@ static inline size_t ___sso_string_short_size(const String* str) {
 #endif
 }
 
-static inline size_t ___sso_string_short_cap(const String* str) {
-    return ___sso_string_min_cap;
+static inline size_t sso_string_short_cap(const String* str) {
+    return SSO_STRING_MIN_CAP;
 }
 
-static inline size_t ___sso_string_long_size(const String* str) {
+static inline size_t sso_string_long_size(const String* str) {
     return str->l.size;
 }
 
-static inline size_t ___sso_string_long_cap(const String* str) {
+static inline size_t sso_string_long_cap(const String* str) {
 #ifdef SSO_STRING_LITTLE_ENDIAN
     return str->l.cap >> 1;
 #else
-    return str->l.cap & ~((size_t)___sso_string_long_flag << SSO_STRING_SHIFT);
+    return str->l.cap & ~((size_t)SSO_STRING_LONG_FLAG << SSO_STRING_SHIFT);
 #endif
 }
 
-static inline void ___sso_string_long_set_cap(String* str, size_t cap) {
+static inline void sso_string_long_set_cap(String* str, size_t cap) {
 #ifdef SSO_STRING_LITTLE_ENDIAN
         str->l.cap = (cap << 1);
 #else
         str->l.cap = cap;
 #endif
-        str->s.size |= ___sso_string_long_flag;
+        str->s.size |= SSO_STRING_LONG_FLAG;
 }
 
-static inline void ___sso_string_long_set_size(String* str, size_t size) {
+static inline void sso_string_long_set_size(String* str, size_t size) {
     str->l.size = size;
 }
 
-static inline void ___sso_string_short_set_size(String* str, size_t size) {
+static inline void sso_string_short_set_size(String* str, size_t size) {
 #ifdef SSO_STRING_LITTLE_ENDIAN
     str->s.size = (size << 1);
 #else
@@ -1085,7 +1085,7 @@ static inline String* string_create_ref(const char* cstr) {
 }
 
 static inline void string_free_resources(String* str) {
-    if(str && ___sso_string_is_long(str)) {
+    if(str && sso_string_is_long(str)) {
         free(str->l.data);
     }
 }
@@ -1096,39 +1096,39 @@ static inline void string_free(String* str) {
 }
 
 static inline char* string_cstr(String* str) {
-    return ___sso_string_is_long(str) ? str->l.data : str->s.data;
+    return sso_string_is_long(str) ? str->l.data : str->s.data;
 }
 
 static inline const char* string_data(const String* str) {
-    return ___sso_string_is_long(str) ? str->l.data : str->s.data;
+    return sso_string_is_long(str) ? str->l.data : str->s.data;
 }
 
 static inline size_t string_size(const String* str) {
-    return ___sso_string_is_long(str) ? ___sso_string_long_size(str) : ___sso_string_short_size(str);
+    return sso_string_is_long(str) ? sso_string_long_size(str) : sso_string_short_size(str);
 }
 
 static inline size_t string_capacity(const String* str) {
-    return ___sso_string_is_long(str) ? ___sso_string_long_cap(str) : ___sso_string_short_cap(str);
+    return sso_string_is_long(str) ? sso_string_long_cap(str) : sso_string_short_cap(str);
 }
 
 static inline char string_get(const String* str, size_t index) {
     SSO_STRING_ASSERT_ARG(str);
-    if(___sso_string_is_long(str)) {
-        SSO_STRING_ASSERT_BOUNDS(index < ___sso_string_long_size(str));
+    if(sso_string_is_long(str)) {
+        SSO_STRING_ASSERT_BOUNDS(index < sso_string_long_size(str));
         return str->l.data[index];
     } else {
-        SSO_STRING_ASSERT_BOUNDS(index < ___sso_string_short_size(str));
+        SSO_STRING_ASSERT_BOUNDS(index < sso_string_short_size(str));
         return str->s.data[index];
     }
 }
 
 static inline void string_set(String* str, size_t index, char value) {
     SSO_STRING_ASSERT_ARG(str);
-    if(___sso_string_is_long(str)) {
-        SSO_STRING_ASSERT_BOUNDS(index < ___sso_string_long_size(str));
+    if(sso_string_is_long(str)) {
+        SSO_STRING_ASSERT_BOUNDS(index < sso_string_long_size(str));
         str->l.data[index] = value;
     } else {
-        SSO_STRING_ASSERT_BOUNDS(index < ___sso_string_short_size(str));
+        SSO_STRING_ASSERT_BOUNDS(index < sso_string_short_size(str));
         str->s.data[index] = value;
     }
 }
@@ -1136,37 +1136,37 @@ static inline void string_set(String* str, size_t index, char value) {
 
 static inline bool string_empty(const String* str) {
     SSO_STRING_ASSERT_ARG(str);
-    return ___sso_string_is_long(str) ? (___sso_string_long_size(str) == 0) 
-                                      : (___sso_string_short_size(str) == 0);
+    return sso_string_is_long(str) ? (sso_string_long_size(str) == 0) 
+                                      : (sso_string_short_size(str) == 0);
 }
 
 static inline bool string_reserve(String* str, size_t reserve) {
     SSO_STRING_ASSERT_ARG(str);
-    if(___sso_string_is_long(str)) {
-        return ___sso_string_long_reserve(str, reserve);
+    if(sso_string_is_long(str)) {
+        return sso_string_long_reserve(str, reserve);
     } else {
-        return ___sso_string_short_reserve(str, reserve) != ___SSO_STRING_SHORT_RESERVE_FAIL;
+        return sso_string_short_reserve(str, reserve) != SSO_STRING_SHORT_RESERVE_FAIL;
     }
 }
 
 static inline void string_clear(String* str) {
     SSO_STRING_ASSERT_ARG(str);
 
-    if(___sso_string_is_long(str)) {
+    if(sso_string_is_long(str)) {
         str->l.data[0] = 0;
-        ___sso_string_long_set_size(str, 0);
+        sso_string_long_set_size(str, 0);
     } else {
         str->s.data[0] = 0;
-        ___sso_string_short_set_size(str, 0);
+        sso_string_short_set_size(str, 0);
     }
 }
 
 static inline bool string_insert_cstr(String* str, const char* value, size_t index) {
-    return ___sso_string_insert_impl(str, value, index, strlen(value));
+    return sso_string_insert_impl(str, value, index, strlen(value));
 }
 
 static inline bool string_insert_string(String* str, const String* value, size_t index) {
-    return ___sso_string_insert_impl(str, string_data(value), index, string_size(value));
+    return sso_string_insert_impl(str, string_data(value), index, string_size(value));
 }
 
 static inline bool string_insert_cstr_part(
@@ -1176,7 +1176,7 @@ static inline bool string_insert_cstr_part(
     size_t start, 
     size_t length) 
 {
-    return ___sso_string_insert_impl(str, value + start, index, length);
+    return sso_string_insert_impl(str, value + start, index, length);
 }
 
 static inline bool string_insert_string_part(
@@ -1186,15 +1186,15 @@ static inline bool string_insert_string_part(
     size_t start, 
     size_t length)
 {
-    return ___sso_string_insert_impl(str, string_data(value) + start, index, length);
+    return sso_string_insert_impl(str, string_data(value) + start, index, length);
 }
 
 static inline bool string_append_cstr(String* str, const char* value) {
-    return ___sso_string_append_impl(str, value, strlen(value));
+    return sso_string_append_impl(str, value, strlen(value));
 }
 
 static inline bool string_append_string(String* str, const String* value) {
-    return ___sso_string_append_impl(str, string_data(value), string_size(value));
+    return sso_string_append_impl(str, string_data(value), string_size(value));
 }
 
 static inline bool string_append_cstr_part(
@@ -1203,7 +1203,7 @@ static inline bool string_append_cstr_part(
     size_t start, 
     size_t count)
 {
-    return ___sso_string_append_impl(str, value + start, count);
+    return sso_string_append_impl(str, value + start, count);
 }
 
 static inline bool string_append_string_part(
@@ -1212,10 +1212,10 @@ static inline bool string_append_string_part(
     size_t start, 
     size_t count)
 {
-    return ___sso_string_append_impl(str, string_data(value) + start, count);
+    return sso_string_append_impl(str, string_data(value) + start, count);
 }
 
-static inline int ___sso_string_compare_impl(const String* str, const char* value, size_t length) {
+static inline int sso_string_compare_impl(const String* str, const char* value, size_t length) {
     SSO_STRING_ASSERT_ARG(str);
     SSO_STRING_ASSERT_ARG(value);
     size_t size = string_size(str);
@@ -1226,11 +1226,11 @@ static inline int ___sso_string_compare_impl(const String* str, const char* valu
 }
 
 static inline int string_compare_cstr(const String* str, const char* value) {
-    return ___sso_string_compare_impl(str, value, strlen(value));
+    return sso_string_compare_impl(str, value, strlen(value));
 }
 
 static inline int string_compare_string(const String* str, const String* value) {
-    return ___sso_string_compare_impl(str, string_data(value), string_size(value));
+    return sso_string_compare_impl(str, string_data(value), string_size(value));
 }
 
 static inline bool string_equals_cstr(const String* str, const char* value) {
@@ -1241,7 +1241,7 @@ static inline bool string_equals_string(const String* str, const String* value) 
     return string_compare_string(str, value) == 0;
 }
 
-static inline bool ___sso_string_starts_with_impl(const String* str, const char* value, size_t length) {
+static inline bool sso_string_starts_with_impl(const String* str, const char* value, size_t length) {
     SSO_STRING_ASSERT_ARG(str);
     SSO_STRING_ASSERT_ARG(value);
     size_t size = string_size(str);
@@ -1253,14 +1253,14 @@ static inline bool ___sso_string_starts_with_impl(const String* str, const char*
 
 
 static inline bool string_starts_with_cstr(const String* str, const char* value) {
-    return ___sso_string_starts_with_impl(str, value, strlen(value));
+    return sso_string_starts_with_impl(str, value, strlen(value));
 }
 
 static inline bool string_starts_with_string(const String* str, const String* value) {
-    return ___sso_string_starts_with_impl(str, string_data(value), string_size(value));
+    return sso_string_starts_with_impl(str, string_data(value), string_size(value));
 }
 
-static inline bool ___sso_string_ends_with_impl(const String* str, const char* value, size_t length) {
+static inline bool sso_string_ends_with_impl(const String* str, const char* value, size_t length) {
     SSO_STRING_ASSERT_ARG(str);
     SSO_STRING_ASSERT_ARG(value);
     size_t size = string_size(str);
@@ -1271,21 +1271,21 @@ static inline bool ___sso_string_ends_with_impl(const String* str, const char* v
 }
 
 static inline bool string_ends_with_cstr(const String* str, const char* value) {
-    return ___sso_string_ends_with_impl(str, value, strlen(value));
+    return sso_string_ends_with_impl(str, value, strlen(value));
 }
 
 static inline bool string_ends_with_string(const String* str, const String* value) {
-    return ___sso_string_ends_with_impl(str, string_data(value), string_size(value));
+    return sso_string_ends_with_impl(str, string_data(value), string_size(value));
 }
 
 
 static inline bool string_replace_cstr(String* str, size_t pos, size_t count, const char* value) {
-    return ___sso_string_replace_impl(str, pos, count, value, strlen(value));
+    return sso_string_replace_impl(str, pos, count, value, strlen(value));
 }
 
 
 static inline bool string_replace_string(String* str, size_t pos, size_t count, const String* value) {
-    return ___sso_string_replace_impl(str, pos, count, string_data(value), string_size(value));
+    return sso_string_replace_impl(str, pos, count, string_data(value), string_size(value));
 }
 
 static inline bool string_substring(const String* str, size_t pos, size_t count, String* value) {
@@ -1315,36 +1315,36 @@ static inline void string_swap(String* left, String* right) {
 }
 
 static inline size_t string_find_cstr(const String* str, size_t pos, const char* value) {
-    return ___sso_string_find_impl(str, pos, value, strlen(value));
+    return sso_string_find_impl(str, pos, value, strlen(value));
 }
 
 static inline size_t string_find_string(const String* str, size_t pos, const String* value) {
-    return ___sso_string_find_impl(str, pos, string_data(value), string_size(value));
+    return sso_string_find_impl(str, pos, string_data(value), string_size(value));
 }
 
 
 static inline size_t string_find_substr_cstr(const String* str, size_t pos, const char* value, size_t start, size_t length) {
-    return ___sso_string_find_substr_impl(str, pos, value + start, length);
+    return sso_string_find_substr_impl(str, pos, value + start, length);
 }
 
 static inline size_t string_find_substr_string(const String* str, size_t pos, const String* value, size_t start, size_t length) {
-    return ___sso_string_find_substr_impl(str, pos, string_data(value) + start, length);
+    return sso_string_find_substr_impl(str, pos, string_data(value) + start, length);
 }
 
 static inline size_t string_rfind_cstr(const String* str, size_t pos, const char* value) {
-    return ___sso_string_rfind_impl(str, pos, value, strlen(value));
+    return sso_string_rfind_impl(str, pos, value, strlen(value));
 }
 
 static inline size_t string_rfind_string(const String* str, size_t pos, const String* value) {
-    return ___sso_string_rfind_impl(str, pos, string_data(value), string_size(value));
+    return sso_string_rfind_impl(str, pos, string_data(value), string_size(value));
 }
 
 static inline size_t string_rfind_substr_cstr(const String* str, size_t pos, const char* value, size_t start, size_t length) {
-    return ___sso_string_rfind_impl(str, pos, value + start, length);
+    return sso_string_rfind_impl(str, pos, value + start, length);
 }
 
 static inline size_t string_rfind_substr_string(const String* str, size_t pos, const String* value, size_t start, size_t length) {
-    return ___sso_string_rfind_impl(str, pos, string_data(value) + start, length);
+    return sso_string_rfind_impl(str, pos, string_data(value) + start, length);
 }
 
 static inline bool string_is_null_or_empty(const String* str) {
