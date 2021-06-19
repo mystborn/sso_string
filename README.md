@@ -2,11 +2,7 @@
 
 sso_string is a mutable string library in C that uses the short string optimization to avoid unnecessary allocations of small strings at the cost of a small amount of speed. It was primarily modelled after the libc++ std::string class, and its api mostly mirrors the C++ std::string api. It has been tested using MSVC and gcc (via WSL).
 
-# Using
-
-It's very simple to add this to your project. It consists of a single header/source file pair, `include/sso_string.h` and `src/sso_string.c` which you can easily copy into your project (or add this repo as a submodule). It can also be added as a subproject when building with Meson.
-
-### Example
+## Example
 
 ``` c
 #include <sso_string.h>
@@ -34,9 +30,9 @@ int main(void) {
 }
 ```
 
-### Strings and C-Strings
+## Including
 
-There are many apis built around c-strings, and a string library wouldn't be worth using in most cases if it can't interface with them. sso_string provides alternative functions that accept c-strings for any function where it makes sense. It can also grab the internal c-string representation using `string_data` (`const char*`)  or `string_cstr` (`char*`). These are `NULL` terminated and can be used just like normal c-strings, as long as the caller doesn't try and resize them.
+sso_string consists of a single header/source file pair, `include/sso_string.h` and `src/sso_string.c` which you can easily copy into your project (or add this repo as a submodule). It can also be added as a subproject when building with Meson.
 
 ### Meson
 
@@ -58,11 +54,15 @@ sso_string_proj = subproject('sso_string')
 sso_string = sso_string_proj.get_variable('sso_string_dep')
 ```
 
-# Documentation
+### Strings and C-Strings
+
+There are many apis built around c-strings, and a string library wouldn't be worth using in most cases if it can't interface with them. sso_string provides alternative functions that accept c-strings for any function where it makes sense. It can also grab the internal c-string representation using `string_data` (`const char*`)  or `string_cstr` (`char*`). These are `NULL` terminated and can be used just like normal c-strings, as long as the caller doesn't try and resize them.
+
+## Documentation
 
 Currently there is no official documentation, but the header file has thorough documentation of each function in the style of doxygen comments. For specific function usage, if it's not clear from the documentation, there is probably a unit test for it that can be used as a template.
 
-# Building
+## Building
 
 The project uses the meson build system by default, but it shouldn't be hard to switch to cmake or another build tool if desired. It also uses check to perform the unit tests. On windows, you'll most likely need to specify `check`s location (usually "C:\Program Files (86)\check"). On \*nix OS', you'll either need to have check installed (most likely) or you can specify its location, provided it has a directory structure like the following:
 
@@ -85,7 +85,7 @@ C:\\sso\\build> meson configure "-Dcheck_location=C:\\Program Files (86)\\check"
 C:\\sso\\build> ninja test
 ```
 
-# Todo
+## Todo
 
 * API Additions
     * string_trim (High)
@@ -99,6 +99,7 @@ C:\\sso\\build> ninja test
         * They will start with `string_gc_*` just like the `string_u8_*` functions.
 * Tests
     * There are not enough tests that check failure conditions. So as long as the input is correct, the functions should work fine, but their might be issues when the input is invalid.
+* CMake Integration
 * Documentation
 * More Comments
     * Just need more comments throughout to explain some of the more esoteric implementations/design decisions.

@@ -9,6 +9,7 @@ sources = [ './src/sso_string.c' ]
 sso_string = static_library(
     'sso_string',
     sources,
+    c_args: ['/DSSO_STRING_BUILD'],
     include_directories: include_files,
     install: true,
     name_suffix: 'lib',
@@ -18,6 +19,7 @@ sso_string = static_library(
 sso_string_shared = shared_library(
     'sso_string',
     sources,
+    c_args: ['/DSSO_STRING_BUILD'],
     version: '1.1.0',
     include_directories: include_files,
     install: true,

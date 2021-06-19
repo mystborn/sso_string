@@ -54,6 +54,22 @@
 
 #include <stdio.h>
 
+#ifdef SSO_STRING_BUILD
+    #if defined(_WIN32)
+        #define SSO_STRING_EXPORT __declspec(dllexport)
+    #elif defined(__ELF__)
+        #define SSO_STRING_EXPORT __attribute__((visibility ("default")))
+    #else
+        #define SSO_STRING_EXPORT
+    #endif
+#else
+    #if defined(_WIN32)
+        #define SSO_STRING_EXPORT __declspec(dllimport)
+    #else
+        #define SSO_STRING_EXPORT
+    #endif
+#endif
+
 #if (defined(__BYTE_ORDER) && __BYTE_ORDER == __BIG_ENDIAN) || \
     defined(__BIG_ENDIAN__) || \
     defined(__ARMEB__) || \
@@ -151,7 +167,7 @@ typedef uint32_t Char32;
 
     @return true on success, false on allocation failure.
  */
-bool string_init(String* str, const char* cstr);
+SSO_STRING_EXPORT bool string_init(String* str, const char* cstr);
 
 /**
     Initializes a string from a subsection of a c-string.
@@ -162,7 +178,7 @@ bool string_init(String* str, const char* cstr);
 
     @return true on success, false on allocation failure.
 */
-bool string_init_size(String* str, const char* cstr, size_t length);
+SSO_STRING_EXPORT bool string_init_size(String* str, const char* cstr, size_t length);
 
 /**
     Creates and initializes a new string value.
@@ -234,7 +250,7 @@ static inline size_t string_size(const String* str);
 
     @return The number of codepoints in the string.
 */
-size_t string_u8_codepoints(const String* str);
+SSO_STRING_EXPORT size_t string_u8_codepoints(const String* str);
 
 /**
     Gets the number of characters a string can potential hold without resizing.
@@ -264,7 +280,7 @@ static inline char string_get(const String* str, size_t index);
 
     @return Thee unicode character starting at the specified byte index.
 */
-Char32 string_u8_get(const String* str, size_t index);
+SSO_STRING_EXPORT Char32 string_u8_get(const String* str, size_t index);
 
 /**
     Gets the unicode character at the specified byte index, 
@@ -279,7 +295,7 @@ Char32 string_u8_get(const String* str, size_t index);
 
     @remark This function can be used to easily iterate over a UTF-8 string.
 */
-Char32 string_u8_get_with_size(const String* str, size_t index, int* out_size);
+SSO_STRING_EXPORT Char32 string_u8_get_with_size(const String* str, size_t index, int* out_size);
 
 /**
     Gets the unicode character size at the specified byte index in bytes. 
@@ -289,7 +305,7 @@ Char32 string_u8_get_with_size(const String* str, size_t index, int* out_size);
 
     @return The number of bytes used to represent the unicode character.
 */
-int string_u8_codepoint_size(const String* str, size_t index);
+SSO_STRING_EXPORT int string_u8_codepoint_size(const String* str, size_t index);
 
 /**
     Sets the character at the specified index in a string.
@@ -309,7 +325,7 @@ static inline void string_set(String* str, size_t index, char value);
 
     @return true on success, false on allocation failure.
 */
-bool string_u8_set(String* str, size_t index, Char32 value);
+SSO_STRING_EXPORT bool string_u8_set(String* str, size_t index, Char32 value);
 
 /**
     Determines if a string has no characters.
@@ -331,7 +347,7 @@ static inline bool string_is_null_or_empty(const String* str);
 
     @return true if the string is NULL, empty, or comprised only of whitespace characters; false otherwise.
 */
-bool string_u8_is_null_or_whitespace(const String* str);
+SSO_STRING_EXPORT bool string_u8_is_null_or_whitespace(const String* str);
 
 /**
     Ensures that a string has a capacity large enough to hold a specified number of characters. 
@@ -349,7 +365,7 @@ static inline bool string_reserve(String* str, size_t reserve);
 
     @param str The string to shrink.
 */
-void string_shrink_to_fit(String* str);
+SSO_STRING_EXPORT void string_shrink_to_fit(String* str);
 
 /**
     Clears the contents of a string, but does not free any allocated memory.
@@ -358,7 +374,7 @@ void string_shrink_to_fit(String* str);
 
     @see string_shrink_to_fit
 */
-void string_clear(String* str);
+SSO_STRING_EXPORT void string_clear(String* str);
 
 /**
     Inserts a c-string into a string at the specified index.
@@ -415,7 +431,7 @@ static inline bool string_insert_string_part(String* str, const String* value, s
     @param index The starting index of the characters to erase.
     @param count The number of characters following index to erase.
 */
-void string_erase(String* str, size_t index, size_t count);
+SSO_STRING_EXPORT void string_erase(String* str, size_t index, size_t count);
 
 /**
     Appends a character to the end of a string.
@@ -426,7 +442,7 @@ void string_erase(String* str, size_t index, size_t count);
     @return true on success, false on allocation failure.
 
 */
-bool string_push_back(String* str, char value);
+SSO_STRING_EXPORT bool string_push_back(String* str, char value);
 
 /**
     Appends a unicode character to the end of a string.
@@ -436,7 +452,7 @@ bool string_push_back(String* str, char value);
 
     @return true on success, false on allocation failure.
 */
-bool string_u8_push_back(String* str, Char32 value);
+SSO_STRING_EXPORT bool string_u8_push_back(String* str, Char32 value);
 
 /**
     Removes a character from the end of a string and returns
@@ -446,7 +462,7 @@ bool string_u8_push_back(String* str, Char32 value);
 
     @return The last character of the string if any, '\\0' otherwise.
 */
-char string_pop_back(String* str);
+SSO_STRING_EXPORT char string_pop_back(String* str);
 
 /**
     Removes a unicode character from the end of a string and
@@ -456,7 +472,7 @@ char string_pop_back(String* str);
 
     @return The last unicode character of the string if any, '\\0' otherwise.
 */
-Char32 string_u8_pop_back(String* str);
+SSO_STRING_EXPORT Char32 string_u8_pop_back(String* str);
 
 /**
     Appends a c-string to the end of a string.
@@ -660,7 +676,7 @@ static inline void string_copy_to(const String* str, char* cstr, size_t pos, siz
 
     @return true on success, false on allocation failure.
 */
-bool string_resize(String* str, size_t count, char ch);
+SSO_STRING_EXPORT bool string_resize(String* str, size_t count, char ch);
 
 /**
     Swaps the contents of two strings.
@@ -771,14 +787,14 @@ static inline size_t string_rfind_substr_string(const String* str, size_t pos, c
 
     @param str The string to reverse.
 */
-void string_reverse_bytes(String* str);
+SSO_STRING_EXPORT void string_reverse_bytes(String* str);
 
 /**
     Reverses the contents of a string in-place based on UTF-8 codepoints.
 
     @param str The string to reverse.
 */
-void string_u8_reverse_codepoints(String* str);
+SSO_STRING_EXPORT void string_u8_reverse_codepoints(String* str);
 
 /**
     Joins an array of strings together into a single string with a
@@ -791,7 +807,7 @@ void string_u8_reverse_codepoints(String* str);
     @param values  An array of strings to combine.
     @param value_count  The number of strings in the values array.
 */
-bool string_join(
+SSO_STRING_EXPORT bool string_join(
     String* str, 
     const String* separator,
     const String* values,
@@ -808,7 +824,7 @@ bool string_join(
     @param values An array of string references to combine.
     @param value_count The number of strings in the values array.
 */
-bool string_join_refs(
+SSO_STRING_EXPORT bool string_join_refs(
     String* str,
     const String* separator,
     const String** values,
@@ -839,7 +855,7 @@ bool string_join_refs(
             by this function that will need to be manually freed. Either way, an array containing the 
             split string segments. Returns NULL on error.
 */
-String* string_split(
+SSO_STRING_EXPORT String* string_split(
     const String* str,
     const String* separator,
     String* results,
@@ -868,7 +884,7 @@ String* string_split(
             by this function that will need to be manually freed. Either way, an array containing the 
             split string segments. Returns NULL on error.
 */
-String** string_split_refs(
+SSO_STRING_EXPORT String** string_split_refs(
     const String* str,
     const String* separator,
     String** results,
@@ -890,7 +906,7 @@ String** string_split_refs(
     @return result if the argument was non-null. Otherwise a newly allocated string
             that contains the format result. NULL on error.
 */
-String* string_format_string(String* result, const String* format, ...);
+SSO_STRING_EXPORT String* string_format_string(String* result, const String* format, ...);
 
 /**
     Formats a string using printf format specifiers.
@@ -905,7 +921,7 @@ String* string_format_string(String* result, const String* format, ...);
     @return result if the argument was non-null. Otherwise a newly allocated string
             that contains the format result. NULL on error.
 */
-String* string_format_cstr(String* result, const char* format, ...);
+SSO_STRING_EXPORT String* string_format_cstr(String* result, const char* format, ...);
 
 /**
     Formats a string using printf format specifiers.
@@ -921,7 +937,7 @@ String* string_format_cstr(String* result, const char* format, ...);
     @return result if the argument was non-null. Otherwise a newly allocated string
             that contains the format result. NULL on error.
 */
-String* string_format_args_string(String* result, const String* format, va_list argp);
+SSO_STRING_EXPORT String* string_format_args_string(String* result, const String* format, va_list argp);
 
 /**
     Formats a string using printf format specifiers.
@@ -937,7 +953,7 @@ String* string_format_args_string(String* result, const String* format, va_list 
     @return result if the argument was non-null. Otherwise a newly allocated string
             that contains the format result. NULL on error.
 */
-String* string_format_args_cstr(String* result, const char* format, va_list argp);
+SSO_STRING_EXPORT String* string_format_args_cstr(String* result, const char* format, va_list argp);
 
 /**
     Creates a hash code from a string using the fnv1-a algorithm.
@@ -946,7 +962,7 @@ String* string_format_args_cstr(String* result, const char* format, va_list argp
 
     @return A hash code for the string.
 */
-uint32_t string_hash(String* str);
+SSO_STRING_EXPORT uint32_t string_hash(String* str);
 
 
 
@@ -972,14 +988,14 @@ static inline size_t ___sso_string_long_cap(const String* str);
 static inline void ___sso_string_long_set_cap(String* str, size_t cap);
 static inline void ___sso_string_long_set_size(String* str, size_t size);
 static inline void ___sso_string_short_set_size(String* str, size_t size);
-bool ___sso_string_long_reserve(String* str, size_t reserve);
-int ___sso_string_short_reserve(String* str, size_t reserve);
-bool ___sso_string_insert_impl(String* str, const char* value, size_t index, size_t length);
-bool ___sso_string_append_impl(String* str, const char* value, size_t length);
-bool ___sso_string_replace_impl(String* str, size_t pos, size_t count, const char* value, size_t length);
-size_t ___sso_string_find_impl(const String* str, size_t pos, const char* value, size_t length);
-size_t ___sso_string_find_substr_impl(const String* str, size_t pos, const char* value, size_t length);
-size_t ___sso_string_rfind_impl(const String* str, size_t pos, const char* value, size_t length);
+SSO_STRING_EXPORT bool ___sso_string_long_reserve(String* str, size_t reserve);
+SSO_STRING_EXPORT int ___sso_string_short_reserve(String* str, size_t reserve);
+SSO_STRING_EXPORT bool ___sso_string_insert_impl(String* str, const char* value, size_t index, size_t length);
+SSO_STRING_EXPORT bool ___sso_string_append_impl(String* str, const char* value, size_t length);
+SSO_STRING_EXPORT bool ___sso_string_replace_impl(String* str, size_t pos, size_t count, const char* value, size_t length);
+SSO_STRING_EXPORT size_t ___sso_string_find_impl(const String* str, size_t pos, const char* value, size_t length);
+SSO_STRING_EXPORT size_t ___sso_string_find_substr_impl(const String* str, size_t pos, const char* value, size_t length);
+SSO_STRING_EXPORT size_t ___sso_string_rfind_impl(const String* str, size_t pos, const char* value, size_t length);
 
 
 
