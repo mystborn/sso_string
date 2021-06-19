@@ -374,7 +374,7 @@ SSO_STRING_EXPORT void string_shrink_to_fit(String* str);
 
     @see string_shrink_to_fit
 */
-SSO_STRING_EXPORT void string_clear(String* str);
+static inline void string_clear(String* str);
 
 /**
     Inserts a c-string into a string at the specified index.
@@ -1134,6 +1134,18 @@ static inline bool string_reserve(String* str, size_t reserve) {
         return ___sso_string_long_reserve(str, reserve);
     } else {
         return ___sso_string_short_reserve(str, reserve) != ___SSO_STRING_SHORT_RESERVE_FAIL;
+    }
+}
+
+static inline void string_clear(String* str) {
+    assert(str);
+
+    if(___sso_string_is_long(str)) {
+        str->l.data[0] = 0;
+        ___sso_string_long_set_size(str, 0);
+    } else {
+        str->s.data[0] = 0;
+        ___sso_string_short_set_size(str, 0);
     }
 }
 

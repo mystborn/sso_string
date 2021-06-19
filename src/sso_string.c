@@ -2,7 +2,11 @@
 
 #include <stdarg.h>
 
-#ifdef _MSC_VER
+#if defined(SSO_STRING_SINGLE_THREAD)
+
+#define SSO_THREAD_LOCAL
+
+#elif defined(_MSC_VER)
 
 #define SSO_THREAD_LOCAL __declspec(thread)
 
@@ -313,41 +317,6 @@ SSO_STRING_EXPORT bool string_u8_is_null_or_whitespace(const String* str) {
     return true;
 }
 
-SSO_STRING_EXPORT void string_shrink_to_fit(String* str) {
-    assert(str);
-
-    if(!___sso_string_is_long(str))
-        return;
-
-    size_t s = ___sso_string_long_size(str);
-
-    if(s == ___sso_string_long_cap(str))
-        return;
-
-    if(s <= ___sso_string_min_cap) {
-        memmove(str->s.data, str->l.data, s);
-        str->s.data[s] = 0;
-        // This will clear the long flag.
-        ___sso_string_short_set_size(str, s);
-    } else {
-        str->l.data = realloc(str->l.data, s + 1);
-        str->l.data[s] = 0;
-        ___sso_string_long_set_cap(str, s);
-    }
-}
-
-SSO_STRING_EXPORT void string_clear(String* str) {
-    assert(str);
-
-    if(___sso_string_is_long(str)) {
-        str->l.data[0] = 0;
-        ___sso_string_long_set_size(str, 0);
-    } else {
-        str->s.data[0] = 0;
-        ___sso_string_short_set_size(str, 0);
-    }
-}
-
 SSO_STRING_EXPORT bool ___sso_string_long_reserve(String* str, size_t reserve) {
     assert(str);
 
@@ -389,6 +358,29 @@ SSO_STRING_EXPORT int ___sso_string_short_reserve(String* str, size_t reserve) {
     return ___SSO_STRING_SHORT_RESERVE_RESIZE;
 }
 
+SSO_STRING_EXPORT void string_shrink_to_fit(String* str) {
+    assert(str);
+
+    if(!___sso_string_is_long(str))
+        return;
+
+    size_t s = ___sso_string_long_size(str);
+
+    if(s == ___sso_string_long_cap(str))
+        return;
+
+    if(s <= ___sso_string_min_cap) {
+        memmove(str->s.data, str->l.data, s);
+        str->s.data[s] = 0;
+        // This will clear the long flag.
+        ___sso_string_short_set_size(str, s);
+    } else {
+        str->l.data = realloc(str->l.data, s + 1);
+        str->l.data[s] = 0;
+        ___sso_string_long_set_cap(str, s);
+    }
+}
+
 SSO_STRING_EXPORT bool ___sso_string_insert_impl(String* str, const char* value, size_t index, size_t length) {
     assert(str);
     assert(value);
@@ -406,6 +398,158 @@ SSO_STRING_EXPORT bool ___sso_string_insert_impl(String* str, const char* value,
     memmove(data + index, value, length);
     ___sso_string_set_size(str, current_size + length);
     return true;
+}
+
+
+
+SSO_STRING_EXPORT void string_erase(String* str, size_t index, size_t count) {
+    assert(str);
+
+    size_t current_size = string_size(str);
+    assert(index + count <= current_size);
+    char* data = string_cstr(str);
+    memmove(data + index, data + index + count, current_size - index - count);
+    current_size -= count;
+    if(___sso_string_is_long(str)) {
+        ___sso_string_long_set_size(str, current_size);
+        str->l.data[current_size] = 0;
+    } else {
+        ___sso_string_short_set_size(str, current_size);
+        str->s.data[current_size] = 0;
+    }
+}
+
+SSO_STRING_EXPORT bool string_push_back(String* str, char value) {
+    assert(str);
+
+    size_t size;
+    char* data;
+
+    if(___sso_string_is_long(str)) {
+        size = ___sso_string_long_size(str) + 1;
+        if(!___sso_string_long_reserve(str, size))
+            return false;
+        ___sso_string_long_set_size(str, size);
+        data = str->l.data;
+    } else {
+        size = ___sso_string_short_size(str) + 1;
+        switch(___sso_string_short_reserve(str, size)) {
+            case ___SSO_STRING_SHORT_RESERVE_RESIZE:
+                ___sso_string_long_set_size(str, size);
+                data = str->l.data;
+                break;
+            case ___SSO_STRING_SHORT_RESERVE_SUCCEED:
+                ___sso_string_short_set_size(str, size);
+                data = str->s.data;
+                break;
+            case ___SSO_STRING_SHORT_RESERVE_FAIL:
+                return false;
+        }
+    }
+    data[size-1] = value;
+    data[size] = 0;
+    return true;
+}
+
+SSO_STRING_EXPORT bool string_u8_push_back(String* str, Char32 value) {
+    assert(str);
+
+    size_t size = string_size(str);
+    char* data;
+    
+    if(value < 0x80) {
+        if(!string_reserve(str, size + 1))
+            return false;
+        data = string_cstr(str);
+        data[size++] = (char)value;
+    } else if(value < 0x800) {
+        if(!string_reserve(str, size + 2))
+            return false;
+
+        data = string_cstr(str);
+        data[size++]     = 0xC0 | ((value >> 6) & 0x1F);
+        data[size++] = 0x80 | (value & 0x3f);
+
+    } else if(value < 0x10000) {
+        if(!string_reserve(str, size + 3))
+            return false;
+
+        data = string_cstr(str);
+
+        data[size++]     = 0xE0 | ((value >> 12) & 0xF);
+        data[size++] = 0x80 | ((value >> 6)  & 0x3F);
+        data[size++] = 0x80 | (value & 0x3F);
+    } else {
+        assert(value <= 0x10FFFF);
+        if(!string_reserve(str, size + 4))
+            return false;
+
+        data = string_cstr(str);
+
+        data[size++]     = 0xF0 | ((value >> 18) & 0x7);
+        data[size++] = 0x80 | ((value >> 12) & 0x3F);
+        data[size++] = 0x80 | ((value >> 6)  & 0x3F);
+        data[size++] = 0x80 | (value & 0x3F);
+    }
+
+    ___sso_string_set_size(str, size);
+    data[size] = '\0';
+    return true;
+}
+
+SSO_STRING_EXPORT char string_pop_back(String* str) {
+    assert(str);
+
+    size_t size;
+    if(___sso_string_is_long(str)) {
+        size = ___sso_string_long_size(str) - 1;
+        if(size == -1)
+            return 0;
+        ___sso_string_long_set_size(str, size);
+    } else {
+        size = ___sso_string_short_size(str) - 1;
+        if(size == -1)
+            return 0;
+        ___sso_string_short_set_size(str, size);
+    }
+    char* data = string_cstr(str);
+    char result = data[size];
+    data[size] = 0;
+    return result;
+}
+
+SSO_STRING_EXPORT Char32 string_u8_pop_back(String* str) {
+    assert(str);
+
+    size_t size = string_size(str);
+    if(size == 0)
+        return 0;
+
+    char* data = string_cstr(str);
+    int shift = 0;
+    Char32 result = 0;
+
+    unsigned char part = (unsigned char)data[--size];
+    while((part & 0xC0) == 0x80) {
+        unsigned int stripped_part = (~0x80 & part);
+        unsigned int shifted = (stripped_part << (6 * shift++));
+        result |= shifted;
+        part = (unsigned char)data[--size];
+    }
+
+    if(part >= 0xF0)
+        result |= (part & 0x07) << 18;
+    else if(part >= 0xE0)
+        result |= (part & 0x0F) << 12;
+    else if(part >= 0xC0)
+        result |= (part & 0x1F) << 6;
+    else
+        result |= part;
+
+    ___sso_string_set_size(str, size);
+    data[size] = 0;
+
+    return result;
 }
 
 SSO_STRING_EXPORT bool ___sso_string_append_impl(String* str, const char* value, size_t length) {
@@ -466,6 +610,96 @@ SSO_STRING_EXPORT bool ___sso_string_replace_impl(String* str, size_t pos, size_
     }
 
     return true;
+}
+
+SSO_STRING_EXPORT bool string_resize(String* str, size_t count, char ch) {
+    assert(str);
+    assert(count < STRING_MAX);
+    
+    if(!string_reserve(str, count))
+        return false;
+
+    char* data = string_cstr(str);
+
+    size_t size;
+
+    if(___sso_string_is_long(str)) {
+        size = ___sso_string_long_size(str);
+        ___sso_string_long_set_size(str, count);
+    } else {
+        size = ___sso_string_short_size(str);
+        ___sso_string_short_set_size(str, count);
+    }
+    
+    for(size_t i = size; i < count; i++)
+        data[i] = ch;
+
+    data[count] = 0;
+    return true;
+}
+
+SSO_STRING_EXPORT size_t ___sso_string_find_impl(const String* str, size_t pos, const char* value, size_t length) {
+    assert(str);
+    assert(value);
+    assert(pos < string_size(str));
+
+    if(pos + length > string_size(str))
+        return SIZE_MAX;
+
+    const char* data = string_data(str);
+    char* result = strstr(data + pos, value);
+    if(result == NULL)
+        return SIZE_MAX;
+    return result - data;
+}
+
+SSO_STRING_EXPORT size_t ___sso_string_find_substr_impl(const String* str, size_t pos, const char* value, size_t length) {
+    assert(str);
+    assert(value);
+
+    // If the length of the find string is bigger than the search string,
+    // early exit.
+    size_t size = string_size(str);
+    if(pos + length > size)
+        return SIZE_MAX;
+
+    size -= length;
+
+    const char* data = string_data(str);
+    for(size_t i = pos; i < size; i++) {
+        if(strncmp(data + i, value, length) == 0)
+            return i;
+    }
+
+    return SIZE_MAX;
+}
+
+SSO_STRING_EXPORT size_t ___sso_string_rfind_impl(const String* str, size_t pos, const char* value, size_t length) {
+    assert(str);
+    assert(value);
+
+    // If the length of the find string is bigger than the search string,
+    // early exit.
+    size_t size = string_size(str);
+
+    if(pos > size || length > size)
+        return SIZE_MAX;
+
+    if(pos < length)
+        pos = length;
+
+    // Turn the negative offset into a normal offset.
+    pos = size - pos;
+
+    const char* data = string_data(str);
+
+    do {
+        if (strncmp(data + pos, value, length) == 0)
+            return pos;
+    } 
+    while (pos-- != 0);
+
+    return SIZE_MAX;
 }
 
 // Todo: Attempt to use intrinsic bswap
@@ -800,246 +1034,6 @@ SSO_STRING_EXPORT String** string_split_refs(
 
         *results_filled = 0;
         return NULL;
-}
-
-SSO_STRING_EXPORT size_t ___sso_string_find_impl(const String* str, size_t pos, const char* value, size_t length) {
-    assert(str);
-    assert(value);
-    assert(pos < string_size(str));
-
-    if(pos + length > string_size(str))
-        return SIZE_MAX;
-
-    const char* data = string_data(str);
-    char* result = strstr(data + pos, value);
-    if(result == NULL)
-        return SIZE_MAX;
-    return result - data;
-}
-
-SSO_STRING_EXPORT size_t ___sso_string_find_substr_impl(const String* str, size_t pos, const char* value, size_t length) {
-    assert(str);
-    assert(value);
-
-    // If the length of the find string is bigger than the search string,
-    // early exit.
-    size_t size = string_size(str);
-    if(pos + length > size)
-        return SIZE_MAX;
-
-    size -= length;
-
-    const char* data = string_data(str);
-    for(size_t i = pos; i < size; i++) {
-        if(strncmp(data + i, value, length) == 0)
-            return i;
-    }
-
-    return SIZE_MAX;
-}
-
-SSO_STRING_EXPORT size_t ___sso_string_rfind_impl(const String* str, size_t pos, const char* value, size_t length) {
-    assert(str);
-    assert(value);
-
-    // If the length of the find string is bigger than the search string,
-    // early exit.
-    size_t size = string_size(str);
-
-    if(pos > size || length > size)
-        return SIZE_MAX;
-
-    if(pos < length)
-        pos = length;
-
-    // Turn the negative offset into a normal offset.
-    pos = size - pos;
-
-    const char* data = string_data(str);
-
-    do {
-        if (strncmp(data + pos, value, length) == 0)
-            return pos;
-    } 
-    while (pos-- != 0);
-
-    return SIZE_MAX;
-}
-
-SSO_STRING_EXPORT void string_erase(String* str, size_t index, size_t count) {
-    assert(str);
-
-    size_t current_size = string_size(str);
-    assert(index + count <= current_size);
-    char* data = string_cstr(str);
-    memmove(data + index, data + index + count, current_size - index - count);
-    current_size -= count;
-    if(___sso_string_is_long(str)) {
-        ___sso_string_long_set_size(str, current_size);
-        str->l.data[current_size] = 0;
-    } else {
-        ___sso_string_short_set_size(str, current_size);
-        str->s.data[current_size] = 0;
-    }
-}
-
-SSO_STRING_EXPORT bool string_push_back(String* str, char value) {
-    assert(str);
-
-    size_t size;
-    char* data;
-
-    if(___sso_string_is_long(str)) {
-        size = ___sso_string_long_size(str) + 1;
-        if(!___sso_string_long_reserve(str, size))
-            return false;
-        ___sso_string_long_set_size(str, size);
-        data = str->l.data;
-    } else {
-        size = ___sso_string_short_size(str) + 1;
-        switch(___sso_string_short_reserve(str, size)) {
-            case ___SSO_STRING_SHORT_RESERVE_RESIZE:
-                ___sso_string_long_set_size(str, size);
-                data = str->l.data;
-                break;
-            case ___SSO_STRING_SHORT_RESERVE_SUCCEED:
-                ___sso_string_short_set_size(str, size);
-                data = str->s.data;
-                break;
-            case ___SSO_STRING_SHORT_RESERVE_FAIL:
-                return false;
-        }
-    }
-    data[size-1] = value;
-    data[size] = 0;
-    return true;
-}
-
-SSO_STRING_EXPORT bool string_u8_push_back(String* str, Char32 value) {
-    assert(str);
-
-    size_t size = string_size(str);
-    char* data;
-    
-    if(value < 0x80) {
-        if(!string_reserve(str, size + 1))
-            return false;
-        data = string_cstr(str);
-        data[size++] = (char)value;
-    } else if(value < 0x800) {
-        if(!string_reserve(str, size + 2))
-            return false;
-
-        data = string_cstr(str);
-        data[size++]     = 0xC0 | ((value >> 6) & 0x1F);
-        data[size++] = 0x80 | (value & 0x3f);
-
-    } else if(value < 0x10000) {
-        if(!string_reserve(str, size + 3))
-            return false;
-
-        data = string_cstr(str);
-
-        data[size++]     = 0xE0 | ((value >> 12) & 0xF);
-        data[size++] = 0x80 | ((value >> 6)  & 0x3F);
-        data[size++] = 0x80 | (value & 0x3F);
-    } else {
-        assert(value <= 0x10FFFF);
-        if(!string_reserve(str, size + 4))
-            return false;
-
-        data = string_cstr(str);
-
-        data[size++]     = 0xF0 | ((value >> 18) & 0x7);
-        data[size++] = 0x80 | ((value >> 12) & 0x3F);
-        data[size++] = 0x80 | ((value >> 6)  & 0x3F);
-        data[size++] = 0x80 | (value & 0x3F);
-    }
-
-    ___sso_string_set_size(str, size);
-    data[size] = '\0';
-    return true;
-}
-
-SSO_STRING_EXPORT char string_pop_back(String* str) {
-    assert(str);
-
-    size_t size;
-    if(___sso_string_is_long(str)) {
-        size = ___sso_string_long_size(str) - 1;
-        if(size == -1)
-            return 0;
-        ___sso_string_long_set_size(str, size);
-    } else {
-        size = ___sso_string_short_size(str) - 1;
-        if(size == -1)
-            return 0;
-        ___sso_string_short_set_size(str, size);
-    }
-    char* data = string_cstr(str);
-    char result = data[size];
-    data[size] = 0;
-    return result;
-}
-
-SSO_STRING_EXPORT Char32 string_u8_pop_back(String* str) {
-    assert(str);
-
-    size_t size = string_size(str);
-    if(size == 0)
-        return 0;
-
-    char* data = string_cstr(str);
-    int shift = 0;
-    Char32 result = 0;
-
-    unsigned char part = (unsigned char)data[--size];
-    while((part & 0xC0) == 0x80) {
-        unsigned int stripped_part = (~0x80 & part);
-        unsigned int shifted = (stripped_part << (6 * shift++));
-        result |= shifted;
-        part = (unsigned char)data[--size];
-    }
-
-    if(part >= 0xF0)
-        result |= (part & 0x07) << 18;
-    else if(part >= 0xE0)
-        result |= (part & 0x0F) << 12;
-    else if(part >= 0xC0)
-        result |= (part & 0x1F) << 6;
-    else
-        result |= part;
-
-    ___sso_string_set_size(str, size);
-    data[size] = 0;
-
-    return result;
-}
-
-SSO_STRING_EXPORT bool string_resize(String* str, size_t count, char ch) {
-    assert(str);
-    assert(count < STRING_MAX);
-    
-    if(!string_reserve(str, count))
-        return false;
-
-    char* data = string_cstr(str);
-
-    size_t size;
-
-    if(___sso_string_is_long(str)) {
-        size = ___sso_string_long_size(str);
-        ___sso_string_long_set_size(str, count);
-    } else {
-        size = ___sso_string_short_size(str);
-        ___sso_string_short_set_size(str, count);
-    }
-    
-    for(size_t i = size; i < count; i++)
-        data[i] = ch;
-
-    data[count] = 0;
-    return true;
 }
 
 SSO_STRING_EXPORT String* string_format_string(String* result, const String* format, ...) {
