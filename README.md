@@ -30,6 +30,10 @@ int main(void) {
 }
 ```
 
+### Strings and C-Strings
+
+There are many apis built around c-strings, and a string library wouldn't be worth using in most cases if it can't interface with them. sso_string provides alternative functions that accept c-strings for any function where it makes sense. It can also grab the internal c-string representation using `string_data` (`const char*`)  or `string_cstr` (`char*`). These are `NULL` terminated and can be used just like normal c-strings, as long as the caller doesn't try and resize them.
+
 ## Including
 
 sso_string consists of a single header/source file pair, `include/sso_string.h` and `src/sso_string.c` which you can easily copy into your project (or add this repo as a submodule). It can also be added as a subproject when building with Meson.
@@ -53,10 +57,6 @@ Then you can easily grab the dependency from the meson.build file:
 sso_string_proj = subproject('sso_string')
 sso_string = sso_string_proj.get_variable('sso_string_dep')
 ```
-
-### Strings and C-Strings
-
-There are many apis built around c-strings, and a string library wouldn't be worth using in most cases if it can't interface with them. sso_string provides alternative functions that accept c-strings for any function where it makes sense. It can also grab the internal c-string representation using `string_data` (`const char*`)  or `string_cstr` (`char*`). These are `NULL` terminated and can be used just like normal c-strings, as long as the caller doesn't try and resize them.
 
 ## Documentation
 
