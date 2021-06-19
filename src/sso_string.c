@@ -258,6 +258,61 @@ SSO_STRING_EXPORT bool string_u8_set(String* str, size_t index, Char32 value) {
     return true;
 }
 
+SSO_STRING_EXPORT bool string_u8_is_null_or_whitespace(const String* str) {
+    // These tables define the whitespace characters in the various codepoint sizes.
+
+    if(string_is_null_or_empty(str))
+        return true;
+
+    size_t size = string_size(str);
+    const char* data = string_data(str);
+    size_t i = 0;
+
+    while(i < size) {
+        int cp;
+        Char32 next = string_u8_get_with_size(str, i, &cp);
+        switch(next) {
+            case 9:
+            case 10:
+            case 11:
+            case 12:
+            case 13:
+            case 32:
+            case 133:
+            case 160:
+            case 5760:
+            case 6158:
+            case 8192:
+            case 8193:
+            case 8194:
+            case 8195:
+            case 8196:
+            case 8197:
+            case 8198:
+            case 8199:
+            case 8200:
+            case 8201:
+            case 8202:
+            case 8203:
+            case 8204:
+            case 8205:
+            case 8232:
+            case 8233:
+            case 8287:
+            case 8288:
+            case 12288:
+            case 65279:
+                continue;
+            default:
+                return false;
+        }
+
+        i += cp;
+    }
+
+    return true;
+}
+
 SSO_STRING_EXPORT void string_shrink_to_fit(String* str) {
     assert(str);
 
@@ -408,90 +463,6 @@ SSO_STRING_EXPORT bool ___sso_string_replace_impl(String* str, size_t pos, size_
             ___sso_string_long_set_size(str, size + offset);
         else
             ___sso_string_short_set_size(str, size + offset);
-    }
-
-    return true;
-}
-
-SSO_STRING_EXPORT bool string_u8_is_null_or_whitespace(const String* str) {
-    static int whitespace_single[] = { 
-        9, 10, 11, 12, 13, 32, 133, 160
-    };
-
-    static int whitespace_double[] = {
-        133, 160
-    };
-
-    static int whitespace_triple[] = {
-        5760,
-        6158,
-        8192,
-        8193,
-        8194,
-        8195,
-        8196,
-        8197,
-        8198,
-        8199,
-        8200,
-        8201,
-        8202,
-        8203,
-        8204,
-        8205,
-        8232,
-        8233,
-        8287,
-        8288,
-        12288,
-        65279
-    };
-
-    if(string_is_null_or_empty(str))
-        return true;
-
-    size_t size = string_size(str);
-    const char* data = string_data(str);
-    size_t i = 0;
-
-    while(i < size) {
-        int cp;
-        Char32 next = string_u8_get_with_size(str, i, &cp);
-        bool is_whitespace = false;
-
-        switch(cp) {
-            case 1:
-                for(int i = 0; i < sizeof(whitespace_single) / sizeof(int); i++) {
-                    if(whitespace_single[i] == next) {
-                        is_whitespace = true;
-                        break;
-                    }
-                }
-                break;
-            case 2:
-                for(int i = 0; i < sizeof(whitespace_double) / sizeof(int); i++) {
-                    if(whitespace_double[i] == next) {
-                        is_whitespace = true;
-                        break;
-                    }
-                }
-                break;
-            case 3:
-                for(int i = 0; i < sizeof(whitespace_triple) / sizeof(int); i++) {
-                    if(whitespace_triple[i] == next) {
-                        is_whitespace = true;
-                        break;
-                    }
-                }
-                break;
-            default:
-                break;
-        }
-
-        if(!is_whitespace)
-            return false;
-
-        i += cp;
     }
 
     return true;
