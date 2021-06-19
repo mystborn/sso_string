@@ -25,7 +25,7 @@ endif
 
 
 string_tests = executable('string_tests',
-    'new_tests.c',
+    'tests.c',
     include_directories: test_inc,
     dependencies: deps,
     link_with: sso_string_shared,
