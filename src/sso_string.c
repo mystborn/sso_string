@@ -6,6 +6,10 @@
 
 #define SSO_THREAD_LOCAL __declspec(thread)
 
+#elif defined(__GNUC__) || defined(__clang__)
+
+#define SSO_THREAD_LOCAL __thread
+
 #elif __STDC_VERSION__ >= 201112L
 #ifndef __STDC_NO_THREADS__
 #ifdef thread_local
