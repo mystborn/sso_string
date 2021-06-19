@@ -2,7 +2,7 @@
 
 sso_string is a mutable string library in C that uses the short string optimization to avoid unnecessary allocations of small strings at the cost of a small amount of speed. It was primarily modelled after the libc++ std::string class, and its api mostly mirrors the C++ std::string api. It has been tested using MSVC and gcc (via WSL).
 
-sso_string aims to provide a memory efficient string representation for low-level/embedded applications, while also providing high-level string manipulation functions.
+sso_string aims to provide a memory efficient string representation for low-level/embedded applications, while also providing high-level string manipulation functions. As such it includes functionality for building strings, handling UTF-8 characters, splitting strings, etc.
 
 
 ## Example
