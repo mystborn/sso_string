@@ -39,7 +39,7 @@ static inline void ___sso_string_set_size(String* str, size_t size) {
 }
 
 SSO_STRING_EXPORT bool string_init(String* str, const char* cstr) {
-    assert(str);
+    SSO_STRING_ASSERT_ARG(str);
 
     if(cstr == NULL)
         cstr = "";
@@ -68,8 +68,8 @@ SSO_STRING_EXPORT bool string_init_size(String* str, const char* cstr, size_t le
     if(cstr == NULL)
         cstr = "";
 
-    assert(str);
-    assert(len <= strlen(cstr));
+    SSO_STRING_ASSERT_ARG(str);
+    SSO_STRING_ASSERT_BOUNDS(len <= strlen(cstr));
 
     if (len <= ___sso_string_min_cap) {
         memcpy(str->s.data, cstr, len);
@@ -91,7 +91,7 @@ SSO_STRING_EXPORT bool string_init_size(String* str, const char* cstr, size_t le
 }
 
 SSO_STRING_EXPORT size_t string_u8_codepoints(const String* str) {
-    assert(str);
+    SSO_STRING_ASSERT_ARG(str);
 
     const unsigned char* data = (unsigned char*)string_data(str);
     size_t count = 0;
@@ -112,7 +112,7 @@ SSO_STRING_EXPORT size_t string_u8_codepoints(const String* str) {
 }
 
 SSO_STRING_EXPORT Char32 string_u8_get(const String* str, size_t index) {
-    assert(str);
+    SSO_STRING_ASSERT_ARG(str);
 
     size_t size = string_size(str);
     if(index >= size)
@@ -134,7 +134,7 @@ SSO_STRING_EXPORT Char32 string_u8_get(const String* str, size_t index) {
 }
 
 SSO_STRING_EXPORT Char32 string_u8_get_with_size(const String* str, size_t index, int* out_size) {
-    assert(str);
+    SSO_STRING_ASSERT_ARG(str);
 
     if(!out_size)
         return string_u8_get(str, index);
@@ -163,7 +163,7 @@ SSO_STRING_EXPORT Char32 string_u8_get_with_size(const String* str, size_t index
 }
 
 SSO_STRING_EXPORT int string_u8_codepoint_size(const String* str, size_t index) {
-    assert(str);
+    SSO_STRING_ASSERT_ARG(str);
 
     size_t size = string_size(str);
     if(index >= size)
@@ -210,7 +210,7 @@ static bool ___sso_string_u8_assure_codepoint_space(
 }
 
 SSO_STRING_EXPORT bool string_u8_set(String* str, size_t index, Char32 value) {
-    assert(str);
+    SSO_STRING_ASSERT_ARG(str);
 
     size_t size = string_size(str);
 
@@ -318,7 +318,7 @@ SSO_STRING_EXPORT bool string_u8_is_null_or_whitespace(const String* str) {
 }
 
 SSO_STRING_EXPORT bool ___sso_string_long_reserve(String* str, size_t reserve) {
-    assert(str);
+    SSO_STRING_ASSERT_ARG(str);
 
     size_t current = ___sso_string_long_cap(str);
     if(reserve <= current)
@@ -337,7 +337,7 @@ SSO_STRING_EXPORT bool ___sso_string_long_reserve(String* str, size_t reserve) {
 }
 
 SSO_STRING_EXPORT int ___sso_string_short_reserve(String* str, size_t reserve) {
-    assert(str);
+    SSO_STRING_ASSERT_ARG(str);
 
     if(reserve <= ___sso_string_min_cap)
         return ___SSO_STRING_SHORT_RESERVE_SUCCEED;
@@ -359,7 +359,7 @@ SSO_STRING_EXPORT int ___sso_string_short_reserve(String* str, size_t reserve) {
 }
 
 SSO_STRING_EXPORT void string_shrink_to_fit(String* str) {
-    assert(str);
+    SSO_STRING_ASSERT_ARG(str);
 
     if(!___sso_string_is_long(str))
         return;
@@ -382,12 +382,12 @@ SSO_STRING_EXPORT void string_shrink_to_fit(String* str) {
 }
 
 SSO_STRING_EXPORT bool ___sso_string_insert_impl(String* str, const char* value, size_t index, size_t length) {
-    assert(str);
-    assert(value);
+    SSO_STRING_ASSERT_ARG(str);
+    SSO_STRING_ASSERT_ARG(value);
 
     size_t current_size = string_size(str);
 
-    assert(current_size + length < STRING_MAX);
+    SSO_STRING_ASSERT_BOUNDS(current_size + length < STRING_MAX);
 
     if(!string_reserve(str, current_size + length))
         return false;
@@ -403,7 +403,7 @@ SSO_STRING_EXPORT bool ___sso_string_insert_impl(String* str, const char* value,
 
 
 SSO_STRING_EXPORT void string_erase(String* str, size_t index, size_t count) {
-    assert(str);
+    SSO_STRING_ASSERT_ARG(str);
 
     size_t current_size = string_size(str);
     assert(index + count <= current_size);
@@ -420,7 +420,7 @@ SSO_STRING_EXPORT void string_erase(String* str, size_t index, size_t count) {
 }
 
 SSO_STRING_EXPORT bool string_push_back(String* str, char value) {
-    assert(str);
+    SSO_STRING_ASSERT_ARG(str);
 
     size_t size;
     char* data;
@@ -452,7 +452,7 @@ SSO_STRING_EXPORT bool string_push_back(String* str, char value) {
 }
 
 SSO_STRING_EXPORT bool string_u8_push_back(String* str, Char32 value) {
-    assert(str);
+    SSO_STRING_ASSERT_ARG(str);
 
     size_t size = string_size(str);
     char* data;
@@ -498,7 +498,7 @@ SSO_STRING_EXPORT bool string_u8_push_back(String* str, Char32 value) {
 }
 
 SSO_STRING_EXPORT char string_pop_back(String* str) {
-    assert(str);
+    SSO_STRING_ASSERT_ARG(str);
 
     size_t size;
     if(___sso_string_is_long(str)) {
@@ -519,7 +519,7 @@ SSO_STRING_EXPORT char string_pop_back(String* str) {
 }
 
 SSO_STRING_EXPORT Char32 string_u8_pop_back(String* str) {
-    assert(str);
+    SSO_STRING_ASSERT_ARG(str);
 
     size_t size = string_size(str);
     if(size == 0)
@@ -553,8 +553,8 @@ SSO_STRING_EXPORT Char32 string_u8_pop_back(String* str) {
 }
 
 SSO_STRING_EXPORT bool ___sso_string_append_impl(String* str, const char* value, size_t length) {
-    assert(str);
-    assert(value);
+    SSO_STRING_ASSERT_ARG(str);
+    SSO_STRING_ASSERT_ARG(value);
 
     size_t size = string_size(str);
     if(!string_reserve(str, size + length))
@@ -570,12 +570,12 @@ SSO_STRING_EXPORT bool ___sso_string_replace_impl(String* str, size_t pos, size_
     if(length == 0)
         string_erase(str, pos, count);
 
-    assert(str);
-    assert(value);
+    SSO_STRING_ASSERT_ARG(str);
+    SSO_STRING_ASSERT_ARG(value);
 
     size_t size = string_size(str);
 
-    assert(pos + count <= size);
+    SSO_STRING_ASSERT_BOUNDS(pos + count <= size);
 
     char* data;
     if(count == length) {
@@ -613,8 +613,8 @@ SSO_STRING_EXPORT bool ___sso_string_replace_impl(String* str, size_t pos, size_
 }
 
 SSO_STRING_EXPORT bool string_resize(String* str, size_t count, char ch) {
-    assert(str);
-    assert(count < STRING_MAX);
+    SSO_STRING_ASSERT_ARG(str);
+    SSO_STRING_ASSERT_BOUNDS(count < STRING_MAX);
     
     if(!string_reserve(str, count))
         return false;
@@ -639,9 +639,9 @@ SSO_STRING_EXPORT bool string_resize(String* str, size_t count, char ch) {
 }
 
 SSO_STRING_EXPORT size_t ___sso_string_find_impl(const String* str, size_t pos, const char* value, size_t length) {
-    assert(str);
-    assert(value);
-    assert(pos < string_size(str));
+    SSO_STRING_ASSERT_ARG(str);
+    SSO_STRING_ASSERT_ARG(value);
+    SSO_STRING_ASSERT_BOUNDS(pos < string_size(str));
 
     if(pos + length > string_size(str))
         return SIZE_MAX;
@@ -654,8 +654,8 @@ SSO_STRING_EXPORT size_t ___sso_string_find_impl(const String* str, size_t pos, 
 }
 
 SSO_STRING_EXPORT size_t ___sso_string_find_substr_impl(const String* str, size_t pos, const char* value, size_t length) {
-    assert(str);
-    assert(value);
+    SSO_STRING_ASSERT_ARG(str);
+    SSO_STRING_ASSERT_ARG(value);
 
     // If the length of the find string is bigger than the search string,
     // early exit.
@@ -675,8 +675,8 @@ SSO_STRING_EXPORT size_t ___sso_string_find_substr_impl(const String* str, size_
 }
 
 SSO_STRING_EXPORT size_t ___sso_string_rfind_impl(const String* str, size_t pos, const char* value, size_t length) {
-    assert(str);
-    assert(value);
+    SSO_STRING_ASSERT_ARG(str);
+    SSO_STRING_ASSERT_ARG(value);
 
     // If the length of the find string is bigger than the search string,
     // early exit.
@@ -713,7 +713,7 @@ static inline void string_reverse_bytes_impl(char* start, char* end) {
 }
 
 SSO_STRING_EXPORT void string_reverse_bytes(String* str) {
-    assert(str);
+    SSO_STRING_ASSERT_ARG(str);
 
     size_t size = string_size(str);
     char* start = string_cstr(str);
@@ -723,7 +723,7 @@ SSO_STRING_EXPORT void string_reverse_bytes(String* str) {
 }
 
 SSO_STRING_EXPORT void string_u8_reverse_codepoints(String* str) {
-    assert(str);
+    SSO_STRING_ASSERT_ARG(str);
 
     size_t size = string_size(str);
     char* data;
@@ -761,9 +761,9 @@ SSO_STRING_EXPORT bool string_join(
     if(value_count == 0)
         return true;
 
-    assert(str);
-    assert(separator);
-    assert(values);
+    SSO_STRING_ASSERT_ARG(str);
+    SSO_STRING_ASSERT_ARG(separator);
+    SSO_STRING_ASSERT_ARG(values);
 
     // Put the joined values in a temporary variable to avoid
     // altering the result string if the operation fails.
@@ -803,10 +803,10 @@ SSO_STRING_EXPORT bool string_join_refs(
 {
     if(value_count == 0)
         return true;
-    
-    assert(str);
-    assert(separator);
-    assert(values);
+
+    SSO_STRING_ASSERT_ARG(str);
+    SSO_STRING_ASSERT_ARG(separator);
+    SSO_STRING_ASSERT_ARG(values);
 
     // Put the joined values in a temporary variable to avoid
     // altering the result string if the operation fails.
@@ -848,14 +848,14 @@ SSO_STRING_EXPORT String* string_split(
     bool init_results)
 {
     // Make sure the required inputs aren't NULL.
-    assert(str);
-    assert(separator);
+    SSO_STRING_ASSERT_ARG(str);
+    SSO_STRING_ASSERT_ARG(separator);
 
     // results only needs to be initialized when results_count is > 0.
     // On 0, it doesn't matter what state it is.
     // On a negative number, results will be allocated by the function.
     if(results_count > 0)
-        assert(results);
+        SSO_STRING_ASSERT_ARG(results);
 
     // Nothing needs to happen if there is no room for results. Return immediately.
     if(results_count == 0) {
@@ -944,14 +944,14 @@ SSO_STRING_EXPORT String** string_split_refs(
     bool init_results) 
 {
     // Make sure the required inputs aren't NULL.
-    assert(str);
-    assert(separator);
+    SSO_STRING_ASSERT_ARG(str);
+    SSO_STRING_ASSERT_ARG(separator);
 
     // results only needs to be initialized when results_count is > 0.
     // On 0, it doesn't matter what state it is.
     // On a negative number, results will be allocated by the function.
     if(results_count > 0)
-        assert(results);
+        SSO_STRING_ASSERT_ARG(results);
 
     // Nothing needs to happen if there is no room for results. Return immediately.
     if(results_count == 0) {
@@ -1076,6 +1076,8 @@ SSO_STRING_EXPORT String* string_format_args_cstr(String* result, const char* fo
     char buffer[___SSO_STRING_FORMAT_BUFFER_SIZE];
 
     #endif
+
+    SSO_STRING_ASSERT_ARG(format);
 
     size_t original_size = SIZE_MAX;
     if(!result) {
