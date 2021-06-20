@@ -665,7 +665,6 @@ SSO_STRING_EXPORT bool string_resize(String* str, size_t count, char ch) {
 SSO_STRING_EXPORT size_t sso_string_find_impl(const String* str, size_t pos, const char* value, size_t length) {
     SSO_STRING_ASSERT_ARG(str);
     SSO_STRING_ASSERT_ARG(value);
-    SSO_STRING_ASSERT_BOUNDS(pos < string_size(str));
 
     if(pos + length > string_size(str))
         return SIZE_MAX;
