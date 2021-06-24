@@ -81,6 +81,21 @@
 
 #define SSO_STRING_BIG_ENDIAN
 
+#elif (defined(__BYTE_ORDER) && __BYTE_ORDER == __LITTLE_ENDIAN) || \
+    defined(__LITTLE_ENDIAN__) || \
+    defined(__ARMEL__) || \
+    defined(__THUMBEL__) || \
+    defined(__AARCH64EL__) || \
+    defined(_MIPSEL) || defined(__MIPSEL) || defined(__MIPSEL__) || \
+    defined(_WIN32) || \
+    defined(STRING_LITTLE_ENDIAN)
+
+#define SSO_STRING_LITTLE_ENDIAN
+
+#else
+#error "I don't know what architecture this is!"
+#endif
+
 // This should never be defined unless the compiler defines SIZE_MAX 
 // to be different from max(uint32_t) or max(uint64_t), in which case it
 // should be the number of bits in size_t - 8.
@@ -101,21 +116,6 @@
 #error "Unable to determine the number of bits in size_t, please define SSO_STRING_SHIFT before including this file as the number of bits in size_t - 8"
 
 #endif
-#endif
-
-#elif (defined(__BYTE_ORDER) && __BYTE_ORDER == __LITTLE_ENDIAN) || \
-    defined(__LITTLE_ENDIAN__) || \
-    defined(__ARMEL__) || \
-    defined(__THUMBEL__) || \
-    defined(__AARCH64EL__) || \
-    defined(_MIPSEL) || defined(__MIPSEL) || defined(__MIPSEL__) || \
-    defined(_WIN32) || \
-    defined(STRING_LITTLE_ENDIAN)
-
-#define SSO_STRING_LITTLE_ENDIAN
-
-#else
-#error "I don't know what architecture this is!"
 #endif
 
 #ifndef SSO_STRING_ASSERT_ARG
@@ -970,7 +970,7 @@ SSO_STRING_EXPORT String* string_format_args_cstr(String* result, const char* fo
 
     @return A hash code for the string.
 */
-SSO_STRING_EXPORT uint32_t string_hash(String* str);
+SSO_STRING_EXPORT size_t string_hash(String* str);
 
 
 

@@ -330,7 +330,7 @@ SSO_STRING_EXPORT bool string_u8_is_null_or_whitespace(const String* str) {
             case 8288:
             case 12288:
             case 65279:
-                continue;
+                break;
             default:
                 return false;
         }
@@ -1158,4 +1158,25 @@ SSO_STRING_EXPORT String* string_format_args_cstr(String* result, const char* fo
             string_cstr(result)[original_size] = '\0';
 
         return NULL;
+}
+
+#if SSO_STRING_SHIFT == 24
+
+#define SSO_FNV_PRIME 0x01000193
+#define SSO_FNV_OFFSET 0x811c9dc5 
+
+#elif SSO_STRING_SHIFT == 56
+
+#define SSO_FNV_PRIME 0x00000100000001B3
+#define SSO_FNV_OFFSET 0xcbf29ce484222325
+
+#endif
+
+SSO_STRING_EXPORT size_t string_hash(String* str) {
+    const unsigned char* data = string_data(str);
+    size_t hash = SSO_FNV_OFFSET;
+    while(*data != 0)
+        hash = (*(data++) ^ hash) * SSO_FNV_PRIME;
+
+    return hash;
 }

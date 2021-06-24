@@ -1767,6 +1767,20 @@ START_TEST(string_format_cstr_append) {
 }
 END_TEST
 
+START_TEST(string_hash_verify) {
+    String str = string_create("Hello world, it is I, your master.");
+    size_t hash_result = string_hash(&str);
+
+#if SSO_STRING_SHIFT == 24
+    ck_assert(hash_result == 0x7d8ee846);
+#elif SSO_STRING_SHIFT == 56
+    ck_assert(hash_result == 0xe288df2017a06dc6);
+#endif
+
+    string_free_resources(&str);
+}
+END_TEST
+
 int main(void) {
     int number_failed;
 
@@ -1928,6 +1942,7 @@ int main(void) {
     tcase_add_test(tc, string_split_allocate_init);
     tcase_add_test(tc, string_split_skip_empty);
     tcase_add_test(tc, string_split_dont_skip_empty);
+    tcase_add_test(tc, string_hash_verify);
 
 
     suite_add_tcase(s, tc);
