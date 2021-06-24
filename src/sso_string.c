@@ -428,6 +428,8 @@ SSO_STRING_EXPORT bool sso_string_insert_impl(String* str, const char* value, si
 
 SSO_STRING_EXPORT void string_erase(String* str, size_t index, size_t count) {
     SSO_STRING_ASSERT_ARG(str);
+    if(count == 0)
+        return;
 
     size_t current_size = string_size(str);
     assert(index + count <= current_size);
@@ -588,6 +590,43 @@ SSO_STRING_EXPORT bool sso_string_append_impl(String* str, const char* value, si
     data[size + length] = 0;
     sso_string_set_size(str, size + length);
     return true;
+}
+
+SSO_STRING_EXPORT void sso_string_trim_start_impl(String* str, const char* value, size_t length) {
+    SSO_STRING_ASSERT_ARG(str);
+    SSO_STRING_ASSERT_ARG(value);
+
+    const char* data = string_data(str);
+    size_t count = 0;
+    size_t size = string_size(str);
+
+    for(; count < size; count += length) {
+        if(strncmp(data + count, value, length) != 0)
+            break;
+    }
+
+    if(count != 0) {
+        string_erase(str, 0, count);
+    }
+}
+
+SSO_STRING_EXPORT void sso_string_trim_end_impl(String* str, const char* value, size_t length) {
+    SSO_STRING_ASSERT_ARG(str);
+    SSO_STRING_ASSERT_ARG(value);
+
+    size_t size = string_size(str);
+    char* data = string_cstr(str);
+    size_t count = size;
+
+    for(; count > 0; count -= length) {
+        if(strncmp(data + count - length, value, length) != 0)
+            break;
+    }
+
+    if(count != size) {
+        data[count] = '\0';
+        sso_string_set_size(str, count);
+    }
 }
 
 SSO_STRING_EXPORT bool sso_string_replace_impl(String* str, size_t pos, size_t count, const char* value, size_t length) {
@@ -1178,4 +1217,82 @@ SSO_STRING_EXPORT size_t string_hash(String* str) {
         hash = (*(data++) ^ hash) * SSO_FNV_PRIME;
 
     return hash;
+}
+
+SSO_STRING_EXPORT bool string_file_read_line(String* str, FILE* file) {
+    // Todo: Potentially use the string contents as the buffer.
+    #define SSO_STRING_FILE_BUFFER_SIZE 256
+
+    #ifdef SSO_THREAD_LOCAL
+
+    static SSO_THREAD_LOCAL char buffer[SSO_STRING_FILE_BUFFER_SIZE];
+
+    #else
+
+    char buffer[SSO_STRING_FILE_BUFFER_SIZE];
+
+    #endif
+
+    string_clear(str);
+
+    while (!feof(file)) {
+        size_t current = ftell(file);
+
+        char* end;
+        do {
+            size_t read_size = fread(buffer, 1, SSO_STRING_FILE_BUFFER_SIZE, file);
+            if (read_size == 0 || (read_size != SSO_STRING_FILE_BUFFER_SIZE && ferror(file)))
+                return false;
+
+            end = strchr(buffer, '\n');
+            if (end && (size_t)(end - buffer) > read_size)
+                end = NULL;
+
+            if (!end) {
+                if (!string_append_cstr_part(str, buffer, 0, read_size))
+                    return false;
+                return true;
+            }
+            else {
+                if (!string_append_cstr_part(str, buffer, 0, (size_t)(end - buffer)))
+                    return false;
+
+                if (fseek(file, current + (end - buffer) + 2, SEEK_SET) != 0)
+                    return false;
+
+                return true;
+            }
+        } while (!end);
+    }
+
+    return false;
+}
+
+SSO_STRING_EXPORT bool string_file_read_all(String* str, FILE* file) {
+    long current = ftell(file);
+    if(current < 0)
+        return false;
+
+    if(fseek(file, 0, SEEK_END) != 0)
+        return false;
+    
+    long size = ftell(file);
+    if(size < 0)
+        return false;
+
+    if(fseek(file, current, SEEK_SET) != 0)
+        return false;
+
+    if(!string_reserve(str, size))
+        return false;
+    
+    char* buffer = string_cstr(str);
+    size_t read = fread(buffer, 1, size, file);
+    if(read != size)
+        return false;
+
+    buffer[size] = '\0';
+    sso_string_set_size(str, size);
+
+    return true;
 }

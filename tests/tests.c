@@ -1071,6 +1071,70 @@ START_TEST(string_ends_with_string_false) {
 }
 END_TEST
 
+START_TEST(string_trim_string_both) {
+    String value = string_create("abba");
+    String a = string_create("a");
+    string_trim_string(&value, &a);
+    ck_assert(string_equals_cstr(&value, "bb"));
+    string_free_resources(&value);
+    string_free_resources(&a);
+}
+END_TEST
+
+START_TEST(string_trim_string_left) {
+    String h = string_create("h");
+    string_trim_string(&small, &h);
+    ck_assert(string_equals_cstr(&small, "ello"));
+    string_free_resources(&h);
+}
+END_TEST
+
+START_TEST(string_trim_string_right) {
+    String o = string_create("o");
+    string_trim_string(&small, &o);
+    ck_assert(string_equals_cstr(&small, "hell"));
+    string_free_resources(&o);
+}
+END_TEST
+
+START_TEST(string_trim_string_neither) {
+    String b = string_create("b");
+    string_trim_string(&small, &b);
+    ck_assert(string_equals_cstr(&small, HELLO));
+    string_free_resources(&b);
+}
+END_TEST
+
+START_TEST(string_trim_string_multiple_letters) {
+    String value = string_create("aabbaa");
+    String aa = string_create("aa");
+    string_trim_string(&value, &aa);
+    ck_assert(string_equals_cstr(&value, "bb"));
+    string_free_resources(&value);
+    string_free_resources(&aa);
+}
+END_TEST
+
+START_TEST(string_trim_string_multiple_sequences) {
+    String value = string_create("aabcaa");
+    String a = string_create("a");
+    string_trim_string(&value, &a);
+    ck_assert(string_equals_cstr(&value, "bc"));
+    string_free_resources(&value);
+    string_free_resources(&a);
+}
+END_TEST
+
+START_TEST(string_trim_string_full_sequence_only) {
+    String value = string_create("aaabbaaa");
+    String aa = string_create("aa");
+    string_trim_string(&value, &aa);
+    ck_assert(string_equals_cstr(&value, "abba"));
+    string_free_resources(&value);
+    string_free_resources(&aa);
+}
+END_TEST
+
 START_TEST(string_replace_cstr_shrink) {
     ck_assert(string_replace_cstr(&small, 1, 3, "b"));
     ck_assert(string_equals(&small, "hbo"));
@@ -1877,6 +1941,13 @@ int main(void) {
     tcase_add_test(tc, string_ends_with_cstr_true);
     tcase_add_test(tc, string_ends_with_cstr_false);
     tcase_add_test(tc, string_ends_with_string_true);
+    tcase_add_test(tc, string_ends_with_string_false);
+    tcase_add_test(tc, string_trim_string_both);
+    tcase_add_test(tc, string_trim_string_left);
+    tcase_add_test(tc, string_trim_string_right);
+    tcase_add_test(tc, string_trim_string_neither);
+    tcase_add_test(tc, string_trim_string_multiple_letters);
+    tcase_add_test(tc, string_trim_string_full_sequence_only);
     tcase_add_test(tc, string_ends_with_string_false);
     tcase_add_test(tc, string_replace_cstr_shrink);
     tcase_add_test(tc, string_replace_cstr_shrink_end);

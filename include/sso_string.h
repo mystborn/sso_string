@@ -1,4 +1,5 @@
 /*
+
     MIT License
 
     Copyright (c) 2019 Precisamento LLC
@@ -164,7 +165,7 @@ typedef union String {
 
 /**
     A numeric representation of a unicode character/codepoint.
- */
+*/
 typedef uint32_t Char32;
 
 /**
@@ -174,7 +175,7 @@ typedef uint32_t Char32;
     @param cstr The contents to initialize the string with.
 
     @return true on success, false on allocation failure.
- */
+*/
 SSO_STRING_EXPORT bool string_init(String* str, const char* cstr);
 
 /**
@@ -338,12 +339,16 @@ SSO_STRING_EXPORT bool string_u8_set(String* str, size_t index, Char32 value);
 /**
     Determines if a string has no characters.
 
+    @param str The string to check is empty.
+
     @return true if the string is empty; false otherwise.
 */
 static inline bool string_empty(const String* str);
 
 /**
     Determines if the string is NULL or has no characters.
+
+    @param str The string to check is NULL or empty.
 
     @return true if the string is NULL or empty; false otherwise.
 */
@@ -352,6 +357,8 @@ static inline bool string_is_null_or_empty(const String* str);
 /**
     Working with ASCII or UTF-8 strings, determines if the string is NULL,
     empty, or comprised of only whitespace characters.
+
+    @param str The string to check is NULL, empty, or comprised entirely of whitespace.
 
     @return true if the string is NULL, empty, or comprised only of whitespace characters; false otherwise.
 */
@@ -613,6 +620,13 @@ static inline bool string_ends_with_cstr(const String* str, const char* value);
     @return true if the string ends with the value; false otherwise.
 */
 static inline bool string_ends_with_string(const String* str, const String* value);
+
+static inline void string_trim_string(String* str, const String* value);
+static inline void string_trim_cstr(String* str, const char* value);
+static inline void string_trim_start_string(String* str, const String* value);
+static inline void string_trim_start_cstr(String* str, const char* value);
+static inline void string_trim_end_string(String* str, const String* value);
+static inline void string_trim_end_cstr(String* str, const char* value);
 
 /**
     Replaces a section of a string with the characters in a c-string.
@@ -972,7 +986,29 @@ SSO_STRING_EXPORT String* string_format_args_cstr(String* result, const char* fo
 */
 SSO_STRING_EXPORT size_t string_hash(String* str);
 
+/**
+    Reads a single line of a file into a string.
 
+    @param str The string that will contain the line. Its contents will be overwritten.
+    @param file The file to read a line from.
+
+    @return true if the operation was a success and there is more data to read. 
+            false if there is no more data or if there is an error.
+            Check if there is an error using feof/ferror. If neither are set,
+            there was an allocation error.
+*/
+SSO_STRING_EXPORT bool string_file_read_line(String* str, FILE* file);
+
+/**
+    Reads the entirety of a file from its current position into a string.
+
+    @param str The string that will contain the file contents.
+    @param file The file to read the contents of.
+
+    @return true on success, false on an error. If ferror doesn't indicate an error,
+            it was an allocation error.
+*/
+SSO_STRING_EXPORT bool string_file_read_all(String* str, FILE* file);
 
 // Internal Functions
 //
@@ -1000,6 +1036,8 @@ SSO_STRING_EXPORT bool sso_string_long_reserve(String* str, size_t reserve);
 SSO_STRING_EXPORT int sso_string_short_reserve(String* str, size_t reserve);
 SSO_STRING_EXPORT bool sso_string_insert_impl(String* str, const char* value, size_t index, size_t length);
 SSO_STRING_EXPORT bool sso_string_append_impl(String* str, const char* value, size_t length);
+SSO_STRING_EXPORT void sso_string_trim_start_impl(String* str, const char* value, size_t length);
+SSO_STRING_EXPORT void sso_string_trim_end_impl(String* str, const char* value, size_t length);
 SSO_STRING_EXPORT bool sso_string_replace_impl(String* str, size_t pos, size_t count, const char* value, size_t length);
 SSO_STRING_EXPORT size_t sso_string_find_impl(const String* str, size_t pos, const char* value, size_t length);
 SSO_STRING_EXPORT size_t sso_string_find_substr_impl(const String* str, size_t pos, const char* value, size_t length);
@@ -1278,11 +1316,36 @@ static inline bool string_ends_with_string(const String* str, const String* valu
     return sso_string_ends_with_impl(str, string_data(value), string_size(value));
 }
 
+static inline void string_trim_string(String* str, const String* value) {
+    sso_string_trim_start_impl(str, string_data(value), string_size(value));
+    sso_string_trim_end_impl(str, string_data(value), string_size(value));
+}
+
+static inline void string_trim_cstr(String* str, const char* value) {
+    size_t length = strlen(value);
+    sso_string_trim_end_impl(str, value, length);
+    sso_string_trim_start_impl(str, value, length);
+}
+
+static inline void string_trim_start_string(String* str, const String* value) {
+    sso_string_trim_start_impl(str, string_data(value), string_size(value));
+}
+
+static inline void string_trim_start_cstr(String* str, const char* value) {
+    sso_string_trim_start_impl(str, value, strlen(value));
+}
+
+static inline void string_trim_end_string(String* str, const String* value) {
+    sso_string_trim_end_impl(str, string_data(value), string_size(value));
+}
+
+static inline void string_trim_end_cstr(String* str, const char* value) {
+    sso_string_trim_end_impl(str, value, strlen(value));
+}
 
 static inline bool string_replace_cstr(String* str, size_t pos, size_t count, const char* value) {
     return sso_string_replace_impl(str, pos, count, value, strlen(value));
 }
-
 
 static inline bool string_replace_string(String* str, size_t pos, size_t count, const String* value) {
     return sso_string_replace_impl(str, pos, count, string_data(value), string_size(value));

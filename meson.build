@@ -38,3 +38,5 @@ elif c_comp.compiles('#include <check.h>')
     test_inc = include_files
     subdir('tests')
 endif
+
+subdir('examples')
