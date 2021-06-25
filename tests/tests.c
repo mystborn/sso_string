@@ -623,51 +623,51 @@ START_TEST(string_insert_string_utf8) {
 }
 END_TEST
 
-START_TEST(string_insert_cstr_part_ascii) {
+START_TEST(string_insert_part_cstr_ascii) {
     String str = string_create("lexd");
     char* result = "alexander";
 
-    ck_assert(string_insert_cstr_part(&str, result, 0, 0, 1));
+    ck_assert(string_insert_part_cstr(&str, result, 0, 0, 1));
     ck_assert(strcmp(string_data(&str), "alexd") == 0);
 
-    ck_assert(string_insert_cstr_part(&str, result, 4, 4, 2));
+    ck_assert(string_insert_part_cstr(&str, result, 4, 4, 2));
     ck_assert(strcmp(string_data(&str), "alexand") == 0);
 
-    ck_assert(string_insert_cstr_part(&str, result, 7, 7, 2));
+    ck_assert(string_insert_part_cstr(&str, result, 7, 7, 2));
     ck_assert(strcmp(string_data(&str), result) == 0);
 
     string_free_resources(&str);
 }
 END_TEST
 
-START_TEST(string_insert_cstr_part_utf8) {
+START_TEST(string_insert_part_cstr_utf8) {
     String str = string_create("んち");
     char* result = "こんにちは。";
 
-    ck_assert(string_insert_cstr_part(&str, result, 0, 0, 3));
+    ck_assert(string_insert_part_cstr(&str, result, 0, 0, 3));
     ck_assert(strcmp(string_data(&str), "こんち") == 0);
 
-    ck_assert(string_insert_cstr_part(&str, result, 6, 6, 3));
+    ck_assert(string_insert_part_cstr(&str, result, 6, 6, 3));
     ck_assert(strcmp(string_data(&str), "こんにち") == 0);
 
-    ck_assert(string_insert_cstr_part(&str, result, 12, 12, 6));
+    ck_assert(string_insert_part_cstr(&str, result, 12, 12, 6));
     ck_assert(strcmp(string_data(&str), "こんにちは。") == 0);
 
     string_free_resources(&str);
 }
 END_TEST
 
-START_TEST(string_insert_string_part_ascii) {
+START_TEST(string_insert_part_string_ascii) {
     String str = string_create("lexd");
     String result = string_create("alexander");
 
-    ck_assert(string_insert_string_part(&str, &result, 0, 0, 1));
+    ck_assert(string_insert_part_string(&str, &result, 0, 0, 1));
     ck_assert(strcmp(string_data(&str), "alexd") == 0);
 
-    ck_assert(string_insert_string_part(&str, &result, 4, 4, 2));
+    ck_assert(string_insert_part_string(&str, &result, 4, 4, 2));
     ck_assert(strcmp(string_data(&str), "alexand") == 0);
 
-    ck_assert(string_insert_string_part(&str, &result, 7, 7, 2));
+    ck_assert(string_insert_part_string(&str, &result, 7, 7, 2));
     ck_assert(strcmp(string_data(&str), "alexander") == 0);
 
     string_free_resources(&str);
@@ -675,17 +675,17 @@ START_TEST(string_insert_string_part_ascii) {
 }
 END_TEST
 
-START_TEST(string_insert_string_part_utf8) {
+START_TEST(string_insert_part_string_utf8) {
     String str = string_create("んち");
     String result = string_create("こんにちは。");
 
-    ck_assert(string_insert_string_part(&str, &result, 0, 0, 3));
+    ck_assert(string_insert_part_string(&str, &result, 0, 0, 3));
     ck_assert(strcmp(string_data(&str), "こんち") == 0);
 
-    ck_assert(string_insert_string_part(&str, &result, 6, 6, 3));
+    ck_assert(string_insert_part_string(&str, &result, 6, 6, 3));
     ck_assert(strcmp(string_data(&str), "こんにち") == 0);
 
-    ck_assert(string_insert_string_part(&str, &result, 12, 12, 6));
+    ck_assert(string_insert_part_string(&str, &result, 12, 12, 6));
     ck_assert(strcmp(string_data(&str), "こんにちは。") == 0);
 
     string_free_resources(&str);
@@ -1481,18 +1481,19 @@ START_TEST(string_u8_reverse_codepoints_utf8) {
 }
 END_TEST
 
-START_TEST(string_join_none) {
-    ck_assert(string_join(NULL, NULL, NULL, 0));
+START_TEST(string_join_string_none) {
+    String empty = string_create("");
+    ck_assert(string_join_string(NULL, &empty, NULL, 0));
 }
 END_TEST
 
-START_TEST(string_join_two) {
+START_TEST(string_join_string_two) {
     String segments[2];
     String comma = string_create(", ");
     String result = string_create("");
     ck_assert(string_init(&segments[0], "Hello"));
     ck_assert(string_init(&segments[1], "my name is ..."));
-    ck_assert(string_join(&result, &comma, segments, 2));
+    ck_assert(string_join_string(&result, &comma, segments, 2));
     ck_assert(string_equals(&result, "Hello, my name is ..."));
     string_free_resources(&segments[0]);
     string_free_resources(&segments[1]);
@@ -1501,7 +1502,7 @@ START_TEST(string_join_two) {
 }
 END_TEST
 
-START_TEST(string_join_many) {
+START_TEST(string_join_string_many) {
     String segments[5];
     String comma = string_create(", ");
     String result = string_create("List: ");
@@ -1510,7 +1511,7 @@ START_TEST(string_join_many) {
     ck_assert(string_init(&segments[2], "Bananas"));
     ck_assert(string_init(&segments[3], "Sandwich Meat"));
     ck_assert(string_init(&segments[4], "Bread"));
-    ck_assert(string_join(&result, &comma, segments, 5));
+    ck_assert(string_join_string(&result, &comma, segments, 5));
     ck_assert(string_equals(&result, "List: Milk, Apples, Bananas, Sandwich Meat, Bread"));
 
     for(int i = 0; i < 5; i++)
@@ -1521,18 +1522,19 @@ START_TEST(string_join_many) {
 }
 END_TEST
 
-START_TEST(string_join_refs_none) {
-    ck_assert(string_join_refs(NULL, NULL, NULL, 0));
+START_TEST(string_join_refs_string_none) {
+    String empty = string_create("");
+    ck_assert(string_join_refs_string(NULL, &empty, NULL, 0));
 }
 END_TEST
 
-START_TEST(string_join_refs_two) {
+START_TEST(string_join_refs_string_two) {
     String* segments[2];
     String comma = string_create(", ");
     String result = string_create("");
     ck_assert((segments[0] = string_create_ref("Hello")));
     ck_assert((segments[1] = string_create_ref("my name is ...")));
-    ck_assert(string_join_refs(&result, &comma, segments, 2));
+    ck_assert(string_join_refs_string(&result, &comma, segments, 2));
     ck_assert(string_equals(&result, "Hello, my name is ..."));
     string_free(segments[0]);
     string_free(segments[1]);
@@ -1541,7 +1543,7 @@ START_TEST(string_join_refs_two) {
 }
 END_TEST
 
-START_TEST(string_join_refs_many) {
+START_TEST(string_join_refs_string_many) {
     String* segments[5];
     String comma = string_create(", ");
     String result = string_create("List: ");
@@ -1550,7 +1552,7 @@ START_TEST(string_join_refs_many) {
     ck_assert((segments[2] = string_create_ref("Bananas")));
     ck_assert((segments[3] = string_create_ref("Sandwich Meat")));
     ck_assert((segments[4] = string_create_ref("Bread")));
-    ck_assert(string_join_refs(&result, &comma, segments, 5));
+    ck_assert(string_join_refs_string(&result, &comma, segments, 5));
     ck_assert(string_equals(&result, "List: Milk, Apples, Bananas, Sandwich Meat, Bread"));
 
     for(int i = 0; i < 5; i++)
@@ -1561,12 +1563,12 @@ START_TEST(string_join_refs_many) {
 }
 END_TEST
 
-START_TEST(string_split_init_into_existing_less_than_size) {
+START_TEST(string_split_string_init_into_existing_less_than_size) {
     String results[4];
     String to_split = string_create("moo, caw, meow");
     String separator = string_create(", ");
     int filled;
-    String* result = string_split(&to_split, &separator, results, 4, &filled, false, true);
+    String* result = string_split_string(&to_split, &separator, results, 4, &filled, false, true);
     ck_assert(result);
     ck_assert(result == results);
     ck_assert(filled == 3);
@@ -1582,12 +1584,12 @@ START_TEST(string_split_init_into_existing_less_than_size) {
 }
 END_TEST
 
-START_TEST(string_split_init_into_existing_equal_size) {
+START_TEST(string_split_string_init_into_existing_equal_size) {
     String results[3];
     String to_split = string_create("Who am I");
     String separator = string_create(" ");
     int filled;
-    String* result = string_split(&to_split, &separator, results, 3, &filled, false, true);
+    String* result = string_split_string(&to_split, &separator, results, 3, &filled, false, true);
     ck_assert(result);
     ck_assert(result == results);
     ck_assert(filled == 3);
@@ -1603,12 +1605,12 @@ START_TEST(string_split_init_into_existing_equal_size) {
 }
 END_TEST
 
-START_TEST(string_split_init_into_existing_greater_than_size) {
+START_TEST(string_split_string_init_into_existing_greater_than_size) {
     String results[2];
     String to_split = string_create("What is your name my friend");
     String separator = string_create(" ");
     int filled;
-    String* result = string_split(&to_split, &separator, results, 2, &filled, false, true);
+    String* result = string_split_string(&to_split, &separator, results, 2, &filled, false, true);
     ck_assert(result);
     ck_assert(result == results);
     ck_assert(filled == 2);
@@ -1623,7 +1625,7 @@ START_TEST(string_split_init_into_existing_greater_than_size) {
 }
 END_TEST
 
-START_TEST(string_split_no_init_into_existing_less_than_size) {
+START_TEST(string_split_string_no_init_into_existing_less_than_size) {
     String results[4];
     for(int i = 0; i < 4; i++) {
         ck_assert(string_init(results + i, "init"));
@@ -1631,7 +1633,7 @@ START_TEST(string_split_no_init_into_existing_less_than_size) {
     String to_split = string_create("moo, caw, meow");
     String separator = string_create(", ");
     int filled;
-    String* result = string_split(&to_split, &separator, results, 4, &filled, false, false);
+    String* result = string_split_string(&to_split, &separator, results, 4, &filled, false, false);
     ck_assert(result);
     ck_assert(result == results);
     ck_assert(filled == 3);
@@ -1647,7 +1649,7 @@ START_TEST(string_split_no_init_into_existing_less_than_size) {
 }
 END_TEST
 
-START_TEST(string_split_no_init_into_existing_equal_size) {
+START_TEST(string_split_string_no_init_into_existing_equal_size) {
     String results[3];
     for(int i = 0; i < 3; i++) {
         ck_assert(string_init(results + i, "init"));
@@ -1655,7 +1657,7 @@ START_TEST(string_split_no_init_into_existing_equal_size) {
     String to_split = string_create("Who am I");
     String separator = string_create(" ");
     int filled;
-    String* result = string_split(&to_split, &separator, results, 3, &filled, false, false);
+    String* result = string_split_string(&to_split, &separator, results, 3, &filled, false, false);
     ck_assert(result);
     ck_assert(result == results);
     ck_assert(filled == 3);
@@ -1671,7 +1673,7 @@ START_TEST(string_split_no_init_into_existing_equal_size) {
 }
 END_TEST
 
-START_TEST(string_split_no_init_into_existing_greater_than_size) {
+START_TEST(string_split_string_no_init_into_existing_greater_than_size) {
     String results[2];
     for(int i = 0; i < 2; i++) {
         ck_assert(string_init(results + i, "init"));
@@ -1679,7 +1681,7 @@ START_TEST(string_split_no_init_into_existing_greater_than_size) {
     String to_split = string_create("What is your name my friend");
     String separator = string_create(" ");
     int filled;
-    String* result = string_split(&to_split, &separator, results, 2, &filled, false, false);
+    String* result = string_split_string(&to_split, &separator, results, 2, &filled, false, false);
     ck_assert(result);
     ck_assert(result == results);
     ck_assert(filled == 2);
@@ -1694,11 +1696,11 @@ START_TEST(string_split_no_init_into_existing_greater_than_size) {
 }
 END_TEST
 
-START_TEST(string_split_allocate_init) {
+START_TEST(string_split_string_allocate_init) {
     String to_split = string_create("moo, caw, meow");
     String separator = string_create(", ");
     int filled;
-    String* result = string_split(&to_split, &separator, NULL, STRING_SPLIT_ALLOCATE, &filled, false, true);
+    String* result = string_split_string(&to_split, &separator, NULL, STRING_SPLIT_ALLOCATE, &filled, false, true);
     ck_assert(result);
     ck_assert(filled == 3);
     ck_assert(string_equals_cstr(result + 0, "moo"));
@@ -1714,14 +1716,14 @@ START_TEST(string_split_allocate_init) {
 }
 END_TEST
 
-START_TEST(string_split_allocate_no_init) {
-    // This should work exactly the same as string_split_allocate_init, since
+START_TEST(string_split_string_allocate_no_init) {
+    // This should work exactly the same as string_split_string_allocate_init, since
     // it should be set to init no matter what if results_count < 0.
 
     String to_split = string_create("moo, caw, meow");
     String separator = string_create(", ");
     int filled;
-    String* result = string_split(&to_split, &separator, NULL, STRING_SPLIT_ALLOCATE, &filled, false, false);
+    String* result = string_split_string(&to_split, &separator, NULL, STRING_SPLIT_ALLOCATE, &filled, false, false);
     ck_assert(result);
     ck_assert(filled == 3);
     ck_assert(string_equals_cstr(result + 0, "moo"));
@@ -1737,11 +1739,11 @@ START_TEST(string_split_allocate_no_init) {
 }
 END_TEST
 
-START_TEST(string_split_skip_empty) {
+START_TEST(string_split_string_skip_empty) {
     String to_split = string_create("double  space");
     String separator = string_create(" ");
     int filled;
-    String* result = string_split(&to_split, &separator, NULL, STRING_SPLIT_ALLOCATE, &filled, true, true);
+    String* result = string_split_string(&to_split, &separator, NULL, STRING_SPLIT_ALLOCATE, &filled, true, true);
 
     ck_assert(result);
     ck_assert(filled == 2);
@@ -1758,11 +1760,11 @@ START_TEST(string_split_skip_empty) {
 }
 END_TEST
 
-START_TEST(string_split_dont_skip_empty) {
+START_TEST(string_split_string_dont_skip_empty) {
     String to_split = string_create("double  space");
     String separator = string_create(" ");
     int filled;
-    String* result = string_split(&to_split, &separator, NULL, STRING_SPLIT_ALLOCATE, &filled, false, true);
+    String* result = string_split_string(&to_split, &separator, NULL, STRING_SPLIT_ALLOCATE, &filled, false, true);
 
     ck_assert(result);
     ck_assert(filled == 3);
@@ -1898,10 +1900,10 @@ int main(void) {
     tcase_add_test(tc, string_insert_cstr_utf8);
     tcase_add_test(tc, string_insert_string_ascii);
     tcase_add_test(tc, string_insert_string_utf8);
-    tcase_add_test(tc, string_insert_cstr_part_ascii);
-    tcase_add_test(tc, string_insert_cstr_part_utf8);
-    tcase_add_test(tc, string_insert_string_part_ascii);
-    tcase_add_test(tc, string_insert_string_part_utf8);
+    tcase_add_test(tc, string_insert_part_cstr_ascii);
+    tcase_add_test(tc, string_insert_part_cstr_utf8);
+    tcase_add_test(tc, string_insert_part_string_ascii);
+    tcase_add_test(tc, string_insert_part_string_utf8);
     tcase_add_test(tc, string_erase_small_start);
     tcase_add_test(tc, string_erase_small_end);
     tcase_add_test(tc, string_erase_small_middle);
@@ -1992,27 +1994,27 @@ int main(void) {
     tcase_add_test(tc, string_reverse_bytes_utf8);
     tcase_add_test(tc, string_u8_reverse_codepoints_ascii);
     tcase_add_test(tc, string_u8_reverse_codepoints_utf8);
-    tcase_add_test(tc, string_join_none);
-    tcase_add_test(tc, string_join_two);
-    tcase_add_test(tc, string_join_many);
-    tcase_add_test(tc, string_join_refs_none);
-    tcase_add_test(tc, string_join_refs_two);
-    tcase_add_test(tc, string_join_refs_many);
+    tcase_add_test(tc, string_join_string_none);
+    tcase_add_test(tc, string_join_string_two);
+    tcase_add_test(tc, string_join_string_many);
+    tcase_add_test(tc, string_join_refs_string_none);
+    tcase_add_test(tc, string_join_refs_string_two);
+    tcase_add_test(tc, string_join_refs_string_many);
     tcase_add_test(tc, string_format_string_new);
     tcase_add_test(tc, string_format_string_existing);
     tcase_add_test(tc, string_format_string_append);
     tcase_add_test(tc, string_format_cstr_new);
     tcase_add_test(tc, string_format_cstr_existing);
     tcase_add_test(tc, string_format_cstr_append);
-    tcase_add_test(tc, string_split_init_into_existing_less_than_size);
-    tcase_add_test(tc, string_split_init_into_existing_equal_size);
-    tcase_add_test(tc, string_split_init_into_existing_greater_than_size);
-    tcase_add_test(tc, string_split_no_init_into_existing_less_than_size);
-    tcase_add_test(tc, string_split_no_init_into_existing_equal_size);
-    tcase_add_test(tc, string_split_no_init_into_existing_greater_than_size);
-    tcase_add_test(tc, string_split_allocate_init);
-    tcase_add_test(tc, string_split_skip_empty);
-    tcase_add_test(tc, string_split_dont_skip_empty);
+    tcase_add_test(tc, string_split_string_init_into_existing_less_than_size);
+    tcase_add_test(tc, string_split_string_init_into_existing_equal_size);
+    tcase_add_test(tc, string_split_string_init_into_existing_greater_than_size);
+    tcase_add_test(tc, string_split_string_no_init_into_existing_less_than_size);
+    tcase_add_test(tc, string_split_string_no_init_into_existing_equal_size);
+    tcase_add_test(tc, string_split_string_no_init_into_existing_greater_than_size);
+    tcase_add_test(tc, string_split_string_allocate_init);
+    tcase_add_test(tc, string_split_string_skip_empty);
+    tcase_add_test(tc, string_split_string_dont_skip_empty);
     tcase_add_test(tc, string_hash_verify);
 
 

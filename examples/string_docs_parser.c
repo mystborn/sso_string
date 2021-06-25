@@ -12,6 +12,10 @@
     running out of memory.
 */
 
+
+/**
+    Defines the parts of a doc-string using in sso_string.
+*/
 typedef struct DocParts {
     String* brief;
     String** params;
@@ -89,9 +93,9 @@ bool read_function_prototype(String* prototype, FILE* file) {
             first_line = false;
 
             if (string_starts_with(&line, "SSO_STRING_EXPORT ")) {
-                string_trim_start_cstr(&line, "SSO_STRING_EXPORT ");
+                string_trim_start(&line, "SSO_STRING_EXPORT ");
             } else if (string_starts_with(&line, "static inline ")) {
-                string_trim_start_cstr(&line, "static inline ");
+                string_trim_start(&line, "static inline ");
             } else {
                 goto error;
             }
@@ -109,8 +113,7 @@ bool read_function_prototype(String* prototype, FILE* file) {
 
     // Fix the function prototype so it's all on one line.
     int count;
-    String new_line = string_create("\n");
-    String* lines = string_split(prototype, &new_line, NULL, STRING_SPLIT_ALLOCATE, &count, true, true);
+    String* lines = string_split(prototype, "\n", NULL, STRING_SPLIT_ALLOCATE, &count, true, true);
     string_clear(prototype);
 
     String separator = string_create(", ");
@@ -162,10 +165,9 @@ DocParts* split_doc_parts(String* doc_string) {
     DocParts* parts = calloc(1, sizeof(*parts));
     
     int line_count;
-    String new_line = string_create("\n");
-    String* lines = string_split(doc_string, &new_line, NULL, STRING_SPLIT_ALLOCATE, &line_count, false, true);
+    String* lines = string_split(doc_string, "\n", NULL, STRING_SPLIT_ALLOCATE, &line_count, false, true);
     for(int i = 0; i < line_count; i++)
-        string_trim_cstr(lines + i, " ");
+        string_trim(lines + i, " ");
     int line = 1;
 
     parts->brief = string_create_ref("");
@@ -181,7 +183,7 @@ DocParts* split_doc_parts(String* doc_string) {
         line++;
     }
 
-    string_trim_end_cstr(parts->brief, "\n");
+    string_trim_end(parts->brief, "\n");
 
     String* last_string = NULL;
     while(line < line_count && !string_starts_with(lines + line, "*/")) {
@@ -192,7 +194,7 @@ DocParts* split_doc_parts(String* doc_string) {
         }
         if (string_starts_with(lines + line, "@")) {
             if(last_string)
-                string_trim_end_cstr(last_string, "\n");
+                string_trim_end(last_string, "\n");
 
             if(string_starts_with(lines + line, "@param")) {
                 if(parts->params_count == parts->params_capacity) {
@@ -233,7 +235,6 @@ void write_doc_file(String* doc_string, String* prototype) {
     String example = string_create("");
     String tags = string_create("");
     String param_string = string_create("");
-    String param_separator = string_create(", ");
     String space = string_create(" ");
     String* fname = NULL;
     DocParts* doc_parts = NULL;
@@ -247,7 +248,7 @@ void write_doc_file(String* doc_string, String* prototype) {
     size_t param_start = string_find(prototype, 0, "(") + 1;
     size_t param_end = string_find(prototype, 0, ")");
     string_substring(prototype, param_start, param_end - param_start, &param_string);
-    param_type_list = string_split(&param_string, &param_separator, NULL, STRING_SPLIT_ALLOCATE, &param_count, true, true);
+    param_type_list = string_split(&param_string, ", ", NULL, STRING_SPLIT_ALLOCATE, &param_count, true, true);
     for(int i = 0; i < param_count; i++) {
         size_t type_end = string_find_cstr(param_type_list + i, 0, " ");
         string_erase(param_type_list + i, type_end, string_size(param_type_list + i) - type_end);

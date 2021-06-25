@@ -715,7 +715,7 @@ SSO_STRING_EXPORT size_t sso_string_find_impl(const String* str, size_t pos, con
     return result - data;
 }
 
-SSO_STRING_EXPORT size_t sso_string_find_substr_impl(const String* str, size_t pos, const char* value, size_t length) {
+SSO_STRING_EXPORT size_t sso_string_find_part_impl(const String* str, size_t pos, const char* value, size_t length) {
     SSO_STRING_ASSERT_ARG(str);
     SSO_STRING_ASSERT_ARG(value);
 
@@ -814,9 +814,10 @@ SSO_STRING_EXPORT void string_u8_reverse_codepoints(String* str) {
     }
 }
 
-SSO_STRING_EXPORT bool string_join(
-    String* str, 
-    const String* separator,
+SSO_STRING_EXPORT bool sso_string_join_impl(
+    String* str,
+    const char* separator,
+    size_t separator_length,
     const String* values,
     size_t value_count)
 {
@@ -839,7 +840,7 @@ SSO_STRING_EXPORT bool string_join(
         goto cleanup;
 
     for(size_t i = 1; i < value_count; i++) {
-        if(!string_append_string(&temp, separator))
+        if(!string_append_cstr_part(&temp, separator, 0, separator_length))
             goto cleanup;
 
         if(!string_append_string(&temp, values + i))
@@ -857,9 +858,10 @@ SSO_STRING_EXPORT bool string_join(
         return result;
 }
 
-SSO_STRING_EXPORT bool string_join_refs(
+SSO_STRING_EXPORT bool sso_string_join_refs_impl(
     String* str,
-    const String* separator,
+    const char* separator,
+    size_t separator_length,
     const String** values,
     size_t value_count)
 {
@@ -882,7 +884,7 @@ SSO_STRING_EXPORT bool string_join_refs(
         goto cleanup;
 
     for(size_t i = 1; i < value_count; i++) {
-        if(!string_append_string(&temp, separator))
+        if(!string_append_cstr_part(&temp, separator, 0, separator_length))
             goto cleanup;
 
         if(!string_append_string(&temp, values[i]))
@@ -900,9 +902,10 @@ SSO_STRING_EXPORT bool string_join_refs(
         return result;
 }
 
-SSO_STRING_EXPORT String* string_split(
+SSO_STRING_EXPORT String* sso_string_split_impl(
     const String* str,
-    const String* separator,
+    const char* separator,
+    size_t separator_length,
     String* results,
     int results_count,
     int* results_filled,
@@ -947,7 +950,7 @@ SSO_STRING_EXPORT String* string_split(
     while(true) {
         // Find the next instance of the separator. If the index is SIZE_MAX,
         // the function reached the end of the string without finding it.
-        size_t next = string_find_string(str, start, separator);
+        size_t next = sso_string_find_impl(str, start, separator, separator_length);
         if(next == SIZE_MAX)
             next = size;
 
@@ -978,7 +981,7 @@ SSO_STRING_EXPORT String* string_split(
             }
         }
 
-        start = next + string_size(separator);
+        start = next + separator_length;
 
         // This indicates that the end of the string has been reached, and 
         // that all relevant substrings have been copied into the results array.
@@ -996,14 +999,15 @@ SSO_STRING_EXPORT String* string_split(
         return NULL;
 }
 
-SSO_STRING_EXPORT String** string_split_refs(
+SSO_STRING_EXPORT String** sso_string_split_refs_impl(
     const String* str,
-    const String* separator,
+    const char* separator,
+    size_t separator_length,
     String** results,
     int results_count,
     int* results_filled,
     bool skip_empty,
-    bool init_results) 
+    bool allocate_results) 
 {
     // Make sure the required inputs aren't NULL.
     SSO_STRING_ASSERT_ARG(str);
@@ -1024,7 +1028,7 @@ SSO_STRING_EXPORT String** string_split_refs(
     // Determine if the results array needs to be allocated. If so, create an
     // initial buffer that has space for two items. This is the starting space since
     // splitting small items tends to be pretty common (e.g. an array of key-value pairs).
-    bool allocate_results = results_count < 0;
+    allocate_results |= results_count < 0;
     if(allocate_results) {
         results_count = 2;
         results = malloc(results_count * sizeof(*results));
@@ -1033,7 +1037,7 @@ SSO_STRING_EXPORT String** string_split_refs(
 
         // The results always have to be initialized by this function if the results array 
         // was also created by it. UB otherwise.
-        init_results = true;
+        allocate_results = true;
     }
 
     int count = 0;
@@ -1043,7 +1047,7 @@ SSO_STRING_EXPORT String** string_split_refs(
     while(true) {
         // Find the next instance of the separator. If the index is SIZE_MAX,
         // the function reached the end of the string without finding it.
-        size_t next = string_find_string(str, start, separator);
+        size_t next = sso_string_find_impl(str, start, separator, separator_length);
         if(next == SIZE_MAX)
             next = size;
 
@@ -1051,7 +1055,7 @@ SSO_STRING_EXPORT String** string_split_refs(
         if(copy_length != 0 || !skip_empty) {
             // Add the string segment to the results array. If the value fails to be added,
             // there was an allocation error, so just break out of the function right away.
-            if(init_results) {
+            if(allocate_results) {
                 String* slice = string_create_ref("");
                 if(!slice)
                     goto error;
@@ -1076,7 +1080,7 @@ SSO_STRING_EXPORT String** string_split_refs(
             }
         }
 
-        start = next + string_size(separator);
+        start = next + separator_length;
 
         // This indicates that the end of the string has been reached, and 
         // that all relevant substrings have been copied into the results array.

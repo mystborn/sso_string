@@ -109,6 +109,5 @@ C:\\sso\\build> ninja test
 * Bug Fixes
     * I am not aware of any major bugs at the moment, but there are likely some. These need to be identified and fixed.
 * Improve Speed 
-    * The current version of the library is more focused on usability and correctness. Future versions will start putting more
-      emphasis towards execution speed.
+    * The current version of the library is more focused on usability and correctness. Future versions will putting more emphasis towards execution speed.
     * Considering the main purpose of the short string optimization is memory performance, continuing to improve on this should be a major priority.
