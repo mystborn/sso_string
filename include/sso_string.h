@@ -672,6 +672,11 @@ static inline void string_trim_end_string(String* str, const String* value);
 */
 static inline void string_trim_end_cstr(String* str, const char* value);
 
+SSO_STRING_EXPORT bool string_pad_left(String* str, char value, size_t width);
+SSO_STRING_EXPORT bool string_pad_right(String* str, char value, size_t width);
+SSO_STRING_EXPORT bool string_u8_pad_left(String* str, Char32 value, size_t width);
+SSO_STRING_EXPORT bool string_u8_pad_right(String* str, Char32 value, size_t width);
+
 /**
     Replaces a section of a string with the characters in a c-string.
 

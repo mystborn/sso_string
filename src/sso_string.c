@@ -233,6 +233,41 @@ static bool sso_string_u8_assure_codepoint_space(
     return true;
 }
 
+static int sso_string_u8_codepoint_size(Char32 value) {
+    if(value < 0x80)
+        return 1;
+    else if (value < 0x800)
+        return 2;
+    else if(value < 0x10000)
+        return 3;
+    else {
+        return 4;
+    }
+}
+
+static void sso_string_u8_set_underlying(char* data, Char32 value, size_t index, int size) {
+    switch(size) {
+        case 1:
+            data[index] = (char)value;
+            break;
+        case 2:
+            data[index]     = 0xC0 | ((value >> 6) & 0x1F);
+            data[index + 1] = 0x80 | (value & 0x3f);
+            break;
+        case 3:
+            data[index]     = 0xE0 | ((value >> 12) & 0xF);
+            data[index + 1] = 0x80 | ((value >> 6)  & 0x3F);
+            data[index + 2] = 0x80 | (value & 0x3F);
+            break;
+        case 4:
+            data[index]     = 0xF0 | ((value >> 18) & 0x7);
+            data[index + 1] = 0x80 | ((value >> 12) & 0x3F);
+            data[index + 2] = 0x80 | ((value >> 6)  & 0x3F);
+            data[index + 3] = 0x80 | (value & 0x3F);
+            break;
+    }
+}
+
 SSO_STRING_EXPORT bool string_u8_set(String* str, size_t index, Char32 value) {
     SSO_STRING_ASSERT_ARG(str);
 
@@ -244,44 +279,12 @@ SSO_STRING_EXPORT bool string_u8_set(String* str, size_t index, Char32 value) {
         return string_u8_push_back(str, value);
 
     int old_codepoint = string_u8_codepoint_size(str, index);
-    char* data;
+    int new_codepoint = sso_string_u8_codepoint_size(value);
+    if(!sso_string_u8_assure_codepoint_space(str, index, old_codepoint, new_codepoint));
+        return false;
 
-    if(value < 0x80) {
-        if(!sso_string_u8_assure_codepoint_space(str, index, old_codepoint, 1))
-            return false;
-
-        data = string_cstr(str);
-        data[index] = (char)value;
-
-    } else if(value < 0x800) {
-        if(!sso_string_u8_assure_codepoint_space(str, index, old_codepoint, 2))
-            return false;
-
-        data = string_cstr(str);
-        data[index]     = 0xC0 | ((value >> 6) & 0x1F);
-        data[index + 1] = 0x80 | (value & 0x3f);
-
-    } else if(value < 0x10000) {
-        if(!sso_string_u8_assure_codepoint_space(str, index, old_codepoint, 3))
-            return false;
-
-        data = string_cstr(str);
-
-        data[index]     = 0xE0 | ((value >> 12) & 0xF);
-        data[index + 1] = 0x80 | ((value >> 6)  & 0x3F);
-        data[index + 2] = 0x80 | (value & 0x3F);
-    } else {
-        assert(value <= 0x10FFFF);
-        if(!sso_string_u8_assure_codepoint_space(str, index, old_codepoint, 4))
-            return false;
-
-        data = string_cstr(str);
-
-        data[index]     = 0xF0 | ((value >> 18) & 0x7);
-        data[index + 1] = 0x80 | ((value >> 12) & 0x3F);
-        data[index + 2] = 0x80 | ((value >> 6)  & 0x3F);
-        data[index + 3] = 0x80 | (value & 0x3F);
-    }
+    char* data = string_cstr(str);
+    sso_string_u8_set_underlying(data, value, index, new_codepoint);
 
     return true;
 }
@@ -423,8 +426,6 @@ SSO_STRING_EXPORT bool sso_string_insert_impl(String* str, const char* value, si
     sso_string_set_size(str, current_size + length);
     return true;
 }
-
-
 
 SSO_STRING_EXPORT void string_erase(String* str, size_t index, size_t count) {
     SSO_STRING_ASSERT_ARG(str);
@@ -627,6 +628,103 @@ SSO_STRING_EXPORT void sso_string_trim_end_impl(String* str, const char* value, 
         data[count] = '\0';
         sso_string_set_size(str, count);
     }
+}
+
+SSO_STRING_EXPORT bool string_pad_left(String* str, char value, size_t width) {
+    SSO_STRING_ASSERT_ARG(str);
+
+    size_t size = string_size(str);
+    if(size >= width)
+        return true;
+
+    if(!string_reserve(str, width))
+        return false;
+
+    char* data = string_cstr(str);
+    size_t offset = width - size;
+
+    memmove(data + offset, data, size);
+    for(size_t i = 0; i < offset; i++)
+        data[i] = value;
+
+    data[width] = '\0';
+    sso_string_set_size(str, width);
+
+    return true;
+}
+
+SSO_STRING_EXPORT bool string_pad_right(String* str, char value, size_t width) {
+    SSO_STRING_ASSERT_ARG(str);
+
+    size_t size = string_size(str);
+    if(size >= width)
+        return true;
+
+    if(!string_reserve(str, width))
+        return false;
+
+    char* data = string_cstr(str);
+
+    for(size_t i = size; i < width; i++)
+        data[i] = value;
+
+    data[width] = '\0';
+    sso_string_set_size(str, width);
+
+    return true;
+}
+
+SSO_STRING_EXPORT bool string_u8_pad_left(String* str, Char32 value, size_t width) {
+    SSO_STRING_ASSERT_ARG(str);
+    SSO_STRING_ASSERT_BOUNDS(value <= 0x10FFFF);
+
+    size_t codepoints = string_u8_codepoints(str);
+    size_t size = string_size(str);
+
+    if(codepoints >= width)
+        return true;
+
+    int codepoint_size = sso_string_u8_codepoint_size(value);
+    char* data = string_cstr(str);
+
+    size_t offset = width - codepoints;
+    size_t actual_size = size + offset * codepoint_size;
+    string_reserve(str, actual_size);
+
+    memmove(data + offset * codepoint_size, data, string_size(str));
+    for(size_t i = 0; i < offset; i++)
+        sso_string_u8_set_underlying(data, value, i * codepoint_size, codepoint_size);
+
+    data[actual_size] = '\0';
+    sso_string_set_size(str, actual_size);
+
+    return true;
+}
+
+SSO_STRING_EXPORT bool sso_string_u8_pad_right_impl(String* str, Char32 value, size_t width) {
+    SSO_STRING_ASSERT_ARG(str);
+    SSO_STRING_ASSERT_BOUNDS(value <= 0x10FFFF);
+
+    size_t codepoints = string_u8_codepoints(str);
+    size_t size = string_size(str);
+
+    if(codepoints >= width)
+        return true;
+
+    int codepoint_size = sso_string_u8_codepoint_size(value);
+    char* data = string_cstr(str);
+
+    size_t offset = width - codepoints;
+    size_t actual_size = size + offset * codepoint_size;
+    string_reserve(str, actual_size);
+
+    for(size_t i = 0; i < offset; i++)
+        sso_string_u8_set_underlying(data, value, size + i * codepoint_size, codepoint_size);
+
+    data[actual_size] = '\0';
+    sso_string_set_size(str, actual_size);
+
+    return true;
 }
 
 SSO_STRING_EXPORT bool sso_string_replace_impl(String* str, size_t pos, size_t count, const char* value, size_t length) {

@@ -3,6 +3,7 @@
 ### API Additions
 * `string_trim`, `string_trim_start`, and `string_trim_end` family.
     * Generic macros available for each.
+* `string_pad` and `string_u8_pad` family.
 * `string_file_read_line`
 * `string_file_read_all`
 * Optionally remove generic macros by defining `SSO_STRING_NO_GENERIC`.
