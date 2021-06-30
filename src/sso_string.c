@@ -76,7 +76,7 @@ SSO_STRING_EXPORT bool string_init(String* str, const char* cstr) {
         sso_string_short_set_size(str, len);
     } else {
         size_t cap = sso_string_next_cap(0, len);
-        str->l.data = malloc(cap + 1);
+        str->l.data = sso_string_malloc(cap + 1);
         if(!str->l.data)
             return false;
         memcpy(str->l.data, cstr, len);
@@ -102,7 +102,7 @@ SSO_STRING_EXPORT bool string_init_size(String* str, const char* cstr, size_t le
         sso_string_short_set_size(str, len);
     } else {
         size_t cap = sso_string_next_cap(0, len);
-        str->l.data = malloc(cap + 1);
+        str->l.data = sso_string_malloc(cap + 1);
         if(!str->l.data)
             return false;
         memcpy(str->l.data, cstr, len);
@@ -352,7 +352,7 @@ SSO_STRING_EXPORT bool sso_string_long_reserve(String* str, size_t reserve) {
         return true;
 
     reserve = sso_string_next_cap(current, reserve);
-    void* buffer = realloc(str->l.data, reserve + 1);
+    void* buffer = sso_string_realloc(str->l.data, reserve + 1);
     if(!buffer)
         return false;
 
@@ -370,7 +370,7 @@ SSO_STRING_EXPORT int sso_string_short_reserve(String* str, size_t reserve) {
         return SSO_STRING_SHORT_RESERVE_SUCCEED;
 
     reserve = sso_string_next_cap(SSO_STRING_MIN_CAP, reserve);
-    char* data = malloc(sizeof(char) * (reserve + 1));
+    char* data = sso_string_malloc(sizeof(char) * (reserve + 1));
     if(!data)
         return SSO_STRING_SHORT_RESERVE_FAIL;
 
@@ -402,7 +402,7 @@ SSO_STRING_EXPORT void string_shrink_to_fit(String* str) {
         // This will clear the long flag.
         sso_string_short_set_size(str, s);
     } else {
-        str->l.data = realloc(str->l.data, s + 1);
+        str->l.data = sso_string_realloc(str->l.data, s + 1);
         str->l.data[s] = 0;
         sso_string_long_set_cap(str, s);
     }
@@ -1032,7 +1032,7 @@ SSO_STRING_EXPORT String* sso_string_split_impl(
     bool allocate_results = results_count < 0;
     if(allocate_results) {
         results_count = 2;
-        results = malloc(results_count * sizeof(*results));
+        results = sso_string_malloc(results_count * sizeof(*results));
         if(!results)
             return NULL;
 
@@ -1067,7 +1067,7 @@ SSO_STRING_EXPORT String* sso_string_split_impl(
             if(++count == results_count) {
                 if(allocate_results) {
                     results_count *= 2;
-                    void* array = realloc(results, results_count * sizeof(*results));
+                    void* array = sso_string_realloc(results, results_count * sizeof(*results));
                     if(!array)
                         goto error;
 
@@ -1091,7 +1091,7 @@ SSO_STRING_EXPORT String* sso_string_split_impl(
 
     error:
         if(allocate_results)
-            free(results);
+            sso_string_free(results);
 
         *results_filled = 0;
         return NULL;
@@ -1129,7 +1129,7 @@ SSO_STRING_EXPORT String** sso_string_split_refs_impl(
     allocate_results |= results_count < 0;
     if(allocate_results) {
         results_count = 2;
-        results = malloc(results_count * sizeof(*results));
+        results = sso_string_malloc(results_count * sizeof(*results));
         if(!results)
             return NULL;
 
@@ -1166,7 +1166,7 @@ SSO_STRING_EXPORT String** sso_string_split_refs_impl(
             if(++count == results_count) {
                 if(allocate_results) {
                     results_count *= 2;
-                    void* array = realloc(results, results_count * sizeof(*results));
+                    void* array = sso_string_realloc(results, results_count * sizeof(*results));
                     if(!array)
                         goto error;
 
@@ -1193,7 +1193,7 @@ SSO_STRING_EXPORT String** sso_string_split_refs_impl(
             for(size_t i = 0; i < count; i++)
                 string_free(results[i]);
 
-            free(results);
+            sso_string_free(results);
         }
 
         *results_filled = 0;

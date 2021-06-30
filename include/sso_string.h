@@ -127,6 +127,20 @@
 #define SSO_STRING_ASSERT_BOUNDS assert
 #endif
 
+// Users can define sso_string_malloc, etc. to use custom allocators. 
+// Mainly for use in embedded environments.
+//
+// If you do define malloc, make sure to add definitions for 
+// sso_string_calloc, sso_string_realloc, sso_string_free as well.
+#ifndef sso_string_malloc
+
+#define sso_string_malloc malloc
+#define sso_string_calloc calloc
+#define sso_string_realloc realloc
+#define sso_string_free free
+
+#endif
+
 struct sso_string_long {
     size_t cap;
     size_t size;
@@ -1294,10 +1308,10 @@ static inline String string_create(const char* cstr) {
 }
 
 static inline String* string_create_ref(const char* cstr) {
-    String* str = malloc(sizeof(String));
+    String* str = sso_string_malloc(sizeof(String));
 
     if(!str || !string_init(str, cstr)) {
-        free(str);
+        sso_string_free(str);
         return NULL;
     }
     return str;
@@ -1305,13 +1319,13 @@ static inline String* string_create_ref(const char* cstr) {
 
 static inline void string_free_resources(String* str) {
     if(str && sso_string_is_long(str)) {
-        free(str->l.data);
+        sso_string_free(str->l.data);
     }
 }
 
 static inline void string_free(String* str) {
     string_free_resources(str);
-    free(str);
+    sso_string_free(str);
 }
 
 static inline char* string_cstr(String* str) {
