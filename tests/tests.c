@@ -1135,6 +1135,110 @@ START_TEST(string_trim_string_full_sequence_only) {
 }
 END_TEST
 
+START_TEST(string_pad_left_none) {
+    ck_assert(string_pad_left(&small, ' ', 5));
+    ck_assert(string_size(&small) == 5);
+    ck_assert(string_equals_cstr(&small, HELLO));
+}
+END_TEST
+
+START_TEST(string_pad_left_some) {
+    ck_assert(string_pad_left(&small, ' ', 7));
+    ck_assert(string_size(&small) == 7);
+    ck_assert(string_equals_cstr(&small, "  " HELLO));
+}
+END_TEST
+
+START_TEST(string_pad_right_none) {
+    ck_assert(string_pad_right(&small, ' ', 5));
+    ck_assert(string_size(&small) == 5);
+    ck_assert(string_equals_cstr(&small, HELLO));
+}
+END_TEST
+
+START_TEST(string_pad_right_some) {
+    ck_assert(string_pad_right(&small, ' ', 7));
+    ck_assert(string_size(&small) == 7);
+    ck_assert(string_equals_cstr(&small, HELLO "  "));
+}
+END_TEST
+
+START_TEST(string_u8_pad_left_none) {
+    String kana = string_create(KANA);
+    ck_assert(string_u8_pad_left(&kana, ' ', 5));
+    ck_assert(string_u8_codepoints(&kana) == 5);
+    ck_assert(string_equals_cstr(&kana, KANA));
+    string_free_resources(&kana);
+}
+END_TEST
+
+START_TEST(string_u8_pad_left_string_ascii_value_ascii) {
+    ck_assert(string_u8_pad_left(&small, ' ', 7));
+    ck_assert(string_u8_codepoints(&small) == 7);
+    ck_assert(string_equals_cstr(&small, "  " HELLO));
+}
+END_TEST
+
+START_TEST(string_u8_pad_left_string_u8_value_ascii) {
+    String kana = string_create(KANA);
+    ck_assert(string_u8_pad_left(&kana, ' ', 7));
+    ck_assert(string_u8_codepoints(&kana) == 7);
+    ck_assert(string_equals_cstr(&kana, "  " KANA));
+    string_free_resources(&kana);
+}
+END_TEST
+
+START_TEST(string_u8_pad_left_string_u8_value_u8) {
+    String kana = string_create(KANA);
+    ck_assert(string_u8_pad_left(&kana, '。', 7));
+    ck_assert(string_u8_codepoints(&kana) == 7);
+    ck_assert(string_equals_cstr(&kana, "。。" KANA));
+}
+END_TEST
+
+START_TEST(string_u8_pad_right_none) {
+    String kana = string_create(KANA);
+    ck_assert(string_u8_pad_right(&kana, ' ', 5));
+    ck_assert(string_u8_codepoints(&kana) == 5);
+    ck_assert(string_equals_cstr(&kana, KANA));
+    string_free_resources(&kana);
+}
+END_TEST
+
+START_TEST(string_u8_pad_right_string_ascii_value_ascii) {
+    ck_assert(string_u8_pad_right(&small, ' ', 7));
+    ck_assert(string_u8_codepoints(&small) == 7);
+    ck_assert(string_equals_cstr(&small, HELLO "  "));
+}
+END_TEST
+
+START_TEST(string_u8_pad_right_string_u8_value_ascii) {
+    String kana = string_create(KANA);
+    ck_assert(string_u8_pad_right(&kana, ' ', 7));
+    ck_assert(string_u8_codepoints(&kana) == 7);
+    ck_assert(string_equals_cstr(&kana, KANA "  "));
+    string_free_resources(&kana);
+}
+END_TEST
+
+START_TEST(string_u8_pad_right_string_u8_value_u8) {
+    String kana = string_create(KANA);
+    ck_assert(string_u8_pad_right(&kana, '。', 7));
+    ck_assert(string_u8_codepoints(&kana) == 7);
+    ck_assert(string_equals_cstr(&kana, KANA "。。"));
+    string_free_resources(&kana);
+}
+END_TEST
+
+START_TEST(string_u8_pad_left_string_u8_value_ascii) {
+    String kana = string_create(KANA);
+    ck_assert(string_u8_pad_left(&kana, ' ', 7));
+    ck_assert(string_u8_codepoints(&kana) == 7);
+    ck_assert(string_equals_cstr(&kana, KANA "  "));
+    string_free_resources(&kana);
+}
+END_TEST
+
 START_TEST(string_replace_cstr_shrink) {
     ck_assert(string_replace_cstr(&small, 1, 3, "b"));
     ck_assert(string_equals(&small, "hbo"));
