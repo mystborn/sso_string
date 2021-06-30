@@ -127,15 +127,11 @@
 #define SSO_STRING_ASSERT_BOUNDS assert
 #endif
 
-// Users can define sso_string_malloc, etc. to use custom allocators. 
-// Mainly for use in embedded environments.
-//
-// If you do define malloc, make sure to add definitions for 
-// sso_string_calloc, sso_string_realloc, sso_string_free as well.
+// Users can define sso_string_malloc, sso_string_realloc, and sso_string
+// to use custom allocators. Mainly for use in embedded environments.
 #ifndef sso_string_malloc
 
 #define sso_string_malloc malloc
-#define sso_string_calloc calloc
 #define sso_string_realloc realloc
 #define sso_string_free free
 

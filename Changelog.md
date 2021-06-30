@@ -7,6 +7,9 @@
 * `string_file_read_line`
 * `string_file_read_all`
 * Optionally remove generic macros by defining `SSO_STRING_NO_GENERIC`.
+* Added support for custom allocation functions.
+    * Define `sso_string_malloc`, `sso_string_realloc`, and `sso_string_free` to the custom functions and they will be used instead of the standard library versions of `malloc`, `realloc`, and `free`.
+    * These can be global function pointers as well as long as they're initialized before the string library is used at all.
 
 ### API Changes
 * `string_split` and `string_join` changed to have `_string`/`_cstr` suffixes.

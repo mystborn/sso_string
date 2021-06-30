@@ -50,6 +50,9 @@
 #endif
 #endif
 
+// These are used to check the first character in UTF-8 sequence to determine
+// the length of the codepoint in bytes.
+
 #define U8_SINGLE 0x7F
 #define U8_DOUBLE 0xE0
 #define U8_TRIPLE 0xF0
@@ -65,6 +68,8 @@ static inline void sso_string_set_size(String* str, size_t size) {
 SSO_STRING_EXPORT bool string_init(String* str, const char* cstr) {
     SSO_STRING_ASSERT_ARG(str);
 
+    // Allow users to pass NULL as the cstr parameter which
+    // will just create an empty string.
     if(cstr == NULL)
         cstr = "";
 
@@ -89,6 +94,8 @@ SSO_STRING_EXPORT bool string_init(String* str, const char* cstr) {
 }
 
 SSO_STRING_EXPORT bool string_init_size(String* str, const char* cstr, size_t len) {
+    // Allow users to pass NULL as the cstr parameter which
+    // will just create an empty string.
     if(cstr == NULL)
         cstr = "";
 
@@ -205,6 +212,9 @@ SSO_STRING_EXPORT int string_u8_codepoint_size(const String* str, size_t index) 
         return 4;
 }
 
+/** 
+    Resizes the string smaller or larger to make room to replace a UTF-8 codepoint.
+*/
 static bool sso_string_u8_assure_codepoint_space(
     String* str, 
     size_t index, 
@@ -233,6 +243,10 @@ static bool sso_string_u8_assure_codepoint_space(
     return true;
 }
 
+/*
+    Convenience function to get the number of bytes needed to represent
+    a UTF-8 codepoint as a char*.
+*/
 static int sso_string_u8_codepoint_size(Char32 value) {
     if(value < 0x80)
         return 1;
@@ -245,6 +259,9 @@ static int sso_string_u8_codepoint_size(Char32 value) {
     }
 }
 
+/*
+    Convenience function to set a codepoint in the underlying c-string of a String.
+*/
 static void sso_string_u8_set_underlying(char* data, Char32 value, size_t index, int size) {
     switch(size) {
         case 1:
@@ -290,8 +307,6 @@ SSO_STRING_EXPORT bool string_u8_set(String* str, size_t index, Char32 value) {
 }
 
 SSO_STRING_EXPORT bool string_u8_is_null_or_whitespace(const String* str) {
-    // These tables define the whitespace characters in the various codepoint sizes.
-
     if(string_is_null_or_empty(str))
         return true;
 
@@ -302,6 +317,10 @@ SSO_STRING_EXPORT bool string_u8_is_null_or_whitespace(const String* str) {
     while(i < size) {
         int cp;
         Char32 next = string_u8_get_with_size(str, i, &cp);
+
+        // These are the UTF-8 whitespace codepoints as defined by Wikipedia.
+        // Includes the related characters that aren't necessarily traditional whitespace
+        // characters (such as the zero width space '\u200B').
         switch(next) {
             case 9:
             case 10:
@@ -678,11 +697,14 @@ SSO_STRING_EXPORT bool string_u8_pad_left(String* str, Char32 value, size_t widt
     SSO_STRING_ASSERT_ARG(str);
     SSO_STRING_ASSERT_BOUNDS(value <= 0x10FFFF);
 
-    size_t codepoints = string_u8_codepoints(str);
+    size_t codepoints = 0;
     size_t size = string_size(str);
 
-    if(codepoints >= width)
-        return true;
+    for(size_t i = 0; i < size; i += string_u8_codepoint_size(str, i)) {
+        // Early exit if the string has more codepoints than the pad width.
+        if(++codepoints >= width)
+            return true;
+    }
 
     int codepoint_size = sso_string_u8_codepoint_size(value);
     char* data = string_cstr(str);
@@ -701,15 +723,18 @@ SSO_STRING_EXPORT bool string_u8_pad_left(String* str, Char32 value, size_t widt
     return true;
 }
 
-SSO_STRING_EXPORT bool sso_string_u8_pad_right_impl(String* str, Char32 value, size_t width) {
+SSO_STRING_EXPORT bool string_u8_pad_right(String* str, Char32 value, size_t width) {
     SSO_STRING_ASSERT_ARG(str);
     SSO_STRING_ASSERT_BOUNDS(value <= 0x10FFFF);
 
-    size_t codepoints = string_u8_codepoints(str);
+    size_t codepoints = 0;
     size_t size = string_size(str);
 
-    if(codepoints >= width)
-        return true;
+    for(size_t i = 0; i < size; i += string_u8_codepoint_size(str, i)) {
+        // Early exit if the string has more codepoints than the pad width.
+        if(++codepoints >= width)
+            return true;
+    }
 
     int codepoint_size = sso_string_u8_codepoint_size(value);
     char* data = string_cstr(str);
