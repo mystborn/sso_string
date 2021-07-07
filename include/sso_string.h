@@ -176,7 +176,7 @@ typedef union String {
     struct sso_string_short s;
 } String;
 
-#define SSO_STRING_EMPTY (String){ .s={.size=0, .data=""} }
+#define STRING_EMPTY (String){ .s={.size=0, .data=""} }
 
 /**
     A numeric representation of a unicode character/codepoint.
@@ -1872,8 +1872,6 @@ static inline String** string_split_refs_cstr(
 
 // If C11 is available, use the _Generic macro to select the correct
 // string function, otherwise just default to using cstrings.
-
-#define __STDC_VERSION__ 201112L
 
 #if (defined(__STDC_VERSION__) && __STDC_VERSION__ >= 201112L)
 
