@@ -427,16 +427,6 @@ SSO_STRING_EXPORT void string_shrink_to_fit(String* str) {
     }
 }
 
-static inline void sso_string_perform_insert_move(
-    char* data,
-    char* value,
-    size_t index,
-    size_t length,
-    size_t current_size)
-{
-    memmove(data + index, value, length);
-}
-
 SSO_STRING_EXPORT bool sso_string_insert_impl(String* str, const char* value, size_t index, size_t length) {
     SSO_STRING_ASSERT_ARG(str);
     SSO_STRING_ASSERT_ARG(value);

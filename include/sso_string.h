@@ -676,16 +676,6 @@ static inline void string_trim_start_cstr(String* str, const char* value);
 */
 static inline void string_trim_end_string(String* str, const String* value);
 
-static inline void string_trim_any_string(String* str, String* values, size_t size);
-static inline void string_trim_any_string_refs(String* str, String** values, size_t size);
-static inline void string_trim_any_cstr(String* str, char** values, size_t size);
-SSO_STRING_EXPORT void string_trim_any_start_string(String* str, String* values, size_t size);
-SSO_STRING_EXPORT void string_trim_any_start_string_refs(String* str, String** values, size_t size);
-SSO_STRING_EXPORT void string_trim_any_start_cstr(String* str, char** values, size_t size);
-SSO_STRING_EXPORT void string_trim_any_end_string(String* str, String* values, size_t size);
-SSO_STRING_EXPORT void string_trim_any_end_string_refs(String* str, String** values, size_t size);
-SSO_STRING_EXPORT void string_trim_any_end_cstr(String* str, char** values, size_t size);
-
 /**
     Removes all occurences of a value from the end of a string.
 
@@ -694,9 +684,139 @@ SSO_STRING_EXPORT void string_trim_any_end_cstr(String* str, char** values, size
 */
 static inline void string_trim_end_cstr(String* str, const char* value);
 
+/**
+    Removes all occurrences of any value in an array from the beginning
+    and end of a string.
+
+    @param str The string to remove the values from.
+    @param values An array of strings to remove from str.
+    @param value_count The number of items in values.
+*/
+static inline void string_trim_any_string(String* str, String* values, size_t value_count);
+
+/**
+    Removes all occurrences of any value in an array from the beginning
+    and end of a string.
+
+    @param str The string to remove the values from.
+    @param values An array of string referencess to remove from str.
+    @param value_count The number of items in values.
+*/
+static inline void string_trim_any_string_refs(String* str, String** values, size_t value_count);
+
+/**
+    Removes all occurrences of any value in an array from the beginning
+    and end of a string.
+
+    @param str The string to remove the values from.
+    @param values An array of c-strings to remove from str.
+    @param value_count The number of items in values.
+*/
+static inline void string_trim_any_cstr(String* str, char** values, size_t value_count);
+
+/**
+    Removes all occurrences of any value in an array from the beginning
+    of a string.
+
+    @param str The string to remove the values from.
+    @param values An array of strings to remove from str.
+    @param value_count The number of items in values.
+*/
+SSO_STRING_EXPORT void string_trim_any_start_string(String* str, String* values, size_t value_count);
+
+/**
+    Removes all occurrences of any value in an array from the beginning
+    of a string.
+
+    @param str The string to remove the values from.
+    @param values An array of string references to remove from str.
+    @param value_count The number of items in values.
+*/
+SSO_STRING_EXPORT void string_trim_any_start_string_refs(String* str, String** values, size_t value_count);
+
+/**
+    Removes all occurrences of any value in an array from the beginning
+    of a string.
+
+    @param str The string to remove the values from.
+    @param values An array of c-strings to remove from str.
+    @param value_count The number of items in values.
+*/
+SSO_STRING_EXPORT void string_trim_any_start_cstr(String* str, char** values, size_t value_count);
+
+/**
+    Removes all occurrences of any value in an array from the end of a string.
+
+    @param str The string to remove the values from.
+    @param values An array of strings to remove from str.
+    @param value_count The number of items in values.
+*/
+SSO_STRING_EXPORT void string_trim_any_end_string(String* str, String* values, size_t value_count);
+
+/**
+    Removes all occurrences of any value in an array from the end of a string.
+
+    @param str The string to remove the values from.
+    @param values An array of string references to remove from str.
+    @param value_count The number of items in values.
+*/
+SSO_STRING_EXPORT void string_trim_any_end_string_refs(String* str, String** values, size_t value_count);
+
+/**
+    Removes all occurrences of any value in an array from the end of a string.
+
+    @param str The string to remove the values from.
+    @param values An array of c-strings to remove from str.
+    @param value_count The number of items in values.
+*/
+SSO_STRING_EXPORT void string_trim_any_end_cstr(String* str, char** values, size_t value_count);
+
+/**
+    Pads the beggining of a string with a character until it's at 
+    least the specified size.
+
+    @param str The string to pad.
+    @param value The character to pad the string with.
+    @param width The minimum size of the string after it's padded.
+
+    @return true on success, false on allocation failure.
+*/
 SSO_STRING_EXPORT bool string_pad_left(String* str, char value, size_t width);
+
+/**
+    Pads the end of a string with a character until it's at 
+    least the specified size.
+
+    @param str The string to pad.
+    @param value The character to pad the string with.
+    @param width The minimum size of the string after it's padded.
+
+    @return true on success, false on allocation failure.
+*/
 SSO_STRING_EXPORT bool string_pad_right(String* str, char value, size_t width);
+
+/**
+    Pads the beggining of a string with a unicode character until it's at 
+    least the specified codepoints long.
+
+    @param str The string to pad.
+    @param value The unicode character to pad the string with.
+    @param width The minimum number of codepoints in the string after it's padded.
+
+    @return true on success, false on allocation failure.
+*/
 SSO_STRING_EXPORT bool string_u8_pad_left(String* str, Char32 value, size_t width);
+
+/**
+    Pads the end of a string with a unicode character until it's at 
+    least the specified number of codepoints long.
+
+    @param str The string to pad.
+    @param value The unicode character to pad the string with.
+    @param width The minimum number of codepoints in the string after it's padded.
+
+    @return true on success, false on allocation failure.
+*/
 SSO_STRING_EXPORT bool string_u8_pad_right(String* str, Char32 value, size_t width);
 
 /**
@@ -1520,8 +1640,8 @@ static inline bool string_ends_with_string(const String* str, const String* valu
 }
 
 static inline void string_trim_string(String* str, const String* value) {
-    sso_string_trim_start_impl(str, string_data(value), string_size(value));
     sso_string_trim_end_impl(str, string_data(value), string_size(value));
+    sso_string_trim_start_impl(str, string_data(value), string_size(value));
 }
 
 static inline void string_trim_cstr(String* str, const char* value) {
@@ -1544,6 +1664,21 @@ static inline void string_trim_end_string(String* str, const String* value) {
 
 static inline void string_trim_end_cstr(String* str, const char* value) {
     sso_string_trim_end_impl(str, value, strlen(value));
+}
+
+static inline void string_trim_any_string(String* str, String* values, size_t value_count) {
+    string_trim_any_end_string(str, values, value_count);
+    string_trim_any_start_string(str, values, value_count);
+}
+
+static inline void string_trim_any_string_refs(String* str, String** values, size_t value_count) {
+    string_trim_any_end_string_refs(str, values, value_count);
+    string_trim_any_start_string_refs(str, values, value_count);
+}
+
+static inline void string_trim_any_cstr(String* str, char** values, size_t value_count) {
+    string_trim_any_end_cstr(str, values, value_count);
+    string_trim_any_start_cstr(str, values, value_count);
 }
 
 static inline bool string_replace_cstr(String* str, size_t pos, size_t count, const char* value) {
@@ -1738,6 +1873,8 @@ static inline String** string_split_refs_cstr(
 // If C11 is available, use the _Generic macro to select the correct
 // string function, otherwise just default to using cstrings.
 
+#define __STDC_VERSION__ 201112L
+
 #if (defined(__STDC_VERSION__) && __STDC_VERSION__ >= 201112L)
 
 /**
@@ -1879,6 +2016,51 @@ static inline String** string_split_refs_cstr(
         String*: string_trim_end_string, \
         const String*: string_trim_end_string) \
     ((str), (value))
+
+/**
+    Generic version of string_trim_any_string, string_trim_any_string_refs,
+    and string_trim_any_cstr.
+
+    @see string_trim_any_string
+    @see string_trim_any_string_refs
+    @see string_trim_any_cstr
+*/
+#define string_trim_any(str, values, value_count) \
+    _Generic((values), \
+        String*: string_trim_any_string, \
+        String**: string_trim_any_string_refs, \
+        char**: string_trim_any_cstr) \
+    ((str), (values), (values_count))
+
+/**
+    Generic version of string_trim_any_start_string, 
+    string_trim_any_start_string_refs, and string_trim_any_start_cstr.
+
+    @see string_trim_any_start_string
+    @see string_trim_any_start_string_refs
+    @see string_trim_any_start_cstr
+*/
+#define string_trim_any_start(str, values, value_count) \
+    _Generic((values), \
+        String*: string_trim_any_start_string, \
+        String**: string_trim_any_start_string_refs, \
+        char**: string_trim_any_start_cstr) \
+    ((str), (values), (values_count))
+
+/**
+    Generic version of string_trim_any_end_string, 
+    string_trim_any_end_string_refs, and string_trim_any_end_cstr.
+
+    @see string_trim_any_end_string
+    @see string_trim_any_end_string_refs
+    @see string_trim_any_end_cstr
+*/
+#define string_trim_any_end(str, values, value_count) \
+    _Generic((values), \
+        String*: string_trim_any_end_string, \
+        String**: string_trim_any_end_string_refs, \
+        char**: string_trim_any_end_cstr) \
+    ((str), (values), (values_count))
 
 /**
     Generic version of string_replace_string and string_replace_cstr.
