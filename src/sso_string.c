@@ -427,6 +427,16 @@ SSO_STRING_EXPORT void string_shrink_to_fit(String* str) {
     }
 }
 
+static inline void sso_string_perform_insert_move(
+    char* data,
+    char* value,
+    size_t index,
+    size_t length,
+    size_t current_size)
+{
+    memmove(data + index, value, length);
+}
+
 SSO_STRING_EXPORT bool sso_string_insert_impl(String* str, const char* value, size_t index, size_t length) {
     SSO_STRING_ASSERT_ARG(str);
     SSO_STRING_ASSERT_ARG(value);
@@ -435,13 +445,51 @@ SSO_STRING_EXPORT bool sso_string_insert_impl(String* str, const char* value, si
 
     SSO_STRING_ASSERT_BOUNDS(current_size + length < STRING_MAX);
 
+    char* start_data = string_cstr(str);
+    size_t offset = value - start_data;
+
     if(!string_reserve(str, current_size + length))
         return false;
     char* data = string_cstr(str);
-    data[current_size + length] = 0;
+
+    // Make room for the inserted value.
+    // The check is there since this operation is not needed if
+    // the value is being appended to the end of the string.
     if(index != current_size)
         memmove(data + index + length, data + index, current_size - index);
-    memmove(data + index, value, length);
+
+    // This section is triggered when value is a part of str.
+    // Special consideration needs to be taken when the internal
+    // c-string is moved as a result of the string_reserve operation.
+    if(offset < current_size) {
+        if(offset + length <= index) {
+            // The section of the same string is before the insert point.
+            // In this case we can just adjust the value pointer to the new location.
+            value = data + offset;
+            memmove(data + index, value, length);
+        } else if(offset >= index) {
+            // The section of the same string is after the insert point.
+            // In this case we cna adjust the the value pointer to the realloc-ed
+            // location plus the length of the blank area created to make space
+            // for the insert.
+            value = data + offset + length;
+            memmove(data + index, value, length);
+        } else {
+            // The insert point is in the middle of the string section.
+            // In string section will have been split to make room for the
+            // insert. In this case, just move the split sections into the
+            // insert area separately.
+            value = data + offset;
+            size_t begin_length = index - offset;
+            memmove(data + index, value, begin_length);
+            value = data + offset + length;
+            memmove(data + index + begin_length, value, length - begin_length);
+        }
+    } else {
+        memmove(data + index, value, length);
+    }
+
+    data[current_size + length] = 0;
     sso_string_set_size(str, current_size + length);
     return true;
 }
@@ -603,9 +651,20 @@ SSO_STRING_EXPORT bool sso_string_append_impl(String* str, const char* value, si
     SSO_STRING_ASSERT_ARG(value);
 
     size_t size = string_size(str);
+    const char* start_data = string_data(str);
+
+    // Allow the offset to wrap so the conditional doesn't have to check
+    // negative numbers.
+    size_t offset = value - start_data;
+
     if(!string_reserve(str, size + length))
         return false;
     char* data = string_cstr(str);
+
+    // Allow string to append itself without error on resize.
+    if(data != start_data && offset < size)
+        value = data + offset;
+
     memmove(data + size, value, length);
     data[size + length] = 0;
     sso_string_set_size(str, size + length);
@@ -642,6 +701,221 @@ SSO_STRING_EXPORT void sso_string_trim_end_impl(String* str, const char* value, 
         if(strncmp(data + count - length, value, length) != 0)
             break;
     }
+
+    if(count != size) {
+        data[count] = '\0';
+        sso_string_set_size(str, count);
+    }
+}
+
+SSO_STRING_EXPORT void string_trim_any_start_string(String* str, String* values, size_t value_count) {
+    SSO_STRING_ASSERT_ARG(str);
+    SSO_STRING_ASSERT_ARG(values);
+
+    const char* data = string_data(str);
+    size_t count = 0;
+    size_t size = string_size(str);
+
+    size_t found_length = 0;
+    
+    do {
+        size_t found_length = 0;
+        for(size_t i = 0; i < value_count; i++) {
+            size_t look_size = string_size(values + i);
+
+            // Only perform the comparison if the substring is longer than the last found
+            // string. This is used in cases where later strings in the array start the same
+            // as a previous option.
+            // For example, imagine this input string "hello world" and this trim array:
+            // ["he", "h", "abc"].
+            // In this case we don't want to perform the string comparison for "h" since
+            // even if it matches it'd be shorter than the already matched "he". However
+            // we would want to check "abc" since if it did match it would result in a longer
+            // offset.
+            // Also there's no need to perform the comparison of the substring size is longer
+            // than the size of the string.
+            if(look_size > found_length && look_size <= size - count) {
+                if(strncmp(data + count, string_data(values + i), look_size) == 0) {
+                    found_length = look_size;
+                }
+            }
+        }
+
+        count += found_length;
+    }
+    while(count < size && found_length != 0);
+
+    if(count != 0) {
+        string_erase(str, 0, count);
+    }
+}
+
+SSO_STRING_EXPORT void string_trim_any_start_string_refs(String* str, String** values, size_t value_count) {
+    SSO_STRING_ASSERT_ARG(str);
+    SSO_STRING_ASSERT_ARG(values);
+
+    const char* data = string_data(str);
+    size_t count = 0;
+    size_t size = string_size(str);
+
+    size_t found_length = 0;
+    
+    do {
+        size_t found_length = 0;
+        for(size_t i = 0; i < value_count; i++) {
+            size_t look_size = string_size(values[i]);
+
+            // See the comment in string_trim_any_start_string.
+            if(look_size > found_length && look_size <= size - count) {
+                if(strncmp(data + count, string_data(values[i]), look_size) == 0) {
+                    found_length = look_size;
+                }
+            }
+        }
+
+        count += found_length;
+    }
+    while(count < size && found_length != 0);
+
+    if(count != 0) {
+        string_erase(str, 0, count);
+    }
+}
+
+SSO_STRING_EXPORT void string_trim_any_start_cstr(String* str, char** values, size_t value_count) {
+    SSO_STRING_ASSERT_ARG(str);
+    SSO_STRING_ASSERT_ARG(values);
+
+    const char* data = string_data(str);
+    size_t count = 0;
+    size_t size = string_size(str);
+
+    size_t found_length = 0;
+    
+    do {
+        found_length = 0;
+        for(size_t i = 0; i < value_count; i++) {
+            size_t look_size = strlen(values[i]);
+
+            // See the comment in string_trim_any_start_string.
+            if(look_size > found_length && look_size <= size - count) {
+                if(strncmp(data + count, values[i], look_size) == 0) {
+                    found_length = look_size;
+                }
+            }
+        }
+
+        count += found_length;
+    }
+    while(count < size && found_length != 0);
+
+    if(count != 0) {
+        string_erase(str, 0, count);
+    }
+}
+
+SSO_STRING_EXPORT void string_trim_any_end_string(String* str, String* values, size_t value_count) {
+    SSO_STRING_ASSERT_ARG(str);
+    SSO_STRING_ASSERT_ARG(values);
+
+    size_t size = string_size(str);
+    char* data = string_cstr(str);
+    size_t count = size;
+
+    size_t found_length = 0;
+
+    do {
+        found_length = 0;
+        for(size_t i = 0; i < value_count; i++) {
+            size_t look_size = string_size(values + i);
+
+            // Only perform the comparison if the substring is longer than the last found
+            // string. This is used in cases where later strings in the array start the same
+            // as a previous option.
+            // For example, imagine this input string "hello world" and this trim array:
+            // ["ld", "d", "abc"].
+            // In this case we don't want to perform the string comparison for "d" since
+            // even if it matches it'd be shorter than the already matched "ld". However
+            // we would want to check "abc" since if it did match it would result in a longer
+            // offset.
+            // Also there's no need to perform the comparison of the substring size is longer
+            // than the size of the string.
+            if(look_size > found_length && look_size <= count) {
+                if(strncmp(data + count - look_size, string_data(values + i), look_size) == 0) {
+                    found_length = look_size;
+                }
+            }
+        }
+
+        count -= found_length;
+    }
+    while(count > 0 && found_length != 0);
+
+    if(count != size) {
+        data[count] = '\0';
+        sso_string_set_size(str, count);
+    }
+}
+
+SSO_STRING_EXPORT void string_trim_any_end_string_refs(String* str, String** values, size_t value_count) {
+    SSO_STRING_ASSERT_ARG(str);
+    SSO_STRING_ASSERT_ARG(values);
+
+    size_t size = string_size(str);
+    char* data = string_cstr(str);
+    size_t count = size;
+
+    size_t found_length = 0;
+
+    do {
+        found_length = 0;
+        for(size_t i = 0; i < value_count; i++) {
+            size_t look_size = string_size(values[i]);
+
+            // See the comment in string_trim_any_end_string.
+            if(look_size > found_length && look_size <= count) {
+                if(strncmp(data + count - look_size, string_data(values[i]), look_size) == 0) {
+                    found_length = look_size;
+                }
+            }
+        }
+
+        count -= found_length;
+    }
+    while(count > 0 && found_length != 0);
+
+    if(count != size) {
+        data[count] = '\0';
+        sso_string_set_size(str, count);
+    }
+}
+
+SSO_STRING_EXPORT void string_trim_any_end_cstr(String* str, char** values, size_t value_count) {
+    SSO_STRING_ASSERT_ARG(str);
+    SSO_STRING_ASSERT_ARG(values);
+
+    size_t size = string_size(str);
+    char* data = string_cstr(str);
+    size_t count = size;
+
+    size_t found_length = 0;
+
+    do {
+        found_length = 0;
+        for(size_t i = 0; i < value_count; i++) {
+            size_t look_size = strlen(values[i]);
+
+            // See the comment in string_trim_any_end_string.
+            if(look_size > found_length && look_size <= count) {
+                if(strncmp(data + count - look_size, values[i], look_size) == 0) {
+                    found_length = look_size;
+                }
+            }
+        }
+
+        count -= found_length;
+    }
+    while(count > 0 && found_length != 0);
 
     if(count != size) {
         data[count] = '\0';
@@ -764,14 +1038,32 @@ SSO_STRING_EXPORT bool sso_string_replace_impl(String* str, size_t pos, size_t c
     SSO_STRING_ASSERT_BOUNDS(pos + count <= size);
 
     char* data;
+
+    
+    // There are three replace cases:
+    // * The length of the replace section is the same as the substring.
+    // * The length of the replace section is longer than the substring.
+    // * The length of the replace section is shorter than the substring.
+    //
+    // The three following if blocks are implemented respectively.
+    //
+    // The first two cases don't need any special consideration for replacing a section
+    // of the same string.
+    // The final case can potentially move the data pointer from a realloc operation.
+    // It also need to handle the case of replacing an overlapping section in a special
+    // way since the start and end of the string will be on different sides of the blank
+    // area created to make room for the string.
     if(count == length) {
         data = (char*)string_cstr(str);
         memmove(data + pos, value, length);
     } else if(count > length) {
         data = (char*)string_cstr(str);
         size_t offset = pos + count;
-        memmove(data + pos + length, data + offset, size - offset);
+        // Make sure to move the substring into the replace position first
+        // to make sure replacing an overlapping part of the same string
+        // works properly.
         memmove(data + pos, value, length);
+        memmove(data + pos + length, data + offset, size - offset);
         size_t end = pos + length + (size - offset);
         data[end] = 0;
         if(sso_string_is_long(str))
@@ -779,20 +1071,61 @@ SSO_STRING_EXPORT bool sso_string_replace_impl(String* str, size_t pos, size_t c
         else
             sso_string_short_set_size(str, end);
     } else {
-        size_t offset = length - count;
+        size_t move_offset = length - count;
 
-        if(!string_reserve(str, size + offset))
+        data = string_cstr(str);
+        size_t offset = value - data;
+
+        if(!string_reserve(str, size + move_offset))
             return false;
 
-        size_t cap = string_capacity(str);
-        data = (char*)string_cstr(str);
+        // Set the data pointer again in case the internal string
+        // was realloced.
+        data = string_cstr(str);
+
+        // Move the section after the replace part to the right to make
+        // space for the substring.
         memmove(data + pos + length, data + pos + count, size - (pos + count));
-        memmove(data + pos, value, length);
-        data[size+offset] = 0;
+
+        if(offset < size) {
+            if(offset + length <= pos) {
+                // Update the value pointer in case of realloc.
+                value = data + offset;
+                memmove(data + pos, value, length);
+            } else if (offset >= pos + length) {
+                // Update the value pointer in case of realloc.
+                value = data + offset + length - count;
+                memmove(data + pos, value, length);
+            } else {
+                // The replace string and the substring are overlapping.
+                // Copy everything past the end of the replace string into
+                // the new blank section. Then copy everything from the
+                // start until then end of the replace section into the blank
+                // section.
+
+                char* substring_back_start = data + offset + length + length - count;
+                char* blank_area_end = data + pos + length;
+
+                // Only need to copy the back section if the substring goes
+                // past the replace section.
+                if(substring_back_start > blank_area_end) {
+                    size_t back_offset = substring_back_start - blank_area_end;
+                    memmove(substring_back_start - back_offset, 
+                        substring_back_start, 
+                        back_offset);
+                }
+
+                memmove(data + pos, data + offset, pos + length - offset);
+            }
+        } else {
+            memmove(data + pos, value, length);
+        }
+
+        data[size+move_offset] = 0;
         if(sso_string_is_long(str))
-            sso_string_long_set_size(str, size + offset);
+            sso_string_long_set_size(str, size + move_offset);
         else
-            sso_string_short_set_size(str, size + offset);
+            sso_string_short_set_size(str, size + move_offset);
     }
 
     return true;

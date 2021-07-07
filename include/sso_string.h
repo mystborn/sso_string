@@ -176,6 +176,8 @@ typedef union String {
     struct sso_string_short s;
 } String;
 
+#define SSO_STRING_EMPTY (String){ .s={.size=0, .data=""} }
+
 /**
     A numeric representation of a unicode character/codepoint.
 */
@@ -673,6 +675,16 @@ static inline void string_trim_start_cstr(String* str, const char* value);
     @param value The string value to remove.
 */
 static inline void string_trim_end_string(String* str, const String* value);
+
+static inline void string_trim_any_string(String* str, String* values, size_t size);
+static inline void string_trim_any_string_refs(String* str, String** values, size_t size);
+static inline void string_trim_any_cstr(String* str, char** values, size_t size);
+SSO_STRING_EXPORT void string_trim_any_start_string(String* str, String* values, size_t size);
+SSO_STRING_EXPORT void string_trim_any_start_string_refs(String* str, String** values, size_t size);
+SSO_STRING_EXPORT void string_trim_any_start_cstr(String* str, char** values, size_t size);
+SSO_STRING_EXPORT void string_trim_any_end_string(String* str, String* values, size_t size);
+SSO_STRING_EXPORT void string_trim_any_end_string_refs(String* str, String** values, size_t size);
+SSO_STRING_EXPORT void string_trim_any_end_cstr(String* str, char** values, size_t size);
 
 /**
     Removes all occurences of a value from the end of a string.
