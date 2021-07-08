@@ -13,5 +13,5 @@ int string_u8_codepoint_size(const String* str, size_t index);
 | str | const | The string to gert the unicode character size from. |
 | index | size_t | The starting byte index of the unicode character. |
 
-**Returns:** @return The number of bytes used to represent the unicode character.
+**Returns:** The number of bytes used to represent the unicode character.
 

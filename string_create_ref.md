@@ -12,5 +12,5 @@ String* string_create_ref(const char* cstr);
 | --- | --- | --- |
 | cstr | const | The contents to initialize the string with. |
 
-**Returns:** @return The initialized String reference. Must be manually freed. NULL on allocation failure.
+**Returns:** The initialized String reference. Must be manually freed. NULL on allocation failure.
 

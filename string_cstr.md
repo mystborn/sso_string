@@ -12,5 +12,5 @@ char* string_cstr(String* str);
 | --- | --- | --- |
 | str | String* | The string to get the internal representation of. |
 
-**Returns:** @return The internal representation of the string as a c-string.
+**Returns:** The internal representation of the string as a c-string.
 

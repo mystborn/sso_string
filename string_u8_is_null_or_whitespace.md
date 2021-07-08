@@ -12,5 +12,5 @@ bool string_u8_is_null_or_whitespace(const String* str);
 | --- | --- | --- |
 | str | const | The string to check is NULL, empty, or comprised entirely of whitespace. |
 
-**Returns:** @return true if the string is NULL, empty, or comprised only of whitespace characters; false otherwise.
+**Returns:** true if the string is NULL, empty, or comprised only of whitespace characters; false otherwise.
 

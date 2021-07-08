@@ -17,5 +17,5 @@ bool string_replace_part_cstr(String* str, size_t pos, size_t count, const char*
 | start | size_t | The starting position of value to use as a replacement. |
 | length | size_t | The number of characters following start in value to use as a replacement. |
 
-**Returns:** @return true on success, false on allocation failure.
+**Returns:** true on success, false on allocation failure.
 

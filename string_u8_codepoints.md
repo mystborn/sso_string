@@ -12,5 +12,5 @@ size_t string_u8_codepoints(const String* str);
 | --- | --- | --- |
 | str | const | The string to get the codepoint count of. |
 
-**Returns:** @return The number of codepoints in the string.
+**Returns:** The number of codepoints in the string.
 

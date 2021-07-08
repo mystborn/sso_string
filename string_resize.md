@@ -14,5 +14,5 @@ bool string_resize(String* str, size_t count, char ch);
 | count | size_t | The new size of the string. |
 | ch | char | The character to fill anyh new spots with. |
 
-**Returns:** @return true on success, false on allocation failure.
+**Returns:** true on success, false on allocation failure.
 

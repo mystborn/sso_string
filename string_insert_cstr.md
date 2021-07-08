@@ -14,5 +14,5 @@ bool string_insert_cstr(String* str, const char* value, size_t index);
 | value | const | The c-string to insert. |
 | index | size_t | The index of the string to insert the value into. |
 
-**Returns:** @return true on success, false on allocation failure.
+**Returns:** true on success, false on allocation failure.
 

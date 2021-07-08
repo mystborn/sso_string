@@ -13,5 +13,5 @@ bool string_equals_string(const String* str, const String* value);
 | str | const | The string on the left side of the operation. |
 | value | const | The string on the right side of the operation. |
 
-**Returns:** @return true if the values are equivalent; false otherwise.
+**Returns:** true if the values are equivalent; false otherwise.
 

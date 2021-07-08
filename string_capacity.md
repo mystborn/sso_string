@@ -12,5 +12,5 @@ size_t string_capacity(const String* str);
 | --- | --- | --- |
 | str | const | The string to get the capacity of. |
 
-**Returns:** @return The internal capacity of the string.
+**Returns:** The internal capacity of the string.
 

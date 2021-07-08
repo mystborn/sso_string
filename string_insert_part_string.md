@@ -16,5 +16,5 @@ bool string_insert_part_string(String* str, const String* value, size_t index, s
 | start | size_t | The starting index of the value to insert. |
 | count | size_t | The number of characters following start to insert. |
 
-**Returns:** @return true on success, false on allocation failure.
+**Returns:** true on success, false on allocation failure.
 

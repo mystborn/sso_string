@@ -13,5 +13,5 @@ bool string_u8_push_back(String* str, Char32 value);
 | str | String* | The string to append to. |
 | value | Char32 | The unicode character to append. |
 
-**Returns:** @return true on success, false on allocation failure.
+**Returns:** true on success, false on allocation failure.
 

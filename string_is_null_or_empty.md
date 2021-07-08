@@ -12,5 +12,5 @@ bool string_is_null_or_empty(const String* str);
 | --- | --- | --- |
 | str | const | The string to check is NULL or empty. |
 
-**Returns:** @return true if the string is NULL or empty; false otherwise.
+**Returns:** true if the string is NULL or empty; false otherwise.
 

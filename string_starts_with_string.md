@@ -13,5 +13,5 @@ bool string_starts_with_string(const String* str, const String* value);
 | str | const | The string to check the beginning of. |
 | value | const | The value to check the beginning of the string for. |
 
-**Returns:** @return true if the string starts with the value; false otherwise.
+**Returns:** true if the string starts with the value; false otherwise.
 

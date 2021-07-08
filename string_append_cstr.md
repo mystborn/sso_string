@@ -13,5 +13,5 @@ bool string_append_cstr(String* str, const char* value);
 | str | String* | The string to append to. |
 | value | const | The c-string to append. |
 
-**Returns:** @return true on success, false on allocation failure.
+**Returns:** true on success, false on allocation failure.
 

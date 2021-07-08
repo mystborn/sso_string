@@ -13,5 +13,5 @@ Char32 string_u8_get(const String* str, size_t index);
 | str | const | The string to get the unicode character from. |
 | index | size_t | The starting byte index of the unicode character. |
 
-**Returns:** @return Thee unicode character starting at the specified byte index.
+**Returns:** Thee unicode character starting at the specified byte index.
 

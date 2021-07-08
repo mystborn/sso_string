@@ -14,5 +14,5 @@ void string_clear(String* str);
 
 ### See Also
 
-* [@see string_shrink_to_fit](@see string_shrink_to_fit.md)
+* [string_shrink_to_fit](string_shrink_to_fit.md)
 

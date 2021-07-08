@@ -12,5 +12,5 @@ size_t string_hash(String* str);
 | --- | --- | --- |
 | str | String* | The string to generate a hash for. |
 
-**Returns:** @return A hash code for the string.
+**Returns:** A hash code for the string.
 

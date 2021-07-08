@@ -12,5 +12,5 @@ size_t string_size(const String* str);
 | --- | --- | --- |
 | str | const | The string to get the size of. |
 
-**Returns:** @return The number of bytes on the string.
+**Returns:** The number of bytes on the string.
 

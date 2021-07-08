@@ -14,5 +14,5 @@ String* string_format_cstr(String* result, const char* format, ...);
 | format | const | A c-string that contains the text and format specifiers to be written. |
 | ... | ... | The format specifier values. |
 
-**Returns:** @return result if the argument was non-null. Otherwise a newly allocated string that contains the format result. NULL on error.
+**Returns:** result if the argument was non-null. Otherwise a newly allocated string that contains the format result. NULL on error.
 

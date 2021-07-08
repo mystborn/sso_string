@@ -12,5 +12,5 @@ Char32 string_u8_pop_back(String* str);
 | --- | --- | --- |
 | str | String* | The string to get the last unicode character of. |
 
-**Returns:** @return The last unicode character of the string if any, '\\0' otherwise.
+**Returns:** The last unicode character of the string if any, '\\0' otherwise.
 

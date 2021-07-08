@@ -15,5 +15,5 @@ bool string_replace_string(String* str, size_t pos, size_t count, const String* 
 | count | size_t | The number of characters following pos to replace. |
 | value | const | The string value to replace the section with. |
 
-**Returns:** @return true on success, false on allocation failure.
+**Returns:** true on success, false on allocation failure.
 

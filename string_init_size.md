@@ -14,5 +14,5 @@ bool string_init_size(String* str, const char* cstr, size_t length);
 | cstr | const | The contents to initialize the string with. |
 | len | size_t | The number of characters to copy into str. |
 
-**Returns:** @return true on success, false on allocation failure.
+**Returns:** true on success, false on allocation failure.
 

@@ -16,5 +16,5 @@ size_t string_rfind_substr_string(const String* str, size_t pos, const String* v
 | start | size_t | The beginning index of value to search for in the string. |
 | length | size_t | The number of characters following start in value to search for in the string. |
 
-**Returns:** @return The starting index of the substring on success, or SIZE_MAX if the substring couldn't be found.
+**Returns:** The starting index of the substring on success, or SIZE_MAX if the substring couldn't be found.
 

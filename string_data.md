@@ -12,5 +12,5 @@ const char* string_data(const String* str);
 | --- | --- | --- |
 | str | const | The string to get the internal representation of. |
 
-**Returns:** @return The internal representation of the string as a c-string.
+**Returns:** The internal representation of the string as a c-string.
 

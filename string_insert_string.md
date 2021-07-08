@@ -14,5 +14,5 @@ bool string_insert_string(String* str, const String* value, size_t index);
 | value | const | The string to insert. |
 | index | size_t | The index of the string to insert the value into. |
 
-**Returns:** @return true on success, false on allocation failure.
+**Returns:** true on success, false on allocation failure.
 

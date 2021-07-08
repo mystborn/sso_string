@@ -13,5 +13,5 @@ bool string_init(String* str, const char* cstr);
 | str | String* | A pointer to the string to initialize. |
 | cstr | const | The contents to initialize the string with. |
 
-**Returns:** @return true on success, false on allocation failure.
+**Returns:** true on success, false on allocation failure.
 

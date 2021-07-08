@@ -13,5 +13,5 @@ bool string_reserve(String* str, size_t reserve);
 | str | String* | - The string to potentially enlarge. |
 | reserve | size_t | - The desired minimum capacity, not including the NULL terminating character. |
 
-**Returns:** @return true on success, false on allocation failure.
+**Returns:** true on success, false on allocation failure.
 

@@ -14,5 +14,5 @@ String* string_format_time_cstr(String* result, const char* format, const struct
 | format | const |  A string that contains the text and time format specifiers to be written. |
 | timeptr | const | The time value used to format the string. |
 
-**Returns:** @return result if the argument was non-null. Otherwise a newly allocated string that contains the time format result. NULL on error.
+**Returns:** result if the argument was non-null. Otherwise a newly allocated string that contains the time format result. NULL on error.
 

@@ -13,5 +13,5 @@ bool string_append_string(String* str, const String* value);
 | str | String* | The string to append to. |
 | value | const | The string to append. |
 
-**Returns:** @return true on success, false on allocation failure.
+**Returns:** true on success, false on allocation failure.
 

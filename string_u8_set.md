@@ -14,5 +14,5 @@ bool string_u8_set(String* str, size_t index, Char32 value);
 | index | size_t | The index of the character to replace. |
 | value | Char32 | The new character to replace the existing character with. |
 
-**Returns:** @return true on success, false on allocation failure.
+**Returns:** true on success, false on allocation failure.
 

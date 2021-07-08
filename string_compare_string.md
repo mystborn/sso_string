@@ -13,5 +13,5 @@ int string_compare_string(const String* str, const String* value);
 | str | const | The string on the left side of the operation. |
 | value | const | The string on the right side of the operation. |
 
-**Returns:** @return A negative value if str < value, zero if str == value, a positive value if str > value.
+**Returns:** A negative value if str < value, zero if str == value, a positive value if str > value.
 

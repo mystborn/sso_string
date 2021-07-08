@@ -15,5 +15,5 @@ bool string_append_string_part(    String* str,     const String* value,     siz
 | start |  | The starting index of the section of the value to append. |
 | count |  | The number of characters following start to append. |
 
-**Returns:** @return true on success, false on allocation failure.
+**Returns:** true on success, false on allocation failure.
 

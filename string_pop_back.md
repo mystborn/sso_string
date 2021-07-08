@@ -12,5 +12,5 @@ char string_pop_back(String* str);
 | --- | --- | --- |
 | str | String* | The string to get the last character of. |
 
-**Returns:** @return The last character of the string if any, '\\0' otherwise.
+**Returns:** The last character of the string if any, '\\0' otherwise.
 

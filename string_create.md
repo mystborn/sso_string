@@ -12,5 +12,5 @@ String string_create(const char* cstr);
 | --- | --- | --- |
 | cstr | const | The contents to initialize the string with. |
 
-**Returns:** @return The initialized String value.
+**Returns:** The initialized String value.
 

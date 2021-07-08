@@ -12,5 +12,5 @@ bool string_empty(const String* str);
 | --- | --- | --- |
 | str | const | The string to check is empty. |
 
-**Returns:** @return true if the string is empty; false otherwise.
+**Returns:** true if the string is empty; false otherwise.
 

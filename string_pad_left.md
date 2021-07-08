@@ -14,5 +14,5 @@ bool string_pad_left(String* str, char value, size_t width);
 | value | char | The character to pad the string with. |
 | width | size_t | The minimum size of the string after it's padded. |
 
-**Returns:** @return true on success, false on allocation failure.
+**Returns:** true on success, false on allocation failure.
 

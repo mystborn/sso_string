@@ -18,5 +18,5 @@ String** string_split_refs_cstr(    const String* str,    const char* separator,
 | skip_empty |  | Determines if empty elements should be skipped or added to the results array. |
 | init_results |  | Determines if the segment strings need to be allocated by this function. If this is false, the results will need to be allocated/initialized beforehand. |
 
-**Returns:** @return The value passed to results if results_count is a positive number. Otherwise, it's an array created by this function that will need to be manually freed. Either way, an array containing the split string segments. Returns NULL on error.
+**Returns:** The value passed to results if results_count is a positive number. Otherwise, it's an array created by this function that will need to be manually freed. Either way, an array containing the split string segments. Returns NULL on error.
 

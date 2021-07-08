@@ -14,5 +14,5 @@ bool string_u8_pad_right(String* str, Char32 value, size_t width);
 | value | Char32 | The unicode character to pad the string with. |
 | width | size_t | The minimum number of codepoints in the string after it's padded. |
 
-**Returns:** @return true on success, false on allocation failure.
+**Returns:** true on success, false on allocation failure.
 
