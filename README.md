@@ -91,18 +91,14 @@ C:\\sso\\build> ninja test
 ## Todo
 
 * API Additions
-    * string_trim (High)
-    * string_pad (High)
-    * Custom allocation functions (Medium)
-        * `sso_string_malloc`, `sso_string_calloc`, `sso_string_realloc`, `sso_string_free` 
-          macros that can be defined by the user, but that use the std library versions by default). 
     * Grapheme Clusters (Low)
+        * Most likely will be relegated to a separate project due to a large binary size.
         * These are characters that are represented using multiple codepoints.
         * Should include functions for iterating, adding, removing, etc, grapheme clusters in a string.
         * They will start with `string_gc_*` just like the `string_u8_*` functions.
 * Tests
     * There are not enough tests that check failure conditions. So as long as the input is correct, the functions should work fine, but their might be issues when the input is invalid.
-* CMake Integration
+* CMake Integration (Help Wanted)
 * Documentation
 * More Comments
     * Just need more comments throughout to explain some of the more esoteric implementations/design decisions.
