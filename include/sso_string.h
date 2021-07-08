@@ -52,6 +52,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <time.h>
 
 #include <stdio.h>
 
@@ -1272,8 +1273,8 @@ SSO_STRING_EXPORT String* string_format_args_string(String* result, const String
     Formats a string using printf format specifiers.
 
     @param result A string that stores the result of the format operation.
-                    If this is NULL, this function allocates a string for the return value.
-                    Otherwise it appends the formatted data to the end.
+                  If this is NULL, this function allocates a string for the return value.
+                  Otherwise it appends the formatted data to the end.
 
     @param format A c-string that contains the text and format specifiers to be written.
     @param argp A list of the variadic arguments originally passed to a variadic function. 
@@ -1285,13 +1286,43 @@ SSO_STRING_EXPORT String* string_format_args_string(String* result, const String
 SSO_STRING_EXPORT String* string_format_args_cstr(String* result, const char* format, va_list argp);
 
 /**
+    Formats a string based on a time value using strftime format specifiers.
+
+    @param result A string that stores the result of the format operation.
+                  If this is NULL, this function allocates a string for the return value.
+                  Otherwise it appends the formatted data to the end.
+
+    @param format  A string that contains the text and time format specifiers to be written.
+    @param timeptr The time value used to format the string.
+
+    @return result if the argument was non-null. Otherwise a newly allocated string
+            that contains the time format result. NULL on error.
+*/
+static inline String* string_format_time_string(String* result, const String* format, const struct tm* timeptr);
+
+/**
+    Formats a string based on a time value using strftime format specifiers.
+
+    @param result A string that stores the result of the format operation.
+                  If this is NULL, this function allocates a string for the return value.
+                  Otherwise it appends the formatted data to the end.
+
+    @param format  A string that contains the text and time format specifiers to be written.
+    @param timeptr The time value used to format the string.
+
+    @return result if the argument was non-null. Otherwise a newly allocated string
+            that contains the time format result. NULL on error.
+*/
+SSO_STRING_EXPORT String* string_format_time_cstr(String* result, const char* format, const struct tm* timeptr);
+
+/**
     Creates a hash code from a string using the fnv1-a algorithm.
 
     @param str The string to generate a hash for.
 
     @return A hash code for the string.
 */
-SSO_STRING_EXPORT size_t string_hash(String* str);
+static inline size_t string_hash(String* str);
 
 /**
     Reads a single line of a file into a string.
@@ -1903,6 +1934,32 @@ static inline String** string_split_refs_cstr(
         allocate_results);
 }
 
+static inline String* string_format_time_string(String* result, const String* format, const struct tm* timeptr) {
+    return string_format_time_cstr(result, string_data(format), timeptr);
+}
+
+static inline size_t string_hash(String* str) {
+    SSO_STRING_ASSERT_ARG(str);
+
+    const unsigned char* data = string_data(str);
+
+#if SSO_STRING_SHIFT == 24
+    
+    size_t hash = 0x811c9dc5;
+    while(*data != 0)
+        hash = (*(data++) ^ hash) * 0x01000193;
+
+#elif SSO_STRING_SHIFT == 56
+
+    size_t hash = 0xcbf29ce484222325;
+    while(*data != 0)
+        hash = (*(data++) ^ hash) * 0x00000100000001B3;
+
+#endif
+
+    return hash;
+}
+
 #ifndef SSO_STRING_NO_GENERIC
 
 // If C11 is available, use the _Generic macro to select the correct
@@ -2249,6 +2306,14 @@ static inline String** string_split_refs_cstr(
         const String*: string_format_string) \
     ((str), (format), __VA_ARGS__)
 
+#define string_format_time(str, format, timeptr) \
+    _Generic((format), \
+        char*: string_format_time_cstr, \
+        const char*: string_format_time_cstr, \
+        String*: string_format_time_string, \
+        const String*: string_format_time_string) \
+    ((str), (format), (timeptr))
+
 /**
     Generic version of string_format_args_string and string_format_args_cstr.
 
@@ -2298,6 +2363,7 @@ static inline String** string_split_refs_cstr(
     string_split_refs_cstr((str), (separator), (results), (results_count), (results_filled), (skip_empty), (allocate_results))
 #define string_format(str, format, ...) string_format_cstr((str), (format), __VA_ARGS__)
 #define string_format_args(str, format, argp) string_format_args_cstr((str), (format), (argp))
+#define string_format_time(str, format, timeptr) string_format_time_cstr((str), (format), (timeptr))
 
 #endif // C11
 

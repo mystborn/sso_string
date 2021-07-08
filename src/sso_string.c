@@ -25,6 +25,7 @@
 #include <sso_string.h>
 
 #include <stdarg.h>
+#include <time.h>
 
 #if defined(SSO_STRING_SINGLE_THREAD)
 
@@ -1573,9 +1574,9 @@ SSO_STRING_EXPORT String* string_format_args_string(String* result, const String
     return string_format_args_cstr(result, string_data(format), argp);
 }
 
-SSO_STRING_EXPORT String* string_format_args_cstr(String* result, const char* format, va_list argp) {
-    #define SSO_STRING_FORMAT_BUFFER_SIZE 256
+#define SSO_STRING_FORMAT_BUFFER_SIZE 256
 
+SSO_STRING_EXPORT String* string_format_args_cstr(String* result, const char* format, va_list argp) {
     #ifdef SSO_THREAD_LOCAL
 
     static SSO_THREAD_LOCAL char buffer[SSO_STRING_FORMAT_BUFFER_SIZE];
@@ -1638,32 +1639,65 @@ SSO_STRING_EXPORT String* string_format_args_cstr(String* result, const char* fo
 
     error:
         if(original_size == SIZE_MAX)
-            string_free_resources(result);
+            string_free(result);
         else
             string_cstr(result)[original_size] = '\0';
 
         return NULL;
 }
 
-#if SSO_STRING_SHIFT == 24
+SSO_STRING_EXPORT String* string_format_time_cstr(String* result, const char* format, const struct tm* timeptr) {
+    #ifdef SSO_THREAD_LOCAL
 
-#define SSO_FNV_PRIME 0x01000193
-#define SSO_FNV_OFFSET 0x811c9dc5 
+    static SSO_THREAD_LOCAL char buffer[SSO_STRING_FORMAT_BUFFER_SIZE];
 
-#elif SSO_STRING_SHIFT == 56
+    #else
 
-#define SSO_FNV_PRIME 0x00000100000001B3
-#define SSO_FNV_OFFSET 0xcbf29ce484222325
+    char buffer[SSO_STRING_FORMAT_BUFFER_SIZE];
 
-#endif
+    #endif
 
-SSO_STRING_EXPORT size_t string_hash(String* str) {
-    const unsigned char* data = string_data(str);
-    size_t hash = SSO_FNV_OFFSET;
-    while(*data != 0)
-        hash = (*(data++) ^ hash) * SSO_FNV_PRIME;
+    SSO_STRING_ASSERT_ARG(format);
 
-    return hash;
+    size_t original_size = SIZE_MAX;
+    if(!result) {
+        result = string_create_ref("");
+        if(!result)
+            return NULL;
+        
+    } else {
+        original_size = string_size(result);
+    }
+
+    size_t written = strftime(buffer, SSO_STRING_FORMAT_BUFFER_SIZE, format, timeptr);
+
+    if(written != 0) {
+        if(!string_append_cstr_part(result, buffer, 0, written))
+            goto error;
+    } else {
+        int count = 1;
+        size_t offset = original_size == SIZE_MAX ? 0 : original_size;
+        while(written == 0) {
+            count++;
+            size_t blank_space = SSO_STRING_FORMAT_BUFFER_SIZE * count;
+            if(!string_reserve(result, offset + blank_space))
+                goto error;
+            
+            written = strftime(string_cstr(result) + offset, blank_space, format, timeptr);
+        }
+        sso_string_set_size(result, offset + written);
+        string_cstr(result)[offset + written] = '\0';
+    }
+
+    return result;
+
+    error:
+        if(original_size == SIZE_MAX)
+            string_free(result);
+        else
+            string_cstr(result)[original_size] = '\0';
+
+        return NULL;
 }
 
 SSO_STRING_EXPORT bool string_file_read_line(String* str, FILE* file) {

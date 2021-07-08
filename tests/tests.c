@@ -2054,6 +2054,106 @@ START_TEST(string_format_cstr_append) {
 }
 END_TEST
 
+START_TEST(string_format_time_string_new) {
+    time_t rawtime = time(NULL);
+    struct tm* current_time;
+    current_time = localtime(&rawtime);
+
+    String format = string_create("%c");
+
+    char buffer[512];
+    ck_assert(strftime(buffer, 512, string_data(&format), current_time) != 0);
+
+    String* result = string_format_time_string(NULL, &format, current_time);
+    ck_assert(result != NULL);
+    ck_assert(string_equals_cstr(result, buffer));
+    string_free(result);
+}
+END_TEST
+
+START_TEST(string_format_time_string_existing) {
+    time_t rawtime = time(NULL);
+    struct tm* current_time;
+    current_time = localtime(&rawtime);
+
+    String format = string_create("%c");
+
+    char buffer[512];
+    ck_assert(strftime(buffer, 512, string_data(&format), current_time) != 0);
+
+    String result = STRING_EMPTY;
+
+    ck_assert(string_format_time_string(&result, &format, current_time) != NULL);
+    ck_assert(string_equals_cstr(&result, buffer));
+    string_free_resources(&result);
+}
+END_TEST
+
+START_TEST(string_format_time_string_append) {
+    time_t rawtime = time(NULL);
+    struct tm* current_time;
+    current_time = localtime(&rawtime);
+
+    String format = string_create("%c");
+
+    char buffer[512];
+    ck_assert(strftime(buffer, 512, string_data(&format), current_time) != 0);
+
+    String result = string_create("hello");
+
+    ck_assert(string_format_time_string(&result, &format, current_time) != NULL);
+    ck_assert(string_find_cstr(&result, 0, buffer) == 5);
+    string_free_resources(&result);
+}
+END_TEST
+
+START_TEST(string_format_time_cstr_new) {
+    time_t rawtime = time(NULL);
+    struct tm* current_time;
+    current_time = localtime(&rawtime);
+
+    char buffer[512];
+    ck_assert(strftime(buffer, 512, "%c", current_time) != 0);
+
+    String* result = string_format_time_cstr(NULL, "%c", current_time);
+    ck_assert(result != NULL);
+    ck_assert(string_equals_cstr(result, buffer));
+    string_free(result);
+}
+END_TEST
+
+START_TEST(string_format_time_cstr_existing) {
+    time_t rawtime = time(NULL);
+    struct tm* current_time;
+    current_time = localtime(&rawtime);
+
+    char buffer[512];
+    ck_assert(strftime(buffer, 512, "%c", current_time) != 0);
+
+    String result = STRING_EMPTY;
+
+    ck_assert(string_format_time_cstr(&result, "%c", current_time) != NULL);
+    ck_assert(string_equals_cstr(&result, buffer));
+    string_free_resources(&result);
+}
+END_TEST
+
+START_TEST(string_format_time_cstr_append) {
+    time_t rawtime = time(NULL);
+    struct tm* current_time;
+    current_time = localtime(&rawtime);
+
+    char buffer[512];
+    ck_assert(strftime(buffer, 512, "%c", current_time) != 0);
+
+    String result = string_create("hello");
+
+    ck_assert(string_format_time_cstr(&result, "%c", current_time) != NULL);
+    ck_assert(string_find_cstr(&result, 0, buffer) == 5);
+    string_free_resources(&result);
+}
+END_TEST
+
 START_TEST(string_hash_verify) {
     String str = string_create("Hello world, it is I, your master.");
     size_t hash_result = string_hash(&str);
@@ -2250,6 +2350,12 @@ int main(void) {
     tcase_add_test(tc, string_split_string_allocate_init);
     tcase_add_test(tc, string_split_string_skip_empty);
     tcase_add_test(tc, string_split_string_dont_skip_empty);
+    tcase_add_test(tc, string_format_time_string_new);
+    tcase_add_test(tc, string_format_time_string_existing);
+    tcase_add_test(tc, string_format_time_string_append);
+    tcase_add_test(tc, string_format_time_cstr_new);
+    tcase_add_test(tc, string_format_time_cstr_existing);
+    tcase_add_test(tc, string_format_time_cstr_append);
     tcase_add_test(tc, string_hash_verify);
 
 
