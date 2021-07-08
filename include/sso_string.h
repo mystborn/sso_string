@@ -161,10 +161,7 @@ enum {
 #define STRING_MAX (SIZE_MAX >> 1)
 
 struct sso_string_short {
-    union {
-        unsigned char size;
-        char lx;
-    };
+    unsigned char size;
     char data[SSO_STRING_MIN_CAP + 1];
 };
 
@@ -176,7 +173,7 @@ typedef union String {
     struct sso_string_short s;
 } String;
 
-#define STRING_EMPTY (String){ .s={.size=0, .data=""} }
+#define STRING_EMPTY (String){ .s={.size=0, .data={'\0'}} }
 
 /**
     A numeric representation of a unicode character/codepoint.
@@ -844,7 +841,35 @@ static inline bool string_replace_cstr(String* str, size_t pos, size_t count, co
 static inline bool string_replace_string(String* str, size_t pos, size_t count, const String* value);
 
 /**
-    Initializes a string with the data from a slice of another string.
+    Replaces a section of a string with the characters in another string slice.
+
+    @param str The string whose contents are to be replaced.
+    @param pos The starting position of the contents to replace.
+    @param count The number of characters following pos to replace.
+    @param value The c-string value to replace the section with.
+    @param start The starting position of value to use as a replacement.
+    @param length The number of characters following start in value to use as a replacement.
+
+    @return true on success, false on allocation failure.
+*/
+static inline bool string_replace_part_cstr(String* str, size_t pos, size_t count, const char* value, size_t start, size_t length);
+
+/**
+    Replaces a section of a string with the characters in another string slice.
+
+    @param str The string whose contents are to be replaced.
+    @param pos The starting position of the contents to replace.
+    @param count The number of characters following pos to replace.
+    @param value The string value to replace the section with.
+    @param start The starting position of value to use as a replacement.
+    @param length The number of characters following start in value to use as a replacement.
+
+    @return true on success, false on allocation failure.
+*/
+static inline bool string_replace_part_string(String* str, size_t pos, size_t count, const String* value, size_t start, size_t length);
+
+/**
+    Initializes a string with the data from a slice of another string slice.
 
     @param str The string to get the slice from.
     @param pos The starting position of the slice.
@@ -1689,6 +1714,16 @@ static inline bool string_replace_string(String* str, size_t pos, size_t count, 
     return sso_string_replace_impl(str, pos, count, string_data(value), string_size(value));
 }
 
+static inline bool string_replace_part_cstr(String* str, size_t pos, size_t count, const char* value, size_t start, size_t length) {
+    SSO_STRING_ASSERT_BOUNDS(start + length <= strlen(value));
+    return sso_string_replace_impl(str, pos, count, value + start, length);
+}
+
+static inline bool string_replace_part_string(String* str, size_t pos, size_t count, const String* value, size_t start, size_t length) {
+    SSO_STRING_ASSERT_BOUNDS(start + length <= string_size(value));
+    return sso_string_replace_impl(str, pos, count, string_data(value) + start, length);
+}
+
 static inline bool string_substring(const String* str, size_t pos, size_t count, String* value) {
     SSO_STRING_ASSERT_BOUNDS(pos + count <= string_size(str));
     return string_init_size(value, string_data(str) + pos, count);
@@ -2075,6 +2110,20 @@ static inline String** string_split_refs_cstr(
     ((str), (pos), (count), (value))
 
 /**
+    Generic version of string_replace_part_string and string_replace_part_cstr.
+
+    @see string_replace_part_string
+    @see string_replace_part_cstr
+*/
+#define string_replace_part(str, pos, count, value, start, length)  \
+    _Generic((value),  \
+        char*: string_replace_part_cstr,  \
+        const char*: string_replace_part_cstr,  \
+        String*: string_replace_part_string, \
+        const String*: string_replace_part_string) \
+    ((str), (pos), (count), (value), (start), (length))
+
+/**
     Generic version of string_find_string and string_find_cstr.
 
     @see string_find_string
@@ -2216,18 +2265,39 @@ static inline String** string_split_refs_cstr(
 
 #else
 
-#define string_insert(str, value, index) string_insert_cstr(str, value, index)
-#define string_insert_part(str, value, index, start, length) string_insert_part_cstr(str, value, index, start, length)
-#define string_append(str, value) string_append_cstr(str, value)
-#define string_equals(str, value) string_equals_cstr(str, value)
-#define string_compare(str, value) string_compare_cstr(str, value)
-#define string_starts_with(str, value) string_starts_with_cstr(str, value)
-#define string_ends_with(str, value) string_ends_with_cstr(str, value)
-#define string_replace(str, pos, count, value) string_replace_cstr(str, pos, count, value)
-#define string_find(str, pos, value) string_find_cstr(str, pos, value)
-#define string_rfind(str, pos, value) string_rfind_cstr(str, pos, value)
-#define string_format(str, format, ...) string_format_cstr(str, format, __VA_ARGS__)
-#define string_format_args(str, format, argp) string_format_args_cstr(str, format, argp)
+#define string_insert(str, value, index) string_insert_cstr((str), (value), (index))
+#define string_insert_part(str, value, index, start, length) \
+    string_insert_part_cstr((str), (value), (index), (start), (length))
+#define string_append(str, value) string_append_cstr((str), (value))
+#define string_equals(str, value) string_equals_cstr((str), (value))
+#define string_compare(str, value) string_compare_cstr((str), (value))
+#define string_starts_with(str, value) string_starts_with_cstr((str), (value))
+#define string_ends_with(str, value) string_ends_with_cstr((str), (value))
+#define string_trim(str, value) string_trim_cstr((str), (value))
+#define string_trim_start(str, value) string_trim_start_cstr((str), (value))
+#define string_trim_end(str, value) string_trim_end_cstr((str), (value))
+#define string_trim_any(str, values, value_count) string_trim_any_cstr((str), (values), (value_count))
+#define string_trim_any_start(str, values, value_count) string_trim_any_start_cstr((str), (values), (value_count))
+#define string_trim_any_end(str, values, value_count) string_trim_any_end_cstr((str), (values), (value_count))
+#define string_replace(str, pos, count, value) string_replace_cstr((str), (pos), (count), (value))
+#define string_replace_part(str, pos, count, value, start, length) \
+    string_replace_part_cstr((str), (pos), (count), (value), (start), (length))
+#define string_find(str, pos, value) string_find_cstr((str), (pos), (value))
+#define string_find_part(str, pos, value, start, count) \
+    string_find_part_cstr((str), (pos), (value), (start), (count))
+#define string_rfind(str, pos, value) string_rfind_cstr((str), (pos), (value))
+#define string_rfind_part(str, pos, value, start, count) \
+    string_rfind_part_cstr((str), (pos), (value), (start), (count))
+#define string_join(str, separator, values, value_count) \
+    string_join_cstr((str), (separator), (values), (value_count))
+#define string_join_refs(str, separator, values, value_count) \
+    string_join_refs_cstr((str), (separator), (values), (value_count))
+#define string_split(str, separator, results, results_count, results_filled, skip_empty, init_results) \
+    string_split_cstr((str), (separator), (results), (results_count), (results_filled), (skip_empty), (init_results))
+#define string_split_refs(str, separator, results, results_count, results_filled, skip_empty, allocate_results) \
+    string_split_refs_cstr((str), (separator), (results), (results_count), (results_filled), (skip_empty), (allocate_results))
+#define string_format(str, format, ...) string_format_cstr((str), (format), __VA_ARGS__)
+#define string_format_args(str, format, argp) string_format_args_cstr((str), (format), (argp))
 
 #endif // C11
 

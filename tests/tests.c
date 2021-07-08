@@ -33,7 +33,7 @@ static void string_reset(void) {
 }
 
 START_TEST(string_small_has_small_flag) {
-    String str = string_create("");
+    String str = STRING_EMPTY;
     ck_assert(!sso_string_is_long(&str));
     string_free_resources(&str);
 }
@@ -52,7 +52,7 @@ START_TEST(string_switches_size) {
     // the capacity behaviour is the same for small strings
     // and large strings.
 
-    String str = string_create("");
+    String str = STRING_EMPTY;
 
     int cap = string_capacity(&str);
 
@@ -140,7 +140,7 @@ START_TEST(string_large_size) {
 END_TEST
 
 START_TEST(string_size_dynamic) {
-    String str = string_create("");
+    String str = STRING_EMPTY;
     for(int i = 0; i < 100; i++) {
         ck_assert(string_size(&str) == i);
         string_push_back(&str, 'a');
@@ -181,7 +181,7 @@ START_TEST(string_u8_codepoints_utf8) {
 END_TEST
 
 START_TEST(string_u8_codepoints_all) {
-    String str = string_create("");
+    String str = STRING_EMPTY;
     Char32 all_codepoints[] = ALL_CODEPOINTS;
     for(int i = 0; i < ARRAY_SIZE(all_codepoints); i++)
         string_u8_push_back(&str, all_codepoints[i]);
@@ -228,7 +228,7 @@ END_TEST
 
 START_TEST(string_u8_get_all) {
     Char32 all_codepoints[] = ALL_CODEPOINTS;
-    String str = string_create("");
+    String str = STRING_EMPTY;
     
     for(int i = 0; i < ARRAY_SIZE(all_codepoints); i++)
         ck_assert(string_u8_push_back(&str, all_codepoints[i]));
@@ -281,7 +281,7 @@ END_TEST
 
 START_TEST(string_u8_get_with_size_all) {
     Char32 all_codepoints[] = ALL_CODEPOINTS;
-    String str = string_create("");
+    String str = STRING_EMPTY;
     
     for(int i = 0; i < ARRAY_SIZE(all_codepoints); i++)
         ck_assert(string_u8_push_back(&str, all_codepoints[i]));
@@ -352,7 +352,7 @@ END_TEST
 
 START_TEST(string_u8_codepoint_size_all) {
     Char32 all_codepoints[] = ALL_CODEPOINTS;
-    String str = string_create("");
+    String str = STRING_EMPTY;
     
     for(int i = 0; i < ARRAY_SIZE(all_codepoints); i++)
         ck_assert(string_u8_push_back(&str, all_codepoints[i]));
@@ -461,7 +461,7 @@ START_TEST(string_u8_set_bigger) {
 END_TEST
 
 START_TEST(string_empty_empty) {
-    String str = string_create("");
+    String str = STRING_EMPTY;
     ck_assert(string_empty(&str));
     string_free_resources(&str);
 }
@@ -693,6 +693,30 @@ START_TEST(string_insert_part_string_utf8) {
 }
 END_TEST
 
+START_TEST(string_insert_self_before_insert_point) {
+    String str = string_create("helloworld");
+    ck_assert(string_insert_part_string(&str, &str, 6, 1, 4));
+    ck_assert(string_equals_cstr(&str, "hellowelloorld"));
+    string_free_resources(&str);
+}
+END_TEST
+
+START_TEST(string_insert_self_after_insert_point) {
+    String str = string_create("helloworld");
+    ck_assert(string_insert_part_string(&str, &str, 0, 5, 5));
+    ck_assert(string_equals_cstr(&str, "worldhelloworld"));
+    string_free_resources(&str);
+}
+END_TEST
+
+START_TEST(string_insert_self_overlapping_insert_point) {
+    String str = string_create("helloworld");
+    ck_assert(string_insert_part_string(&str, &str, 7, 5, 5));
+    ck_assert(string_equals_cstr(&str, "hellowoworldrld"));
+    string_free_resources(&str);
+}
+END_TEST
+
 START_TEST(string_erase_small_start) {
     string_erase(&small, 0, 1);
     ck_assert(string_equals_cstr(&small, "ello"));
@@ -730,7 +754,7 @@ START_TEST(string_erase_large_middle) {
 END_TEST
 
 START_TEST(string_push_back_succeeds) {
-    String str = string_create("");
+    String str = STRING_EMPTY;
     ck_assert(string_push_back(&str, 'h'));
     ck_assert(string_equals_cstr(&str, "h"));
 
@@ -742,7 +766,7 @@ START_TEST(string_push_back_succeeds) {
 END_TEST
 
 START_TEST(string_u8_push_back_ascii) {
-    String str = string_create("");
+    String str = STRING_EMPTY;
     ck_assert(string_u8_push_back(&str, 'h'));
     ck_assert(string_equals_cstr(&str, "h"));
 
@@ -754,7 +778,7 @@ START_TEST(string_u8_push_back_ascii) {
 END_TEST
 
 START_TEST(string_u8_push_back_utf8) {
-    String str = string_create("");
+    String str = STRING_EMPTY;
     wchar_t kana[] = KANA_WIDE;
     string_u8_push_back(&str, kana[0]);
     ck_assert(string_equals_cstr(&str, "こ"));
@@ -768,7 +792,7 @@ END_TEST
 
 START_TEST(string_u8_push_back_all) {
     Char32 all_codepoints[] = ALL_CODEPOINTS;
-    String str = string_create("");
+    String str = STRING_EMPTY;
 
     for(int i = 0; i < ARRAY_SIZE(all_codepoints); i++)
         ck_assert(string_u8_push_back(&str, all_codepoints[i]));
@@ -832,7 +856,7 @@ END_TEST
 
 START_TEST(string_u8_pop_back_all) {
     Char32 all_codepoints[] = ALL_CODEPOINTS;
-    String str = string_create("");
+    String str = STRING_EMPTY;
 
     for(int i = 0; i < ARRAY_SIZE(all_codepoints); i++)
         ck_assert(string_u8_push_back(&str, all_codepoints[i]));
@@ -879,7 +903,7 @@ START_TEST(string_append_cstr_large_to_large) {
 END_TEST
 
 START_TEST(string_append_cstr_small_to_large) {
-    String str = string_create("");
+    String str = STRING_EMPTY;
     ck_assert(!sso_string_is_long(&str));
     ck_assert(string_append_cstr(&str, ALPHABET));
     ck_assert(string_equals_cstr(&str, ALPHABET));
@@ -912,7 +936,7 @@ START_TEST(string_append_string_large_to_large) {
 END_TEST
 
 START_TEST(string_append_string_small_to_large) {
-    String str = string_create("");
+    String str = STRING_EMPTY;
     String value = string_create(ALPHABET);
     ck_assert(!sso_string_is_long(&str));
     ck_assert(string_append_string(&str, &value));
@@ -939,6 +963,20 @@ START_TEST(string_append_string_part_succeeds) {
     ck_assert(string_append_string_part(&str, &value, 3, 2));
     ck_assert(string_equals_cstr(&str, HELLO));
 
+    string_free_resources(&str);
+}
+END_TEST
+
+START_TEST(string_append_self_whole) {
+    ck_assert(string_append_string(&small, &small));
+    ck_assert(string_equals_cstr(&small, HELLO HELLO));
+}
+END_TEST
+
+START_TEST(string_append_self_part) {
+    String str = string_create("helloworld");
+    ck_assert(string_append_string_part(&str, &str, 0, 5));
+    ck_assert(string_equals_cstr(&str, "helloworldhello"));
     string_free_resources(&str);
 }
 END_TEST
@@ -1135,6 +1173,30 @@ START_TEST(string_trim_string_full_sequence_only) {
 }
 END_TEST
 
+START_TEST(string_trim_any_string_single) {
+    String value = string_create("abcba");
+    String values[2] = { string_create("a"), string_create("z") };
+    string_trim_any_string(&value, values, 2);
+    ck_assert(string_equals_cstr(&value, "bcb"));
+    string_free_resources(&value);
+    for(int i = 0; i < ARRAY_SIZE(values); i++) {
+        string_free_resources(values + i);
+    }
+}
+END_TEST
+
+START_TEST(string_trim_any_string_multiple) {
+    String value = string_create("abcab");
+    String values[2] = { string_create("a"), string_create("b") };
+    string_trim_any_string(&value, values, 2);
+    ck_assert(string_equals_cstr(&value, "c"));
+    string_free_resources(&value);
+    for(int i = 0; i < ARRAY_SIZE(values); i++) {
+        string_free_resources(values + i);
+    }
+}
+END_TEST
+
 START_TEST(string_pad_left_none) {
     ck_assert(string_pad_left(&small, ' ', 5));
     ck_assert(string_size(&small) == 5);
@@ -1230,15 +1292,6 @@ START_TEST(string_u8_pad_right_string_u8_value_u8) {
 }
 END_TEST
 
-START_TEST(string_u8_pad_left_string_u8_value_ascii) {
-    String kana = string_create(KANA);
-    ck_assert(string_u8_pad_left(&kana, ' ', 7));
-    ck_assert(string_u8_codepoints(&kana) == 7);
-    ck_assert(string_equals_cstr(&kana, KANA "  "));
-    string_free_resources(&kana);
-}
-END_TEST
-
 START_TEST(string_replace_cstr_shrink) {
     ck_assert(string_replace_cstr(&small, 1, 3, "b"));
     ck_assert(string_equals(&small, "hbo"));
@@ -1317,6 +1370,70 @@ START_TEST(string_replace_string_grow_small_to_large) {
 
     string_free_resources(&str);
     string_free_resources(&hero);
+}
+END_TEST
+
+START_TEST(string_replace_self_large_to_small_substring_before_replace) {
+    String str = string_create("helloworld");
+    ck_assert(string_replace_part_string(&str, 6, 3, &str, 2, 2));
+    ck_assert(string_equals_cstr(&str, "hellowlld"));
+    string_free_resources(&str);
+}
+END_TEST
+
+START_TEST(string_replace_self_large_to_small_substring_after_replace) {
+    String str = string_create("helloworld");
+    ck_assert(string_replace_part_string(&str, 1, 3, &str, 4, 2));
+    ck_assert(string_equals_cstr(&str, "howoworld"));
+    string_free_resources(&str);
+}
+END_TEST
+
+START_TEST(string_replace_self_large_to_small_overlapping) {
+    String str = string_create("helloworld");
+    ck_assert(string_replace_part_string(&str, 1, 4, &str, 2, 2));
+    ck_assert(string_equals_cstr(&str, "hllworld"));
+    string_free_resources(&str);
+}
+END_TEST
+
+START_TEST(string_replace_self_small_to_large_before_replace) {
+    String str = string_create("helloworld");
+    ck_assert(string_replace_part_string(&str, 6, 2, &str, 0, 3));
+    ck_assert(string_equals_cstr(&str, "hellowhelld"));
+    string_free_resources(&str);
+}
+END_TEST
+
+START_TEST(string_replace_self_small_to_large_after_replace) {
+    String str = string_create("helloworld");
+    ck_assert(string_replace_part_string(&str, 1, 2, &str, 5, 3));
+    ck_assert(string_equals_cstr(&str, "hworloworld"));
+    string_free_resources(&str);
+}
+END_TEST
+
+START_TEST(string_replace_self_small_to_large_overlapping_right) {
+    String str = string_create("helloworld");
+    ck_assert(string_replace_part_string(&str, 3, 2, &str, 4, 3));
+    ck_assert(string_equals_cstr(&str, "helowoworld"));
+    string_free_resources(&str);
+}
+END_TEST
+
+START_TEST(string_replace_self_small_to_large_overlapping_left) {
+    String str = string_create("helloworld");
+    ck_assert(string_replace_part_string(&str, 5, 2, &str, 4, 3));
+    ck_assert(string_equals_cstr(&str, "hellooworld"));
+    string_free_resources(&str);
+}
+START_TEST(string_replace_self_small_to_large_overlapping_whole) {
+END_TEST
+
+    String str = string_create("helloworld");
+    ck_assert(string_replace_part_string(&str, 2, 2, &str, 0, 3));
+    ck_assert(string_equals_cstr(&str, "heheloworld"));
+    string_free_resources(&str);
 }
 END_TEST
 
@@ -1503,7 +1620,7 @@ START_TEST(string_is_null_or_empty_null) {
 END_TEST
 
 START_TEST(string_is_null_or_empty_empty) {
-    String str = string_create("");
+    String str = STRING_EMPTY;
     ck_assert(string_is_null_or_empty(&str));
     string_free_resources(&str);
 }
@@ -1520,7 +1637,7 @@ START_TEST(string_is_null_or_whitespace_null) {
 END_TEST
 
 START_TEST(string_is_null_or_whitespace_empty) {
-    String str = string_create("");
+    String str = STRING_EMPTY;
     ck_assert(string_u8_is_null_or_whitespace(&str));
     string_free_resources(&str);
 }
@@ -1534,7 +1651,7 @@ START_TEST(string_is_null_or_whitespace_space) {
 END_TEST
 
 START_TEST(string_is_null_or_whitespace_u8_space) {
-    String str = string_create("");
+    String str = STRING_EMPTY;
     string_u8_push_back(&str, ' '); // ascii space
     string_u8_push_back(&str, L'\xA0'); // no-break space
     string_u8_push_back(&str, L'\x180E'); // mongolian vowel separator
@@ -1586,7 +1703,7 @@ START_TEST(string_u8_reverse_codepoints_utf8) {
 END_TEST
 
 START_TEST(string_join_string_none) {
-    String empty = string_create("");
+    String empty = STRING_EMPTY;
     ck_assert(string_join_string(NULL, &empty, NULL, 0));
 }
 END_TEST
@@ -1594,7 +1711,7 @@ END_TEST
 START_TEST(string_join_string_two) {
     String segments[2];
     String comma = string_create(", ");
-    String result = string_create("");
+    String result = STRING_EMPTY;
     ck_assert(string_init(&segments[0], "Hello"));
     ck_assert(string_init(&segments[1], "my name is ..."));
     ck_assert(string_join_string(&result, &comma, segments, 2));
@@ -1627,7 +1744,7 @@ START_TEST(string_join_string_many) {
 END_TEST
 
 START_TEST(string_join_refs_string_none) {
-    String empty = string_create("");
+    String empty = STRING_EMPTY;
     ck_assert(string_join_refs_string(NULL, &empty, NULL, 0));
 }
 END_TEST
@@ -1635,7 +1752,7 @@ END_TEST
 START_TEST(string_join_refs_string_two) {
     String* segments[2];
     String comma = string_create(", ");
-    String result = string_create("");
+    String result = STRING_EMPTY;
     ck_assert((segments[0] = string_create_ref("Hello")));
     ck_assert((segments[1] = string_create_ref("my name is ...")));
     ck_assert(string_join_refs_string(&result, &comma, segments, 2));
@@ -1897,7 +2014,7 @@ END_TEST
 
 START_TEST(string_format_string_existing) {
     String format = string_create("%u");
-    String result = string_create("");
+    String result = STRING_EMPTY;
     ck_assert(string_format_string(&result, &format, UINT_MAX) != NULL);
     ck_assert(string_equals(&result, "4294967295"));
     string_free_resources(&result);
@@ -1922,7 +2039,7 @@ START_TEST(string_format_cstr_new) {
 END_TEST
 
 START_TEST(string_format_cstr_existing) {
-    String result = string_create("");
+    String result = STRING_EMPTY;
     ck_assert(string_format_cstr(&result, "%u", UINT_MAX) != NULL);
     ck_assert(string_equals(&result, "4294967295"));
     string_free_resources(&result);
@@ -2008,6 +2125,9 @@ int main(void) {
     tcase_add_test(tc, string_insert_part_cstr_utf8);
     tcase_add_test(tc, string_insert_part_string_ascii);
     tcase_add_test(tc, string_insert_part_string_utf8);
+    tcase_add_test(tc, string_insert_self_before_insert_point);
+    tcase_add_test(tc, string_insert_self_after_insert_point);
+    tcase_add_test(tc, string_insert_self_overlapping_insert_point);
     tcase_add_test(tc, string_erase_small_start);
     tcase_add_test(tc, string_erase_small_end);
     tcase_add_test(tc, string_erase_small_middle);
@@ -2030,6 +2150,8 @@ int main(void) {
     tcase_add_test(tc, string_append_string_small_to_large);
     tcase_add_test(tc, string_append_cstr_part_succeeds);
     tcase_add_test(tc, string_append_string_part_succeeds);
+    tcase_add_test(tc, string_append_self_whole);
+    tcase_add_test(tc, string_append_self_part);
     tcase_add_test(tc, string_compare_cstr_less_than);
     tcase_add_test(tc, string_compare_cstr_greater_than);
     tcase_add_test(tc, string_compare_cstr_equals);
@@ -2054,7 +2176,8 @@ int main(void) {
     tcase_add_test(tc, string_trim_string_neither);
     tcase_add_test(tc, string_trim_string_multiple_letters);
     tcase_add_test(tc, string_trim_string_full_sequence_only);
-    tcase_add_test(tc, string_ends_with_string_false);
+    tcase_add_test(tc, string_trim_any_string_single);
+    tcase_add_test(tc, string_trim_any_string_multiple);
     tcase_add_test(tc, string_replace_cstr_shrink);
     tcase_add_test(tc, string_replace_cstr_shrink_end);
     tcase_add_test(tc, string_replace_cstr_same_size);
@@ -2065,6 +2188,14 @@ int main(void) {
     tcase_add_test(tc, string_replace_string_same_size);
     tcase_add_test(tc, string_replace_string_grow_small_to_small);
     tcase_add_test(tc, string_replace_string_grow_small_to_large);
+    tcase_add_test(tc, string_replace_self_large_to_small_substring_before_replace);
+    tcase_add_test(tc, string_replace_self_large_to_small_substring_after_replace);
+    tcase_add_test(tc, string_replace_self_large_to_small_overlapping);
+    tcase_add_test(tc, string_replace_self_small_to_large_before_replace);
+    tcase_add_test(tc, string_replace_self_small_to_large_after_replace);
+    tcase_add_test(tc, string_replace_self_small_to_large_overlapping_whole);
+    tcase_add_test(tc, string_replace_self_small_to_large_overlapping_right);
+    tcase_add_test(tc, string_replace_self_small_to_large_overlapping_left);
     tcase_add_test(tc, string_substring_part);
     tcase_add_test(tc, string_substring_whole);
     tcase_add_test(tc, string_copy_small);

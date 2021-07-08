@@ -297,7 +297,7 @@ SSO_STRING_EXPORT bool string_u8_set(String* str, size_t index, Char32 value) {
 
     int old_codepoint = string_u8_codepoint_size(str, index);
     int new_codepoint = sso_string_u8_codepoint_size(value);
-    if(!sso_string_u8_assure_codepoint_space(str, index, old_codepoint, new_codepoint));
+    if(!sso_string_u8_assure_codepoint_space(str, index, old_codepoint, new_codepoint))
         return false;
 
     char* data = string_cstr(str);
@@ -311,7 +311,6 @@ SSO_STRING_EXPORT bool string_u8_is_null_or_whitespace(const String* str) {
         return true;
 
     size_t size = string_size(str);
-    const char* data = string_data(str);
     size_t i = 0;
 
     while(i < size) {
@@ -459,7 +458,7 @@ SSO_STRING_EXPORT bool sso_string_insert_impl(String* str, const char* value, si
             memmove(data + index, value, length);
         } else if(offset >= index) {
             // The section of the same string is after the insert point.
-            // In this case we cna adjust the the value pointer to the realloc-ed
+            // In this case we can adjust the the value pointer to the realloc-ed
             // location plus the length of the blank area created to make space
             // for the insert.
             value = data + offset + length;
@@ -472,7 +471,7 @@ SSO_STRING_EXPORT bool sso_string_insert_impl(String* str, const char* value, si
             value = data + offset;
             size_t begin_length = index - offset;
             memmove(data + index, value, begin_length);
-            value = data + offset + length;
+            value = data + offset + length + begin_length;
             memmove(data + index + begin_length, value, length - begin_length);
         }
     } else {
@@ -551,7 +550,7 @@ SSO_STRING_EXPORT bool string_u8_push_back(String* str, Char32 value) {
             return false;
 
         data = string_cstr(str);
-        data[size++]     = 0xC0 | ((value >> 6) & 0x1F);
+        data[size++] = 0xC0 | ((value >> 6) & 0x1F);
         data[size++] = 0x80 | (value & 0x3f);
 
     } else if(value < 0x10000) {
@@ -560,7 +559,7 @@ SSO_STRING_EXPORT bool string_u8_push_back(String* str, Char32 value) {
 
         data = string_cstr(str);
 
-        data[size++]     = 0xE0 | ((value >> 12) & 0xF);
+        data[size++] = 0xE0 | ((value >> 12) & 0xF);
         data[size++] = 0x80 | ((value >> 6)  & 0x3F);
         data[size++] = 0x80 | (value & 0x3F);
     } else {
@@ -570,7 +569,7 @@ SSO_STRING_EXPORT bool string_u8_push_back(String* str, Char32 value) {
 
         data = string_cstr(str);
 
-        data[size++]     = 0xF0 | ((value >> 18) & 0x7);
+        data[size++] = 0xF0 | ((value >> 18) & 0x7);
         data[size++] = 0x80 | ((value >> 12) & 0x3F);
         data[size++] = 0x80 | ((value >> 6)  & 0x3F);
         data[size++] = 0x80 | (value & 0x3F);
@@ -709,7 +708,7 @@ SSO_STRING_EXPORT void string_trim_any_start_string(String* str, String* values,
     size_t found_length = 0;
     
     do {
-        size_t found_length = 0;
+        found_length = 0;
         for(size_t i = 0; i < value_count; i++) {
             size_t look_size = string_size(values + i);
 
@@ -751,7 +750,7 @@ SSO_STRING_EXPORT void string_trim_any_start_string_refs(String* str, String** v
     size_t found_length = 0;
     
     do {
-        size_t found_length = 0;
+        found_length = 0;
         for(size_t i = 0; i < value_count; i++) {
             size_t look_size = string_size(values[i]);
 
@@ -1088,24 +1087,23 @@ SSO_STRING_EXPORT bool sso_string_replace_impl(String* str, size_t pos, size_t c
                 memmove(data + pos, value, length);
             } else {
                 // The replace string and the substring are overlapping.
-                // Copy everything past the end of the replace string into
-                // the new blank section. Then copy everything from the
-                // start until then end of the replace section into the blank
-                // section.
+                // Copy everything from the start until then end of the replace 
+                // section into the blank section. Then copy everything past the 
+                // end of the replace string into the blank section.
 
-                char* substring_back_start = data + offset + length + length - count;
-                char* blank_area_end = data + pos + length;
+                ptrdiff_t back_length = (offset + length) - (pos + count);
 
-                // Only need to copy the back section if the substring goes
-                // past the replace section.
-                if(substring_back_start > blank_area_end) {
-                    size_t back_offset = substring_back_start - blank_area_end;
-                    memmove(substring_back_start - back_offset, 
-                        substring_back_start, 
-                        back_offset);
+                // back_length may be negative, so don't perform the move in that instance.
+                //
+                // The math for figuring out the length of the front end is different if
+                // the end of the substring is before the end of the replace section.
+                if (back_length > 0) {
+                    ptrdiff_t front_length = pos + count - offset;
+                    memmove(data + pos, data + offset, pos + count - offset);
+                    memmove(data + pos + front_length, data + pos + length, back_length);
+                } else {
+                    memmove(data + pos, data + offset, length);
                 }
-
-                memmove(data + pos, data + offset, pos + length - offset);
             }
         } else {
             memmove(data + pos, value, length);
@@ -1237,7 +1235,6 @@ SSO_STRING_EXPORT void string_u8_reverse_codepoints(String* str) {
     char* data;
     char* start = data = string_cstr(str);
     char* end = start + size - 1;
-    char tmp;
 
     // Reverse string bytewise
     string_reverse_bytes_impl(start, end);
