@@ -7,6 +7,8 @@
     * Generic macros available for each.
 * `string_replace_part` family.
     * Generic macros available for each.
+* `string_format_time` family
+    * Generic macro available.
 * `string_file_read_line`
 * `string_file_read_all`
 * Optionally remove generic macros by defining `SSO_STRING_NO_GENERIC`.
@@ -26,7 +28,7 @@
 
 ### Others
 * Added an examples folder.
-* Added an example that is actually used to generate the site documentation.
+* Added an example that is used to generate the site documentation.
 
 # Version 0.1.0
 

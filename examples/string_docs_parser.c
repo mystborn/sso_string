@@ -204,10 +204,13 @@ DocParts* split_doc_parts(String* doc_string) {
 
                 parts->params[parts->params_count++] = last_string = string_create_ref("");
             } else if(string_starts_with(lines + line, "@return")) {
+                string_trim_start(lines + line, "@return ");
                 parts->ret = last_string = string_create_ref("");
             } else if(string_starts_with(lines + line, "@remarks")) {
+                string_trim_start(lines + line, "@remarks ");
                 parts->remarks = last_string = string_create_ref("");
             } else if(string_starts_with(lines + line, "@see")) {
+                string_trim_start(lines + line, "@see ");
                 if(parts->see_also_count == parts->see_also_capacity) {
                     parts->see_also_capacity = parts->see_also_capacity == 0 ? 2 : parts->see_also_capacity * 2;
                     parts->see_also = realloc(parts->see_also, parts->see_also_capacity * sizeof(*parts->see_also));
@@ -335,7 +338,7 @@ void write_doc_file(String* doc_string, String* prototype) {
 }
 
 int main(void) {
-    FILE* file = fopen("../../../include/sso_string.h", "r");
+    FILE* file = fopen(HEADER_LOCATION, "r");
     String doc_string = string_create("");
     String prototype = string_create("");
 
