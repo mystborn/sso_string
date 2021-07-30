@@ -1,3 +1,5 @@
+tags: memory
+
 # string_init_size
 
 Initializes a string from a subsection of a c-string.
@@ -16,3 +18,13 @@ bool string_init_size(String* str, const char* cstr, size_t length);
 
 **Returns:** true on success, false on allocation failure.
 
+## Example
+
+```c
+String str;
+string_init_size(&str, "I only want a part of this string", 6);
+
+puts(string_data(&str)); // I only
+
+string_free_resources(&str);
+```

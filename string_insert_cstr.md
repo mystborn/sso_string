@@ -1,3 +1,5 @@
+tags: modify
+
 # string_insert_cstr
 
 Inserts a c-string into a string at the specified index.
@@ -16,3 +18,17 @@ bool string_insert_cstr(String* str, const char* value, size_t index);
 
 **Returns:** true on success, false on allocation failure.
 
+## Example
+
+```c
+String str = string_create("hllo");
+
+puts(string_data(&str)); // hllo
+
+string_insert_cstr(&str, "e", 1);
+
+puts(string_data(&str)); // hello
+
+string_free_resources(&str);
+
+```

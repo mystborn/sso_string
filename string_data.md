@@ -1,3 +1,5 @@
+tags: property
+
 # string_data
 
 Gets the character data held by a string. This data cannot be altered.
@@ -14,3 +16,13 @@ const char* string_data(const String* str);
 
 **Returns:** The internal representation of the string as a c-string.
 
+## Example
+
+```c
+String str = string_create("Hello, data");
+
+const char* data = string_data(&str);
+puts(data); // Hello, data
+
+string_free_resources(&str);
+```

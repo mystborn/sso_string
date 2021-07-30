@@ -1,3 +1,5 @@
+tags: unicode, property
+
 # string_u8_is_null_or_whitespace
 
 Working with ASCII or UTF-8 strings, determines if the string is NULL, empty, or comprised of only whitespace characters.
@@ -14,3 +16,8 @@ bool string_u8_is_null_or_whitespace(const String* str);
 
 **Returns:** true if the string is NULL, empty, or comprised only of whitespace characters; false otherwise.
 
+## Example
+
+```c
+
+```

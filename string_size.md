@@ -1,3 +1,5 @@
+tags: property
+
 # string_size
 
 Gets the number of bytes in a string, ignoring any terminating characters.
@@ -14,3 +16,15 @@ size_t string_size(const String* str);
 
 **Returns:** The number of bytes on the string.
 
+## Example
+
+```c
+String str = string_create("Count");
+
+// Using int in example to mkae printf easier.
+int size = string_size(&str);
+
+printf("%d\n", size);
+
+string_free_resources(&str);
+```

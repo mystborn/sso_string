@@ -1,3 +1,5 @@
+tags: memory
+
 # string_init
 
 Initializes a string from a c-string.
@@ -15,3 +17,13 @@ bool string_init(String* str, const char* cstr);
 
 **Returns:** true on success, false on allocation failure.
 
+## Example
+
+```c
+String str;
+string_init(&str, "The string value");
+
+puts(string_data(&str)); // The string value
+
+string_free_resources(&str);
+```

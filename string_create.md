@@ -1,3 +1,5 @@
+tags: lifecycle
+
 # string_create
 
 Creates and initializes a new string value.
@@ -14,3 +16,12 @@ String string_create(const char* cstr);
 
 **Returns:** The initialized String value.
 
+## Example
+
+```c
+String str = string_create("Easy way to create a string.");
+
+puts(string_data(&str)); // Easy way to create a string.
+
+string_free_resources(&str);
+```

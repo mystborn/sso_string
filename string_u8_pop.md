@@ -1,11 +1,13 @@
-# string_u8_pop_back
+tags: unicode, modify
+
+# string_u8_pop
 
 Removes a unicode character from the end of a string and returns the characters value.
 
 ## Syntax
 
 ```c
-Char32 string_u8_pop_back(String* str);
+Char32 string_u8_pop(String* str);
 ```
 
 | Name | Type | Description |
@@ -14,3 +16,16 @@ Char32 string_u8_pop_back(String* str);
 
 **Returns:** The last unicode character of the string if any, '\\0' otherwise.
 
+## Example
+
+```c
+String str = string_create("こんにちは。") // Hello in Japanese
+
+puts(string_data(&str)); // こんにちは。
+
+string_u8_pop(&str);
+
+puts(string_data(&str)); // こんにちは
+
+string_free_resources(&str);
+```
