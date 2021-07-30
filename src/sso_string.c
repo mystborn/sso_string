@@ -59,13 +59,6 @@
 #define U8_TRIPLE 0xF0
 #define U8_QUAD   0xF8 
 
-static inline void sso_string_set_size(String* str, size_t size) {
-    if(sso_string_is_long(str))
-        sso_string_long_set_size(str, size);
-    else
-        sso_string_short_set_size(str, size);
-}
-
 SSO_STRING_EXPORT bool string_init(String* str, const char* cstr) {
     SSO_STRING_ASSERT_ARG(str);
 
@@ -294,7 +287,7 @@ SSO_STRING_EXPORT bool string_u8_set(String* str, size_t index, Char32 value) {
     assert(index <= string_size(str));
 
     if(index == size)
-        return string_u8_push_back(str, value);
+        return string_u8_push(str, value);
 
     int old_codepoint = string_u8_codepoint_size(str, index);
     int new_codepoint = sso_string_u8_codepoint_size(value);
@@ -503,7 +496,7 @@ SSO_STRING_EXPORT void string_erase(String* str, size_t index, size_t count) {
     }
 }
 
-SSO_STRING_EXPORT bool string_push_back(String* str, char value) {
+SSO_STRING_EXPORT bool string_push(String* str, char value) {
     SSO_STRING_ASSERT_ARG(str);
 
     size_t size;
@@ -535,7 +528,7 @@ SSO_STRING_EXPORT bool string_push_back(String* str, char value) {
     return true;
 }
 
-SSO_STRING_EXPORT bool string_u8_push_back(String* str, Char32 value) {
+SSO_STRING_EXPORT bool string_u8_push(String* str, Char32 value) {
     SSO_STRING_ASSERT_ARG(str);
 
     size_t size = string_size(str);
@@ -581,7 +574,7 @@ SSO_STRING_EXPORT bool string_u8_push_back(String* str, Char32 value) {
     return true;
 }
 
-SSO_STRING_EXPORT char string_pop_back(String* str) {
+SSO_STRING_EXPORT char string_pop(String* str) {
     SSO_STRING_ASSERT_ARG(str);
 
     size_t size;
@@ -602,7 +595,7 @@ SSO_STRING_EXPORT char string_pop_back(String* str) {
     return result;
 }
 
-SSO_STRING_EXPORT Char32 string_u8_pop_back(String* str) {
+SSO_STRING_EXPORT Char32 string_u8_pop(String* str) {
     SSO_STRING_ASSERT_ARG(str);
 
     size_t size = string_size(str);

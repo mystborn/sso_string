@@ -23,6 +23,9 @@
     * This change was made to better match the rest of the API.
 * `string_insert_cstr_part` and `string_insert_string_part` changed to `string_insert_part_cstr` and `string_insert_part_string` respectively.
     * This change was made to better match the rest of the API.
+* `string_append_cstr_part` and `string_append_string_part` changed to `string_append_part_cstr` and `string_append_part_string`.
+    * This change was made to better match the rest of the API.
+* `string_push_back`, `string_pop_back`, `string_u8_push_back`, and `string_u8_push_back` removed `_back` form their name.
 
 ### Bug Fixes
 

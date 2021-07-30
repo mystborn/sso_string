@@ -148,9 +148,6 @@ void read_example(String* example, FILE* file) {
     String line = string_create("");
     bool found = false;
     while(string_file_read_line(&line, file)) {
-        if (string_starts_with(&line, "// Hello")) {
-            puts("");
-        }
         if(found || string_starts_with(&line, "## Example")) {
             string_append(example, &line);
             string_append(example, "\n");

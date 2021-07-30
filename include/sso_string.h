@@ -121,10 +121,25 @@
 #endif
 
 #ifndef SSO_STRING_ASSERT_ARG
+
+/**
+    Assert macro used to ensure args are appropriate. 
+    Typically used for NULL checks. Uses assert by default 
+    so the checks are excluded from release builds.
+
+    @see assert
+*/
 #define SSO_STRING_ASSERT_ARG assert
 #endif
 
 #ifndef SSO_STRING_ASSERT_BOUNDS
+
+/**
+    Assert macro used to ensure args don't go outside of string/array bounds. 
+    Uses assert by default so the checks are excluded from release builds.
+
+    @see assert
+*/
 #define SSO_STRING_ASSERT_BOUNDS assert
 #endif
 
@@ -132,8 +147,31 @@
 // to use custom allocators. Mainly for use in embedded environments.
 #ifndef sso_string_malloc
 
+/**
+    Custom string malloc method. Uses stdlib malloc by default.
+
+    @see sso_string_realloc
+    @see sso_string_free
+    @see malloc
+*/
 #define sso_string_malloc malloc
+
+/**
+    Custom string realloc function. Uses stdlib realloc by default.
+
+    @see sso_string_malloc
+    @see sso_string_free
+    @see realloc
+*/
 #define sso_string_realloc realloc
+
+/**
+    Custom string free function. Uses stdlib free by default.
+
+    @see sso_string_malloc
+    @see sso_string_free
+    @see free
+*/
 #define sso_string_free free
 
 #endif
@@ -174,6 +212,10 @@ typedef union String {
     struct sso_string_short s;
 } String;
 
+/*
+    Creates an empty string l-value through a compound literal. 
+    Only use with compilers that support compound literals.
+*/
 #define STRING_EMPTY (String){ .s={.size=0, .data={'\0'}} }
 
 /**
@@ -275,7 +317,7 @@ static inline size_t string_size(const String* str);
 SSO_STRING_EXPORT size_t string_u8_codepoints(const String* str);
 
 /**
-    Gets the number of characters a string can potential hold without resizing.
+    Gets the number of characters a string can potential hold without resizing. 
     This does NOT include the NULL terminating character.
 
     @param str The string to get the capacity of.
@@ -306,7 +348,7 @@ SSO_STRING_EXPORT Char32 string_u8_get(const String* str, size_t index);
 
 /**
     Gets the unicode character at the specified byte index, 
-    optionally getting the number of bytes that the character
+    optionally getting the number of bytes that the character 
     takes in the string.
 
     @param str The string to get the unicode character from.
@@ -368,7 +410,7 @@ static inline bool string_empty(const String* str);
 static inline bool string_is_null_or_empty(const String* str);
 
 /**
-    Working with ASCII or UTF-8 strings, determines if the string is NULL,
+    Working with ASCII or UTF-8 strings, determines if the string is NULL, 
     empty, or comprised of only whitespace characters.
 
     @param str The string to check is NULL, empty, or comprised entirely of whitespace.
@@ -385,6 +427,10 @@ SSO_STRING_EXPORT bool string_u8_is_null_or_whitespace(const String* str);
     @param reserve - The desired minimum capacity, not including the NULL terminating character.
 
     @return true on success, false on allocation failure.
+
+    @remark Mostly for internal use and for resizing the internal buffer of a string 
+            before passing it into a function that modifies a c-string. Make sure to 
+            use sso_string_set_size afterwards.
 */
 static inline bool string_reserve(String* str, size_t reserve);
 
@@ -470,7 +516,7 @@ SSO_STRING_EXPORT void string_erase(String* str, size_t index, size_t count);
     @return true on success, false on allocation failure.
 
 */
-SSO_STRING_EXPORT bool string_push_back(String* str, char value);
+SSO_STRING_EXPORT bool string_push(String* str, char value);
 
 /**
     Appends a unicode character to the end of a string.
@@ -480,7 +526,7 @@ SSO_STRING_EXPORT bool string_push_back(String* str, char value);
 
     @return true on success, false on allocation failure.
 */
-SSO_STRING_EXPORT bool string_u8_push_back(String* str, Char32 value);
+SSO_STRING_EXPORT bool string_u8_push(String* str, Char32 value);
 
 /**
     Removes a character from the end of a string and returns
@@ -490,17 +536,17 @@ SSO_STRING_EXPORT bool string_u8_push_back(String* str, Char32 value);
 
     @return The last character of the string if any, '\\0' otherwise.
 */
-SSO_STRING_EXPORT char string_pop_back(String* str);
+SSO_STRING_EXPORT char string_pop(String* str);
 
 /**
-    Removes a unicode character from the end of a string and
+    Removes a unicode character from the end of a string and 
     returns the characters value.
 
     @param str The string to get the last unicode character of.
 
     @return The last unicode character of the string if any, '\\0' otherwise.
 */
-SSO_STRING_EXPORT Char32 string_u8_pop_back(String* str);
+SSO_STRING_EXPORT Char32 string_u8_pop(String* str);
 
 /**
     Appends a c-string to the end of a string.
@@ -532,7 +578,7 @@ static inline bool string_append_string(String* str, const String* value);
 
     @return true on success, false on allocation failure.
 */
-static inline bool string_append_cstr_part(
+static inline bool string_append_part_cstr(
     String* str, 
     const char* value, 
     size_t start, 
@@ -548,7 +594,7 @@ static inline bool string_append_cstr_part(
 
     @return true on success, false on allocation failure.
 */
-static inline bool string_append_string_part(
+static inline bool string_append_part_string(
     String* str, 
     const String* value, 
     size_t start, 
@@ -683,7 +729,7 @@ static inline void string_trim_end_string(String* str, const String* value);
 static inline void string_trim_end_cstr(String* str, const char* value);
 
 /**
-    Removes all occurrences of any value in an array from the beginning
+    Removes all occurrences of any value in an array from the beginning 
     and end of a string.
 
     @param str The string to remove the values from.
@@ -693,7 +739,7 @@ static inline void string_trim_end_cstr(String* str, const char* value);
 static inline void string_trim_any_string(String* str, String* values, size_t value_count);
 
 /**
-    Removes all occurrences of any value in an array from the beginning
+    Removes all occurrences of any value in an array from the beginning 
     and end of a string.
 
     @param str The string to remove the values from.
@@ -703,7 +749,7 @@ static inline void string_trim_any_string(String* str, String* values, size_t va
 static inline void string_trim_any_string_refs(String* str, String** values, size_t value_count);
 
 /**
-    Removes all occurrences of any value in an array from the beginning
+    Removes all occurrences of any value in an array from the beginning 
     and end of a string.
 
     @param str The string to remove the values from.
@@ -713,7 +759,7 @@ static inline void string_trim_any_string_refs(String* str, String** values, siz
 static inline void string_trim_any_cstr(String* str, char** values, size_t value_count);
 
 /**
-    Removes all occurrences of any value in an array from the beginning
+    Removes all occurrences of any value in an array from the beginning 
     of a string.
 
     @param str The string to remove the values from.
@@ -723,7 +769,7 @@ static inline void string_trim_any_cstr(String* str, char** values, size_t value
 SSO_STRING_EXPORT void string_trim_any_start_string(String* str, String* values, size_t value_count);
 
 /**
-    Removes all occurrences of any value in an array from the beginning
+    Removes all occurrences of any value in an array from the beginning 
     of a string.
 
     @param str The string to remove the values from.
@@ -733,7 +779,7 @@ SSO_STRING_EXPORT void string_trim_any_start_string(String* str, String* values,
 SSO_STRING_EXPORT void string_trim_any_start_string_refs(String* str, String** values, size_t value_count);
 
 /**
-    Removes all occurrences of any value in an array from the beginning
+    Removes all occurrences of any value in an array from the beginning 
     of a string.
 
     @param str The string to remove the values from.
@@ -875,7 +921,7 @@ static inline bool string_replace_part_string(String* str, size_t pos, size_t co
     @param str The string to get the slice from.
     @param pos The starting position of the slice.
     @param count The number of characters following pos to copy into the substring.
-    @param out_value The string that will be initialized with the contents of the substring.
+    @param out_value The string that will be initialized with the contents of the substring. 
                      This value should not be initialized by the caller, or it might cause a memory leak.
 
     @return true on success, false on allocation failure.
@@ -886,7 +932,7 @@ static inline bool string_substring(const String* str, size_t pos, size_t count,
     Initializes a string with the data of another string.
 
     @param str The string to copy.
-    @param out_value The string to copy the contents into.
+    @param out_value The string to copy the contents into. 
                      This value should not be initialized by the caller, or it might cause a memory leak.
 
     @return true on success, false on allocation failure.
@@ -1036,10 +1082,10 @@ SSO_STRING_EXPORT void string_reverse_bytes(String* str);
 SSO_STRING_EXPORT void string_u8_reverse_codepoints(String* str);
 
 /**
-    Joins an array of strings together into a single string with a
+    Joins an array of strings together into a single string with a 
     common separator in between each of them.
 
-    @param str The string that stores the result. If it has a value,
+    @param str The string that stores the result. If it has a value, 
                the result is appended to the end. It needs to be initialized.
 
     @param separator  A string to separate each array value in the result.
@@ -1053,10 +1099,10 @@ static inline bool string_join_string(
     size_t value_count);
 
     /**
-    Joins an array of strings together into a single string with a
+    Joins an array of strings together into a single string with a 
     common separator in between each of them.
 
-    @param str The string that stores the result. If it has a value,
+    @param str The string that stores the result. If it has a value, 
                the result is appended to the end. It needs to be initialized.
 
     @param separator  A c-string to separate each array value in the result.
@@ -1070,10 +1116,10 @@ static inline bool string_join_cstr(
     size_t value_count);
 
 /**
-    Joins an array of strings together into a single string with a
+    Joins an array of strings together into a single string with a 
     common separator in between each of them.
 
-    @param str The string that stores the result. If it has a value,
+    @param str The string that stores the result. If it has a value, 
                the result is appended to the end. It needs to be initialized.
 
     @param separator A string to separate each array value in the result.
@@ -1087,10 +1133,10 @@ static inline bool string_join_refs(
     size_t value_count);
 
 /**
-    Joins an array of strings together into a single string with a
+    Joins an array of strings together into a single string with a 
     common separator in between each of them.
 
-    @param str The string that stores the result. If it has a value,
+    @param str The string that stores the result. If it has a value, 
                the result is appended to the end. It needs to be initialized.
 
     @param separator A c-string to separate each array value in the result.
@@ -1117,14 +1163,14 @@ static inline bool string_join_cstr_refs(
     @param results A contiguous array of strings that will store the split segments. 
                    Should be NULL if results_count is a negative number.
 
-    @param results_count The number of elements available in the results array. If this is
+    @param results_count The number of elements available in the results array. If this is 
                          a negative number, the return value will be allocated by the function.
 
     @param results_filled A pointer that will contain the number of string segments added to the results array.
     @param skip_empty Determines if empty elements should be skipped or added to the results array.
     @param init_results Determines if the segment strings need to be initialized by this function.
 
-    @return The value passed to results if results_count is a positive number. Otherwise, it's an array created
+    @return The value passed to results if results_count is a positive number. Otherwise, it's an array created 
             by this function that will need to be manually freed. Either way, an array containing the 
             split string segments. Returns NULL on error.
 */
@@ -1145,14 +1191,14 @@ static inline String* string_split_string(
     @param results A contiguous array of strings that will store the split segments. 
                    Should be NULL if results_count is a negative number.
 
-    @param results_count The number of elements available in the results array. If this is
+    @param results_count The number of elements available in the results array. If this is 
                          a negative number, the return value will be allocated by the function.
 
     @param results_filled A pointer that will contain the number of string segments added to the results array.
     @param skip_empty Determines if empty elements should be skipped or added to the results array.
     @param init_results Determines if the segment strings need to be initialized by this function.
 
-    @return The value passed to results if results_count is a positive number. Otherwise, it's an array created
+    @return The value passed to results if results_count is a positive number. Otherwise, it's an array created 
             by this function that will need to be manually freed. Either way, an array containing the 
             split string segments. Returns NULL on error.
 */
@@ -1173,15 +1219,15 @@ static inline String* string_split_cstr(
     @param results A non-contiguous array of strings that will store the split segments. 
                    Should be NULL if results_count is a negative number.
 
-    @param results_count The number of elements available in the results array. If this is
+    @param results_count The number of elements available in the results array. If this is 
                          a negative number, the return value will be allocated by the function.
 
     @param results_filled A pointer that will contain the number of string segments added to the results array.
     @param skip_empty Determines if empty elements should be skipped or added to the results array.
-    @param init_results Determines if the segment strings need to be allocated by this function.
+    @param init_results Determines if the segment strings need to be allocated by this function. 
                         If this is false, the results will need to be allocated/initialized beforehand.
 
-    @return The value passed to results if results_count is a positive number. Otherwise, it's an array created
+    @return The value passed to results if results_count is a positive number. Otherwise, it's an array created 
             by this function that will need to be manually freed. Either way, an array containing the 
             split string segments. Returns NULL on error.
 */
@@ -1202,15 +1248,15 @@ static inline String** string_split_refs_string(
     @param results A non-contiguous array of strings that will store the split segments. 
                    Should be NULL if results_count is a negative number.
 
-    @param results_count The number of elements available in the results array. If this is
+    @param results_count The number of elements available in the results array. If this is 
                          a negative number, the return value will be allocated by the function.
 
     @param results_filled A pointer that will contain the number of string segments added to the results array.
     @param skip_empty Determines if empty elements should be skipped or added to the results array.
-    @param init_results Determines if the segment strings need to be allocated by this function.
+    @param init_results Determines if the segment strings need to be allocated by this function. 
                         If this is false, the results will need to be allocated/initialized beforehand.
 
-    @return The value passed to results if results_count is a positive number. Otherwise, it's an array created
+    @return The value passed to results if results_count is a positive number. Otherwise, it's an array created 
             by this function that will need to be manually freed. Either way, an array containing the 
             split string segments. Returns NULL on error.
 */
@@ -1226,14 +1272,14 @@ static inline String** string_split_refs_cstr(
 /**
     Formats a string using printf format specifiers.
 
-    @param result A string that stores the result of the format operation.
-                    If this is NULL, this function allocates a string for the return value.
-                    Otherwise it appends the formatted data to the end.
+    @param result A string that stores the result of the format operation. 
+                  If this is NULL, this function allocates a string for the return value. 
+                  Otherwise it appends the formatted data to the end.
 
     @param format A string that contains the text and format specifiers to be written.
     @param ... The format specifier values.
 
-    @return result if the argument was non-null. Otherwise a newly allocated string
+    @return result if the argument was non-null. Otherwise a newly allocated string 
             that contains the format result. NULL on error.
 */
 SSO_STRING_EXPORT String* string_format_string(String* result, const String* format, ...);
@@ -1241,14 +1287,14 @@ SSO_STRING_EXPORT String* string_format_string(String* result, const String* for
 /**
     Formats a string using printf format specifiers.
 
-    @param result A string that stores the result of the format operation.
-                    If this is NULL, this function allocates a string for the return value.
-                    Otherwise it appends the formatted data to the end.
+    @param result A string that stores the result of the format operation. 
+                  If this is NULL, this function allocates a string for the return value. 
+                  Otherwise it appends the formatted data to the end.
 
     @param format A c-string that contains the text and format specifiers to be written.
     @param ... The format specifier values.
 
-    @return result if the argument was non-null. Otherwise a newly allocated string
+    @return result if the argument was non-null. Otherwise a newly allocated string 
             that contains the format result. NULL on error.
 */
 SSO_STRING_EXPORT String* string_format_cstr(String* result, const char* format, ...);
@@ -1256,15 +1302,15 @@ SSO_STRING_EXPORT String* string_format_cstr(String* result, const char* format,
 /**
     Formats a string using printf format specifiers.
 
-    @param result A string that stores the result of the format operation.
-                    If this is NULL, this function allocates a string for the return value.
-                    Otherwise it appends the formatted data to the end.
+    @param result A string that stores the result of the format operation. 
+                  If this is NULL, this function allocates a string for the return value. 
+                  Otherwise it appends the formatted data to the end.
 
     @param format A string that contains the text and format specifiers to be written.
     @param argp A list of the variadic arguments originally passed to a variadic function. 
                 The position of the argument may be changed, so pass a copy to this method if that isn't desired.
 
-    @return result if the argument was non-null. Otherwise a newly allocated string
+    @return result if the argument was non-null. Otherwise a newly allocated string 
             that contains the format result. NULL on error.
 */
 SSO_STRING_EXPORT String* string_format_args_string(String* result, const String* format, va_list argp);
@@ -1272,15 +1318,15 @@ SSO_STRING_EXPORT String* string_format_args_string(String* result, const String
 /**
     Formats a string using printf format specifiers.
 
-    @param result A string that stores the result of the format operation.
-                  If this is NULL, this function allocates a string for the return value.
+    @param result A string that stores the result of the format operation. 
+                  If this is NULL, this function allocates a string for the return value. 
                   Otherwise it appends the formatted data to the end.
 
     @param format A c-string that contains the text and format specifiers to be written.
     @param argp A list of the variadic arguments originally passed to a variadic function. 
-                The position of the argument may be changed, so pass a copy to this method if that isn't desired.
+                The position of the argument may be changed, so pass a copy to this method if that isn't desired. 
 
-    @return result if the argument was non-null. Otherwise a newly allocated string
+    @return result if the argument was non-null. Otherwise a newly allocated string 
             that contains the format result. NULL on error.
 */
 SSO_STRING_EXPORT String* string_format_args_cstr(String* result, const char* format, va_list argp);
@@ -1288,14 +1334,14 @@ SSO_STRING_EXPORT String* string_format_args_cstr(String* result, const char* fo
 /**
     Formats a string based on a time value using strftime format specifiers.
 
-    @param result A string that stores the result of the format operation.
-                  If this is NULL, this function allocates a string for the return value.
+    @param result A string that stores the result of the format operation. 
+                  If this is NULL, this function allocates a string for the return value. 
                   Otherwise it appends the formatted data to the end.
 
     @param format  A string that contains the text and time format specifiers to be written.
     @param timeptr The time value used to format the string.
 
-    @return result if the argument was non-null. Otherwise a newly allocated string
+    @return result if the argument was non-null. Otherwise a newly allocated string 
             that contains the time format result. NULL on error.
 */
 static inline String* string_format_time_string(String* result, const String* format, const struct tm* timeptr);
@@ -1303,14 +1349,14 @@ static inline String* string_format_time_string(String* result, const String* fo
 /**
     Formats a string based on a time value using strftime format specifiers.
 
-    @param result A string that stores the result of the format operation.
-                  If this is NULL, this function allocates a string for the return value.
+    @param result A string that stores the result of the format operation. 
+                  If this is NULL, this function allocates a string for the return value. 
                   Otherwise it appends the formatted data to the end.
 
     @param format  A string that contains the text and time format specifiers to be written.
     @param timeptr The time value used to format the string.
 
-    @return result if the argument was non-null. Otherwise a newly allocated string
+    @return result if the argument was non-null. Otherwise a newly allocated string 
             that contains the time format result. NULL on error.
 */
 SSO_STRING_EXPORT String* string_format_time_cstr(String* result, const char* format, const struct tm* timeptr);
@@ -1331,8 +1377,8 @@ static inline size_t string_hash(String* str);
     @param file The file to read a line from.
 
     @return true if the operation was a success and there is more data to read. 
-            false if there is no more data or if there is an error.
-            Check if there is an error using feof/ferror. If neither are set,
+            false if there is no more data or if there is an error. 
+            Check if there is an error using feof/ferror. If neither are set, 
             there was an allocation error.
 */
 SSO_STRING_EXPORT bool string_file_read_line(String* str, FILE* file);
@@ -1343,7 +1389,7 @@ SSO_STRING_EXPORT bool string_file_read_line(String* str, FILE* file);
     @param str The string that will contain the file contents.
     @param file The file to read the contents of.
 
-    @return true on success, false on an error. If ferror doesn't indicate an error,
+    @return true on success, false on an error. If ferror doesn't indicate an error, 
             it was an allocation error.
 */
 SSO_STRING_EXPORT bool string_file_read_all(String* str, FILE* file);
@@ -1358,22 +1404,31 @@ SSO_STRING_EXPORT bool string_file_read_all(String* str, FILE* file);
 // the buffer is big enough using string_reserve when performing this type of operation.
 
 /**
-    Internal return code from sso_string_short_reserve that indicates that the
+    Internal return code from sso_string_short_reserve that indicates that the 
     string tried to switch from short to long but failed due to lack of memory.
 */
 #define SSO_STRING_SHORT_RESERVE_FAIL 0
 
 /**
-    Internal return code from sso_string_short_reserve that indicates that the
+    Internal return code from sso_string_short_reserve that indicates that the 
     operation succeeded without having to switch to a long string.
 */
 #define SSO_STRING_SHORT_RESERVE_SUCCEED 1
 
 /**
-    Internal return code from sso_string_short_reserve that indicates that the
+    Internal return code from sso_string_short_reserve that indicates that the 
     operation succeeded and it switched from short to long.
 */
 #define SSO_STRING_SHORT_RESERVE_RESIZE 2
+
+/**
+    Sets the number of bytes used by a string, not including any NULL-terminating characters.
+
+    @remark This is mostly for internal use, but it can be used by others 
+            to synchronize the length of a string with its internal representation 
+            after some operation modified the c-string directly.
+*/
+static inline void sso_string_set_size(String* str, size_t size);
 
 static inline size_t sso_string_next_cap(size_t current, size_t desired);
 static inline bool sso_string_is_long(const String* str);
@@ -1483,6 +1538,13 @@ static inline void sso_string_short_set_size(String* str, size_t size) {
 #else
     str->s.size = size;
 #endif
+}
+
+static inline void sso_string_set_size(String* str, size_t size) {
+    if(sso_string_is_long(str))
+        sso_string_long_set_size(str, size);
+    else
+        sso_string_short_set_size(str, size);
 }
 
 static inline String string_create(const char* cstr) {
@@ -1968,7 +2030,14 @@ static inline size_t string_hash(String* str) {
 #if (defined(__STDC_VERSION__) && __STDC_VERSION__ >= 201112L)
 
 /**
+    Inserts a value into a string at the specified index. 
     Generic version of string_insert_string and string_insert_cstr.
+
+    @param str The string to insert into.
+    @param value The value to insert.
+    @param index The index of the string to insert the value into.
+
+    @return true on success, false on allocation failure.
 
     @see string_insert_string
     @see string_insert_cstr
@@ -1982,7 +2051,16 @@ static inline size_t string_hash(String* str) {
     ((str), (value), (index)) 
 
 /**
+    Inserts a section of a value into a string at the specified index. 
     Generic version of string_insert_part_string and string_insert_part_cstr.
+
+    @param str The string to insert into.
+    @param value The value to insert.
+    @param index The index of the string to insert the value into.
+    @param start The starting index of the value to insert.
+    @param count The number of characters following start to insert.
+
+    @return true on success, false on allocation failure.
 
     @see string_insert_part_string
     @see string_insert_part_cstr
@@ -1996,12 +2074,18 @@ static inline size_t string_hash(String* str) {
     ((str), (value), (index), (start), (length))
 
 /**
+    Appends a value to the end of a string. 
     Generic version of string_append_string and string_append_cstr.
+
+    @param str The string to append to.
+    @param value The value to append.
+
+    @return true on success, false on allocation failure.
 
     @see string_append_string
     @see string_append_cstr
 */
-#define string_append(str, value)  \
+#define string_append(str, value) \
     _Generic((value), \
         char*: string_append_cstr, \
         const char*: string_append_cstr, \
@@ -2010,7 +2094,35 @@ static inline size_t string_hash(String* str) {
     ((str), (value))
 
 /**
+    Appends a section of a value to the end of a string. 
+    Generic version of string_append_part_cstr and string_append_part_string
+
+    @param str The string to append to.
+    @param value The value to append.
+    @param start The starting index of the section of the value to append.
+    @param count The number of characters following start to append.
+
+    @return true on success, false on allocation failure.
+
+    @see string_append_string
+    @see string_append_cstr
+*/
+#define string_append_part(str, value, start, count) \
+    _Generic((value), \
+        char*: string_append_part_cstr, \
+        const char*: string_append_part_cstr, \
+        String*: string_append_part_string, \
+        const String*: string_append_part_string) \
+    ((str), (value), (start), (count))
+
+/**
+    Determines if the contents of a String is equivalent to a value. 
     Generic version of string_equals_string and string_equals_cstr.
+
+    @param str The string on the left side of the operation.
+    @param value The value on the right side of the operation.
+
+    @return true if the values are equivalent; false otherwise.
 
     @see string_equals_string
     @see string_equals_cstr
@@ -2024,7 +2136,13 @@ static inline size_t string_hash(String* str) {
     ((str), (value))
 
 /**
+    Compares a string and a value in the same fashion as strcmp. 
     Generic version of string_compare_string and string_compare_cstr.
+
+    @param str The string on the left side of the operation.
+    @param value The value on the right side of the operation.
+
+    @return A negative value if str < value, zero if str == value, a positive value if str > value.
 
     @see string_compare_string
     @see string_compare_cstr
@@ -2038,78 +2156,108 @@ static inline size_t string_hash(String* str) {
     ((str), (value))
 
 /**
+    Determines if a string starts with the characters in a value. 
     Generic version of string_starts_with_string and string_starts_with_cstr.
+
+    @param str The string to check the beginning of.
+    @param value The value to check the beginning of the string for.
+
+    @return true if the string starts with the value; false otherwise.
 
     @see string_starts_with_string
     @see string_starts_with_cstr
 */
-#define string_starts_with(str, value)  \
-    _Generic((value),  \
-        char*: string_starts_with_cstr,  \
-        const char*: string_starts_with_cstr,  \
+#define string_starts_with(str, value) \
+    _Generic((value), \
+        char*: string_starts_with_cstr, \
+        const char*: string_starts_with_cstr, \
         String*: string_starts_with_string, \
         const String*: string_starts_with_string) \
     ((str), (value))
 
 /**
+    Determines if a string ends with the characters in a value. 
     Generic version of string_ends_with_string and string_ends_with_cstr.
+
+    @param str The string to check the ending of.
+    @param value The value to check the ending of the string for.
+
+    @return true if the string ends with the value; false otherwise.
 
     @see string_ends_with_string
     @see string_ends_with_cstr
 */
-#define string_ends_with(str, value)  \
-    _Generic((value),  \
-        char*: string_ends_with_cstr,  \
-        const char*: string_ends_with_cstr,  \
+#define string_ends_with(str, value) \
+    _Generic((value), \
+        char*: string_ends_with_cstr, \
+        const char*: string_ends_with_cstr, \
         String*: string_ends_with_string, \
         const String*: string_ends_with_string) \
     ((str), (value))
 
 /**
+    Removes all occurences of a value from the beginning and end of a string. 
     Generic version of string_trim_string and string_trim_cstr.
+
+    @param str The string to remove the value from.
+    @param value The string value to remove.
 
     @see string_trim_string
     @see string_trim_cstr
 */
-#define string_trim(str, value)  \
-    _Generic((value),  \
-        char*: string_trim_cstr,  \
-        const char*: string_trim_cstr,  \
+#define string_trim(str, value) \
+    _Generic((value), \
+        char*: string_trim_cstr, \
+        const char*: string_trim_cstr, \
         String*: string_trim_string, \
         const String*: string_trim_string) \
     ((str), (value))
 
 /**
+    Removes all occurences of a value from the beginning a string. 
     Generic version of string_trim_start_string and string_trim_start_cstr.
+
+    @param str The string to remove the value from.
+    @param value The string value to remove.
 
     @see string_trim_start_string
     @see string_trim_start_cstr
 */
-#define string_trim_start(str, value)  \
-    _Generic((value),  \
-        char*: string_trim_start_cstr,  \
-        const char*: string_trim_start_cstr,  \
+#define string_trim_start(str, value) \
+    _Generic((value), \
+        char*: string_trim_start_cstr, \
+        const char*: string_trim_start_cstr, \
         String*: string_trim_start_string, \
         const String*: string_trim_start_string) \
     ((str), (value))
 
 /**
+    Removes all occurences of a value from the end of a string. 
     Generic version of string_trim_end_string and string_trim_end_cstr.
+
+    @param str The string to remove the value from.
+    @param value The string value to remove.
 
     @see string_trim_end_string
     @see string_trim_end_cstr
 */
-#define string_trim_end(str, value)  \
-    _Generic((value),  \
-        char*: string_trim_end_cstr,  \
-        const char*: string_trim_end_cstr,  \
+#define string_trim_end(str, value) \
+    _Generic((value), \
+        char*: string_trim_end_cstr, \
+        const char*: string_trim_end_cstr, \
         String*: string_trim_end_string, \
         const String*: string_trim_end_string) \
     ((str), (value))
 
 /**
-    Generic version of string_trim_any_string, string_trim_any_string_refs,
+    Removes all occurrences of any value in an array from the beginning 
+    and end of a string. 
+    Generic version of string_trim_any_string, string_trim_any_string_refs, 
     and string_trim_any_cstr.
+
+    @param str The string to remove the values from.
+    @param values An array of values to remove from str.
+    @param value_count The number of items in values.
 
     @see string_trim_any_string
     @see string_trim_any_string_refs
@@ -2123,8 +2271,14 @@ static inline size_t string_hash(String* str) {
     ((str), (values), (values_count))
 
 /**
+    Removes all occurrences of any value in an array from the beginning 
+    of a string. 
     Generic version of string_trim_any_start_string, 
     string_trim_any_start_string_refs, and string_trim_any_start_cstr.
+
+    @param str The string to remove the values from.
+    @param values An array of values to remove from str.
+    @param value_count The number of items in values.
 
     @see string_trim_any_start_string
     @see string_trim_any_start_string_refs
@@ -2138,8 +2292,13 @@ static inline size_t string_hash(String* str) {
     ((str), (values), (values_count))
 
 /**
+    Removes all occurrences of any value in an array from the end of a string. 
     Generic version of string_trim_any_end_string, 
     string_trim_any_end_string_refs, and string_trim_any_end_cstr.
+
+    @param str The string to remove the values from.
+    @param values An array of strings to remove from str.
+    @param value_count The number of items in values.
 
     @see string_trim_any_end_string
     @see string_trim_any_end_string_refs
@@ -2153,49 +2312,83 @@ static inline size_t string_hash(String* str) {
     ((str), (values), (values_count))
 
 /**
+    Replaces a section of a string with the characters in a value. 
     Generic version of string_replace_string and string_replace_cstr.
+
+    @param str The string whose contents are to be replaced.
+    @param pos The starting position of the contents to replace.
+    @param count The number of characters following pos to replace.
+    @param value The value to replace the section with.
+
+    @return true on success, false on allocation failure.
 
     @see string_replace_string
     @see string_replace_cstr
 */
-#define string_replace(str, pos, count, value)  \
-    _Generic((value),  \
-        char*: string_replace_cstr,  \
-        const char*: string_replace_cstr,  \
+#define string_replace(str, pos, count, value) \
+    _Generic((value), \
+        char*: string_replace_cstr, \
+        const char*: string_replace_cstr, \
         String*: string_replace_string, \
         const String*: string_replace_string) \
     ((str), (pos), (count), (value))
 
 /**
+    Replaces a section of a string with the characters in another value slice. 
     Generic version of string_replace_part_string and string_replace_part_cstr.
+
+    @param str The string whose contents are to be replaced.
+    @param pos The starting position of the contents to replace.
+    @param count The number of characters following pos to replace.
+    @param value The value to replace the section with.
+    @param start The starting position of value to use as a replacement.
+    @param length The number of characters following start in value to use as a replacement.
+
+    @return true on success, false on allocation failure.
 
     @see string_replace_part_string
     @see string_replace_part_cstr
 */
-#define string_replace_part(str, pos, count, value, start, length)  \
-    _Generic((value),  \
-        char*: string_replace_part_cstr,  \
-        const char*: string_replace_part_cstr,  \
+#define string_replace_part(str, pos, count, value, start, length) \
+    _Generic((value), \
+        char*: string_replace_part_cstr, \
+        const char*: string_replace_part_cstr, \
         String*: string_replace_part_string, \
         const String*: string_replace_part_string) \
     ((str), (pos), (count), (value), (start), (length))
 
 /**
+    Finds the starting index of the first occurrence of a value in a string. 
     Generic version of string_find_string and string_find_cstr.
+    
+    @param str The string to search.
+    @param pos The starting position in the string to start searching.
+    @param value The value to search for.
+
+    @return The starting index of the substring on success, or SIZE_MAX if the substring couldn't be found.
 
     @see string_find_string
     @see string_find_cstr
 */
-#define string_find(str, pos, value)  \
-    _Generic((value),  \
-        char*: string_find_cstr,  \
-        const char*: string_find_cstr,  \
+#define string_find(str, pos, value) \
+    _Generic((value), \
+        char*: string_find_cstr, \
+        const char*: string_find_cstr, \
         String*: string_find_string, \
         const String*: string_find_string) \
     ((str), (pos), (value))
 
 /**
+    Finds the starting index of the first occurrence of part of a value in a string. 
     Generic version of string_find_part_string and string_find_part_cstr.
+    
+    @param str The string to search.
+    @param pos The starting position in the string to start searching.
+    @param value The value to search for.
+    @param start The beginning index of value to search for in the string.
+    @param length The number of characters following start in value to search for in the string.
+
+    @return The starting index of the substring on success, or SIZE_MAX if the substring couldn't be found.
 
     @see string_find_part_string
     @see string_find_part_cstr
@@ -2209,103 +2402,201 @@ static inline size_t string_hash(String* str) {
     ((str), (pos), (value), (start), (count))
 
 /**
+    Finds the starting index of the last occurrence of a value in a string. 
     Generic version of string_rfind_string and string_rfind_cstr.
+    
+    @param str The string to search.
+    @param pos The starting position in the string to start searching, starting from the back.
+    @param value The value to search for.
+
+    @return The starting index of the substring on success, or SIZE_MAX if the substring couldn't be found.
 
     @see string_rfind_string
     @see string_rfind_cstr
 */
 #define string_rfind(str, pos, value) \
-    _Generic((value),  \
-        char*: string_rfind_cstr,  \
-        const char*: string_rfind_cstr,  \
+    _Generic((value), \
+        char*: string_rfind_cstr, \
+        const char*: string_rfind_cstr, \
         String*: string_rfind_string, \
         const String*: string_rfind_string) \
     ((str), (pos), (value))
 
 /**
+    Finds the starting index of the last occurrence of part of a value in a string. 
     Generic version of string_rfind_part_string and string_rfind_part_cstr.
+    
+    @param str The string to search.
+    @param pos The starting position in the string to start searching, starting from the back.
+    @param value The value to search for.
+    @param start The beginning index of value to search for in the string.
+    @param length The number of characters following start in value to search for in the string.
+
+    @return The starting index of the substring on success, or SIZE_MAX if the substring couldn't be found.
 
     @see string_rfind_part_string
     @see string_rfind_part_cstr
 */
 #define string_rfind_part(str, pos, value, start, count) \
-    _Generic((value),  \
-        char*: string_rfind_part_cstr,  \
-        const char*: string_rfind_part_cstr,  \
+    _Generic((value), \
+        char*: string_rfind_part_cstr, \
+        const char*: string_rfind_part_cstr, \
         String*: string_rfind_part_string, \
         const String*: string_rfind_part_string) \
     ((str), (pos), (value), (start), (count))
 
 /**
+    Joins an array of strings together into a single string with a 
+    common separator in between each of them. 
     Generic version of string_join_string and string_join_cstr.
+
+    @param str The string that stores the result. If it has a value, 
+               the result is appended to the end. It needs to be initialized.
+
+    @param separator  A value to separate each array value in the result.
+    @param values  An array of strings to combine.
+    @param value_count  The number of strings in the values array.
 
     @see string_join_string
     @see string_join_cstr
 */
 #define string_join(str, separator, values, value_count) \
-    _Generic((separator),  \
-        char*: string_join_cstr,  \
-        const char*: string_join_cstr,  \
+    _Generic((separator), \
+        char*: string_join_cstr, \
+        const char*: string_join_cstr, \
         String*: string_join_string, \
         const String*: string_join_string) \
     ((str), (separator), (values), (value_count))
 
 /**
+    Joins an array of strings together into a single string with a 
+    common separator in between each of them. 
     Generic version of string_join_refs_string and string_join_refs_cstr.
+
+    @param str The string that stores the result. If it has a value, 
+               the result is appended to the end. It needs to be initialized.
+
+    @param separator A value to separate each array value in the result.
+    @param values An array of string references to combine.
+    @param value_count The number of strings in the values array.
 
     @see string_join_refs_string
     @see string_join_refs_cstr
 */
 #define string_join_refs(str, separator, values, value_count) \
-    _Generic((separator),  \
-        char*: string_join_refs_cstr,  \
-        const char*: string_join_refs_cstr,  \
+    _Generic((separator), \
+        char*: string_join_refs_cstr, \
+        const char*: string_join_refs_cstr, \
         String*: string_join_refs_string, \
         const String*: string_join_refs_string) \
     ((str), (separator), (values), (value_count))
 
 /**
+    Splits a string into segments based on a separator. 
     Generic version of string_split_string and string_split_cstr.
+
+    @param str The string to split apart.
+    @param separator The value to split on.
+    @param results A contiguous array of strings that will store the split segments. 
+                   Should be NULL if results_count is a negative number.
+
+    @param results_count The number of elements available in the results array. If this is 
+                         a negative number, the return value will be allocated by the function.
+
+    @param results_filled A pointer that will contain the number of string segments added to the results array.
+    @param skip_empty Determines if empty elements should be skipped or added to the results array.
+    @param init_results Determines if the segment strings need to be initialized by this function.
+
+    @return The value passed to results if results_count is a positive number. Otherwise, it's an array created 
+            by this function that will need to be manually freed. Either way, an array containing the 
+            split string segments. Returns NULL on error.
 
     @see string_split_string
     @see string_split_cstr
 */
 #define string_split(str, separator, results, results_count, results_filled, skip_empty, init_results) \
-    _Generic((separator),  \
-        char*: string_split_cstr,  \
-        const char*: string_split_cstr,  \
+    _Generic((separator), \
+        char*: string_split_cstr, \
+        const char*: string_split_cstr, \
         String*: string_split_string, \
         const String*: string_split_string) \
     ((str), (separator), (results), (results_count), (results_filled), (skip_empty), (init_results))
 
 /**
+    Splits a string into segments based on a separator. 
     Generic version of string_split_refs_string and string_split_refs_cstr.
+
+    @param str The string to split apart.
+    @param separator The value to split on.
+    @param results A non-contiguous array of strings that will store the split segments. 
+                   Should be NULL if results_count is a negative number.
+
+    @param results_count The number of elements available in the results array. If this is 
+                         a negative number, the return value will be allocated by the function.
+
+    @param results_filled A pointer that will contain the number of string segments added to the results array.
+    @param skip_empty Determines if empty elements should be skipped or added to the results array.
+    @param init_results Determines if the segment strings need to be allocated by this function. 
+                        If this is false, the results will need to be allocated/initialized beforehand.
+
+    @return The value passed to results if results_count is a positive number. Otherwise, it's an array created 
+            by this function that will need to be manually freed. Either way, an array containing the 
+            split string segments. Returns NULL on error.
 
     @see string_split_refs_string
     @see string_split_refs_cstr
 */
 #define string_split_refs(str, separator, results, results_count, results_filled, skip_empty, allocate_results) \
-    _Generic((separator),  \
-        char*: string_split_refs_cstr,  \
-        const char*: string_split_refs_cstr,  \
+    _Generic((separator), \
+        char*: string_split_refs_cstr, \
+        const char*: string_split_refs_cstr, \
         String*: string_split_refs_string, \
         const String*: string_split_refs_string) \
     ((str), (separator), (results), (results_count), (results_filled), (skip_empty), (allocate_results))
 
 /**
+    Formats a string using printf format specifiers. 
     Generic version of string_format_string and string_format_cstr.
+
+    @param result A string that stores the result of the format operation. 
+                  If this is NULL, this function allocates a string for the return value. 
+                  Otherwise it appends the formatted data to the end.
+
+    @param format A value that contains the text and format specifiers to be written.
+    @param ... The format specifier values.
+
+    @return result if the argument was non-null. Otherwise a newly allocated string 
+            that contains the format result. NULL on error.
 
     @see string_format_string
     @see string_format_cstr
 */
 #define string_format(str, format, ...) \
-    _Generic((format),  \
-        char*: string_format_cstr,  \
-        const char*: string_format_cstr,  \
+    _Generic((format), \
+        char*: string_format_cstr, \
+        const char*: string_format_cstr, \
         String*: string_format_string, \
         const String*: string_format_string) \
     ((str), (format), __VA_ARGS__)
 
+/**
+    Formats a string based on a time value using strftime format specifiers. 
+    Generic version of string_format_time_string and string_format_time_cstr.
+
+    @param result A string that stores the result of the format operation. 
+                  If this is NULL, this function allocates a string for the return value. 
+                  Otherwise it appends the formatted data to the end.
+
+    @param format  A value that contains the text and time format specifiers to be written. 
+    @param timeptr The time value used to format the string.
+
+    @return result if the argument was non-null. Otherwise a newly allocated string 
+            that contains the time format result. NULL on error.
+
+
+    @see string_format_time_string
+    @see string_format_time_cstr
+*/
 #define string_format_time(str, format, timeptr) \
     _Generic((format), \
         char*: string_format_time_cstr, \
@@ -2315,15 +2606,27 @@ static inline size_t string_hash(String* str) {
     ((str), (format), (timeptr))
 
 /**
+    Formats a string using printf format specifiers. 
     Generic version of string_format_args_string and string_format_args_cstr.
+
+    @param result A string that stores the result of the format operation. 
+                  If this is NULL, this function allocates a string for the return value. 
+                  Otherwise it appends the formatted data to the end.
+
+    @param format A value that contains the text and format specifiers to be written.
+    @param argp A list of the variadic arguments originally passed to a variadic function. 
+                The position of the argument may be changed, so pass a copy to this method if that isn't desired.
+
+    @return result if the argument was non-null. Otherwise a newly allocated string 
+            that contains the format result. NULL on error.
 
     @see string_format_args_string
     @see string_format_args_cstr
 */
 #define string_format_args(str, format, ...) \
-    _Generic((format),  \
-        char*: string_format_args_cstr,  \
-        const char*: string_format_args_cstr,  \
+    _Generic((format), \
+        char*: string_format_args_cstr, \
+        const char*: string_format_args_cstr, \
         String*: string_format_args_string, \
         const String*: string_format_args_string) \
     ((str), (format), __VA_ARGS__)
@@ -2334,6 +2637,7 @@ static inline size_t string_hash(String* str) {
 #define string_insert_part(str, value, index, start, length) \
     string_insert_part_cstr((str), (value), (index), (start), (length))
 #define string_append(str, value) string_append_cstr((str), (value))
+#define string_append_part(str, value, start, count) string_append_part_cstr(str, value, start, count)
 #define string_equals(str, value) string_equals_cstr((str), (value))
 #define string_compare(str, value) string_compare_cstr((str), (value))
 #define string_starts_with(str, value) string_starts_with_cstr((str), (value))

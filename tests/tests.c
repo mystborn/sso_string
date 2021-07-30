@@ -58,7 +58,7 @@ START_TEST(string_switches_size) {
 
     while(string_size(&str) <= cap) {
         ck_assert(!sso_string_is_long(&str));
-        string_push_back(&str, 'a');
+        string_push(&str, 'a');
     }
 
     ck_assert(sso_string_is_long(&str));
@@ -67,7 +67,7 @@ START_TEST(string_switches_size) {
 
     while(string_size(&str) <= cap) {
         ck_assert(string_capacity(&str) == cap);
-        string_push_back(&str, 'b');
+        string_push(&str, 'b');
     }
 
     ck_assert(string_capacity(&str) != cap);
@@ -76,7 +76,7 @@ START_TEST(string_switches_size) {
 
     while(string_size(&str) <= cap) {
         ck_assert(string_capacity(&str) == cap);
-        string_push_back(&str, 'c');
+        string_push(&str, 'c');
     }
 
     ck_assert(string_capacity(&str) != cap);
@@ -143,7 +143,7 @@ START_TEST(string_size_dynamic) {
     String str = STRING_EMPTY;
     for(int i = 0; i < 100; i++) {
         ck_assert(string_size(&str) == i);
-        string_push_back(&str, 'a');
+        string_push(&str, 'a');
     }
     string_free_resources(&str);
 }
@@ -160,7 +160,7 @@ START_TEST(string_size_utf8) {
     string_init(&str, "");
     Char32 all_codepoints[] = ALL_CODEPOINTS;
     for(int i = 0; i < ARRAY_SIZE(all_codepoints); i++)
-        string_u8_push_back(&str, all_codepoints[i]);
+        string_u8_push(&str, all_codepoints[i]);
 
     ck_assert(string_size(&str) == ALL_CODEPOINTS_SIZE);
     ck_assert(string_size(&str) == strlen(string_data(&str)));
@@ -184,7 +184,7 @@ START_TEST(string_u8_codepoints_all) {
     String str = STRING_EMPTY;
     Char32 all_codepoints[] = ALL_CODEPOINTS;
     for(int i = 0; i < ARRAY_SIZE(all_codepoints); i++)
-        string_u8_push_back(&str, all_codepoints[i]);
+        string_u8_push(&str, all_codepoints[i]);
 
     ck_assert(string_u8_codepoints(&str) == ARRAY_SIZE(all_codepoints));
     string_free_resources(&str);
@@ -231,7 +231,7 @@ START_TEST(string_u8_get_all) {
     String str = STRING_EMPTY;
     
     for(int i = 0; i < ARRAY_SIZE(all_codepoints); i++)
-        ck_assert(string_u8_push_back(&str, all_codepoints[i]));
+        ck_assert(string_u8_push(&str, all_codepoints[i]));
 
     int size = 1;
     int index = 0;
@@ -284,7 +284,7 @@ START_TEST(string_u8_get_with_size_all) {
     String str = STRING_EMPTY;
     
     for(int i = 0; i < ARRAY_SIZE(all_codepoints); i++)
-        ck_assert(string_u8_push_back(&str, all_codepoints[i]));
+        ck_assert(string_u8_push(&str, all_codepoints[i]));
 
     int index = 0;
     int count = 0;
@@ -355,7 +355,7 @@ START_TEST(string_u8_codepoint_size_all) {
     String str = STRING_EMPTY;
     
     for(int i = 0; i < ARRAY_SIZE(all_codepoints); i++)
-        ck_assert(string_u8_push_back(&str, all_codepoints[i]));
+        ck_assert(string_u8_push(&str, all_codepoints[i]));
 
     int index = 0;
     int count = 0;
@@ -517,7 +517,7 @@ END_TEST
 
 START_TEST(string_shrink_large_to_large) {
     if(string_size(&large) == string_capacity(&large))
-        string_push_back(&large, 'a');
+        string_push(&large, 'a');
 
     ck_assert(string_size(&large) != string_capacity(&large));
     string_shrink_to_fit(&large);
@@ -753,49 +753,49 @@ START_TEST(string_erase_large_middle) {
 }
 END_TEST
 
-START_TEST(string_push_back_succeeds) {
+START_TEST(string_push_succeeds) {
     String str = STRING_EMPTY;
-    ck_assert(string_push_back(&str, 'h'));
+    ck_assert(string_push(&str, 'h'));
     ck_assert(string_equals_cstr(&str, "h"));
 
-    ck_assert(string_push_back(&str, 'e'));
+    ck_assert(string_push(&str, 'e'));
     ck_assert(string_equals_cstr(&str, "he"));
 
     string_free_resources(&str);
 }
 END_TEST
 
-START_TEST(string_u8_push_back_ascii) {
+START_TEST(string_u8_push_ascii) {
     String str = STRING_EMPTY;
-    ck_assert(string_u8_push_back(&str, 'h'));
+    ck_assert(string_u8_push(&str, 'h'));
     ck_assert(string_equals_cstr(&str, "h"));
 
-    ck_assert(string_u8_push_back(&str, 'e'));
+    ck_assert(string_u8_push(&str, 'e'));
     ck_assert(string_equals_cstr(&str, "he"));
 
     string_free_resources(&str);
 }
 END_TEST
 
-START_TEST(string_u8_push_back_utf8) {
+START_TEST(string_u8_push_utf8) {
     String str = STRING_EMPTY;
     wchar_t kana[] = KANA_WIDE;
-    string_u8_push_back(&str, kana[0]);
+    string_u8_push(&str, kana[0]);
     ck_assert(string_equals_cstr(&str, "こ"));
 
-    string_u8_push_back(&str, kana[1]);
+    string_u8_push(&str, kana[1]);
     ck_assert(string_equals_cstr(&str, "こん"));
 
     string_free_resources(&str);
 }
 END_TEST
 
-START_TEST(string_u8_push_back_all) {
+START_TEST(string_u8_push_all) {
     Char32 all_codepoints[] = ALL_CODEPOINTS;
     String str = STRING_EMPTY;
 
     for(int i = 0; i < ARRAY_SIZE(all_codepoints); i++)
-        ck_assert(string_u8_push_back(&str, all_codepoints[i]));
+        ck_assert(string_u8_push(&str, all_codepoints[i]));
 
     int index = 0;
     int count = 0;
@@ -816,32 +816,32 @@ START_TEST(string_u8_push_back_all) {
 }
 END_TEST
 
-START_TEST(string_pop_back_succeeds) {
+START_TEST(string_pop_succeeds) {
     char* hello = HELLO;
     for(int i = HELLO_SIZE - 1; i >= 0; i--) {
-        char letter = string_pop_back(&small);
+        char letter = string_pop(&small);
         ck_assert(letter = hello[i]);
     }
 }
 END_TEST
 
-START_TEST(string_u8_pop_back_ascii) {
+START_TEST(string_u8_pop_ascii) {
     char* hello = HELLO;
     for(int i = HELLO_SIZE - 1; i >= 0; i--) {
-        Char32 letter = string_u8_pop_back(&small);
+        Char32 letter = string_u8_pop(&small);
         ck_assert(letter = hello[i]);
     }
 }
 END_TEST
 
-START_TEST(string_u8_pop_back_utf8) {
+START_TEST(string_u8_pop_utf8) {
     String str = string_create(KANA);
     String result = string_create(KANA);
     int codepoints = string_u8_codepoints(&result);
     int size = string_size(&str);
 
     for(int i = codepoints - 1; i >= 0; i--) {
-        Char32 kana = string_u8_pop_back(&str);
+        Char32 kana = string_u8_pop(&str);
         Char32 expected = string_u8_get(&result, i * 3);
         ck_assert(kana == expected);
         size_t new_size = string_size(&str);
@@ -854,12 +854,12 @@ START_TEST(string_u8_pop_back_utf8) {
 }
 END_TEST
 
-START_TEST(string_u8_pop_back_all) {
+START_TEST(string_u8_pop_all) {
     Char32 all_codepoints[] = ALL_CODEPOINTS;
     String str = STRING_EMPTY;
 
     for(int i = 0; i < ARRAY_SIZE(all_codepoints); i++)
-        ck_assert(string_u8_push_back(&str, all_codepoints[i]));
+        ck_assert(string_u8_push(&str, all_codepoints[i]));
 
     String result = string_create(string_data(&str));
 
@@ -868,7 +868,7 @@ START_TEST(string_u8_pop_back_all) {
     size_t size = string_size(&result);
 
     for(int i = ARRAY_SIZE(all_codepoints) - 1; i >= 0; i--) {
-        Char32 letter = string_u8_pop_back(&str);
+        Char32 letter = string_u8_pop(&str);
         Char32 expected_letter = string_u8_get(&result, size - offset);
 
         ck_assert(letter == expected_letter);
@@ -1652,9 +1652,9 @@ END_TEST
 
 START_TEST(string_is_null_or_whitespace_u8_space) {
     String str = STRING_EMPTY;
-    string_u8_push_back(&str, ' '); // ascii space
-    string_u8_push_back(&str, L'\xA0'); // no-break space
-    string_u8_push_back(&str, L'\x180E'); // mongolian vowel separator
+    string_u8_push(&str, ' '); // ascii space
+    string_u8_push(&str, L'\xA0'); // no-break space
+    string_u8_push(&str, L'\x180E'); // mongolian vowel separator
     ck_assert(string_u8_is_null_or_whitespace(&str));
     string_free_resources(&str);
 }
@@ -2234,14 +2234,14 @@ int main(void) {
     tcase_add_test(tc, string_erase_large_start);
     tcase_add_test(tc, string_erase_large_end);
     tcase_add_test(tc, string_erase_large_middle);
-    tcase_add_test(tc, string_push_back_succeeds);
-    tcase_add_test(tc, string_u8_push_back_ascii);
-    tcase_add_test(tc, string_u8_push_back_utf8);
-    tcase_add_test(tc, string_u8_push_back_all);
-    tcase_add_test(tc, string_pop_back_succeeds);
-    tcase_add_test(tc, string_u8_pop_back_ascii);
-    tcase_add_test(tc, string_u8_pop_back_utf8);
-    tcase_add_test(tc, string_u8_pop_back_all);
+    tcase_add_test(tc, string_push_succeeds);
+    tcase_add_test(tc, string_u8_push_ascii);
+    tcase_add_test(tc, string_u8_push_utf8);
+    tcase_add_test(tc, string_u8_push_all);
+    tcase_add_test(tc, string_pop_succeeds);
+    tcase_add_test(tc, string_u8_pop_ascii);
+    tcase_add_test(tc, string_u8_pop_utf8);
+    tcase_add_test(tc, string_u8_pop_all);
     tcase_add_test(tc, string_append_cstr_small_to_small);
     tcase_add_test(tc, string_append_cstr_large_to_large);
     tcase_add_test(tc, string_append_cstr_small_to_large);
