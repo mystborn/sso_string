@@ -1322,6 +1322,28 @@ static inline String** string_split_refs_cstr(
     bool allocate_results);
 
 /**
+    Helper function to help free a library allocated result from string_split.
+
+    @param values An array of strings returned from a string_split call when 
+                  results_count was less than 0.
+    @param count The value of the results_filled parameter from a string_split call.
+
+    @see string_split
+*/
+static inline void string_split_free(String* values, int count);
+
+/**
+    Helper function to help free a library allocated result from string_split_refs.
+
+    @param values An array of strings returned from a string_split_refs call when 
+                  results_count was less than 0.
+    @param count The value of the results_filled parameter from a string_split_refs call.
+
+    @see string_split_refs
+*/
+static inline void string_split_refs_free(String** values, int count);
+
+/**
     Formats a string using printf format specifiers.
 
     @param result A string that stores the result of the format operation. 
@@ -2071,6 +2093,20 @@ static inline String** string_split_refs_cstr(
         results_filled,
         skip_empty,
         allocate_results);
+}
+
+static inline void string_split_free(String* results, int count) {
+    for(int i = 0; i < count; i++)
+        string_free_resources(results + i);
+    
+    sso_string_free(results);
+}
+
+static inline void string_split_free_refs(String** results, int count) {
+    for(int i = 0; i < count; i++)
+        string_free(results[i]);
+    
+    sso_string_free(results);
 }
 
 static inline String* string_format_time_string(String* result, const String* format, const struct tm* timeptr) {
