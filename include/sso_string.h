@@ -621,7 +621,33 @@ static inline int string_compare_cstr(const String* str, const char* value);
 static inline int string_compare_string(const String* str, const String* value);
 
 /**
-    Determines if the contents of a String is equivalent to a c-string.
+    Compares a subsection of a string and a c-string in the same fashion as strncmp.
+
+    @param str The on the left size of the operation.
+    @param pos The starting point of str to compare.
+    @param value The c-string on the right side of the operation.
+    @param start The starting point of value to compare.
+    @param length The total number of characters to compare.
+
+    @return A negative value if str < value, zero if str == value, a positive value if str > value.
+*/
+static inline int string_compare_part_cstr(const String* str, size_t pos, const char* value, size_t start, size_t length);
+
+/**
+    Compares a subsection of two strings in the same fashion as strncmp.
+
+    @param str The on the left size of the operation.
+    @param pos The starting point of str to compare.
+    @param value The string on the right side of the operation.
+    @param start The starting point of value to compare.
+    @param length The total number of characters to compare.
+
+    @return A negative value if str < value, zero if str == value, a positive value if str > value.
+*/
+static inline int string_compare_part_string(const String* str, size_t pos, const String* value, size_t start, size_t length);
+
+/**
+    Determines if the contents of a string is equivalent to a c-string.
 
     @param str The string on the left side of the operation.
     @param value The c-string on the right side of the operation.
@@ -639,6 +665,32 @@ static inline bool string_equals_cstr(const String* str, const char* value);
     @return true if the values are equivalent; false otherwise.
 */
 static inline bool string_equals_string(const String* str, const String* value);
+
+/**
+    Determines if the contents of subsections of a string and a c-string are equivalent.
+
+    @param str The on the left size of the operation.
+    @param pos The starting point of str to compare.
+    @param value The c-string on the right side of the operation.
+    @param start The starting point of value to compare.
+    @param length The total number of characters to compare.
+
+    @return true if the values are equivalent; false otherwise.
+*/
+static inline bool string_equals_part_cstr(const String* str, size_t pos, const char* value, size_t start, size_t length);
+
+/**
+    Determines if the contents of subsections of two strings are equivalent.
+
+    @param str The on the left size of the operation.
+    @param pos The starting point of str to compare.
+    @param value The string on the right side of the operation.
+    @param start The starting point of value to compare.
+    @param length The total number of characters to compare.
+
+    @return true if the values are equivalent; false otherwise.
+*/
+static inline bool string_equals_part_string(const String* str, size_t pos, const String* value, size_t start, size_t length);
 
 /**
     Determines if a string starts with the characters in a c-string.
@@ -1694,22 +1746,39 @@ static inline bool string_append_string_part(
     return sso_string_append_impl(str, string_data(value) + start, count);
 }
 
-static inline int sso_string_compare_impl(const String* str, const char* value, size_t length) {
+static inline int sso_string_compare_impl(const String* str, size_t pos, const char* value, size_t length) {
     SSO_STRING_ASSERT_ARG(str);
     SSO_STRING_ASSERT_ARG(value);
-    size_t size = string_size(str);
+
+    // It's valid to compare starting from the NULL terminating character.
+    // The main motivation behind this is to make it valid to compare two
+    // empty strings.
+    SSO_STRING_ASSERT_BOUNDS(string_size(str) >= pos);
+
+    size_t size = string_size(str) - pos;
+
     if(size != length)
         return size < length ? -1 : 1;
 
-    return strncmp(string_data(str), value, length);
+    return strncmp(string_data(str) + pos, value, length);
 }
 
 static inline int string_compare_cstr(const String* str, const char* value) {
-    return sso_string_compare_impl(str, value, strlen(value));
+    return sso_string_compare_impl(str, 0, value, strlen(value));
 }
 
 static inline int string_compare_string(const String* str, const String* value) {
-    return sso_string_compare_impl(str, string_data(value), string_size(value));
+    return sso_string_compare_impl(str, 0, string_data(value), string_size(value));
+}
+
+static inline int string_compare_part_cstr(const String* str, size_t pos, const char* value, size_t start, size_t length) {
+    SSO_STRING_ASSERT_BOUNDS(strlen(value) > start);
+    return sso_string_compare_impl(str, pos, value + start, length);
+}
+
+static inline int string_compare_part_string(const String* str, size_t pos, const String* value, size_t start, size_t length) {
+    SSO_STRING_ASSERT_BOUNDS(string_size(value) > start);
+    return sso_string_compare_impl(str, pos, string_data(value), length);
 }
 
 static inline bool string_equals_cstr(const String* str, const char* value) {
@@ -1718,6 +1787,14 @@ static inline bool string_equals_cstr(const String* str, const char* value) {
 
 static inline bool string_equals_string(const String* str, const String* value) {
     return string_compare_string(str, value) == 0;
+}
+
+static inline bool string_equals_part_cstr(const String* str, size_t pos, const char* value, size_t start, size_t length) {
+    return string_compare_part_cstr(str, pos, value, start, length) == 0;
+}
+
+static inline bool string_equals_part_string(const String* str, size_t pos, const String* value, size_t start, size_t length) {
+    return string_compare_part_string(str, pos, value, start, length) == 0;
 }
 
 static inline bool sso_string_starts_with_impl(const String* str, const char* value, size_t length) {
