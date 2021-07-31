@@ -1,3 +1,5 @@
+tags: memory
+
 # string_copy
 
 Initializes a string with the data of another string.
@@ -15,3 +17,13 @@ bool string_copy(const String* str, String* out_value);
 
 **Returns:** true on success, false on allocation failure.
 
+## Example
+
+```c
+Stirng str = string_create("Copy");
+String out_value;
+
+string_copy(&str, &out_value);
+
+puts(string_data(&out_value)); // Copy
+```

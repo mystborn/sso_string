@@ -1,3 +1,5 @@
+tags: compare
+
 # string_equals_cstr
 
 Determines if the contents of a String is equivalent to a c-string.
@@ -15,3 +17,18 @@ bool string_equals_cstr(const String* str, const char* value);
 
 **Returns:** true if the values are equivalent; false otherwise.
 
+## Example
+
+```c
+String str = string_create("Hello");
+
+bool result = string_equals_cstr(&str, "Hello");
+
+puts(result ? "true" : "false"); // true
+
+result = string_equals_cstr(&str, "A totally different string");
+
+puts(result ? "true" : "false"); // false
+
+string_free_resources(&str);
+```

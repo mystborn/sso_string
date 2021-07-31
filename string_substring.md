@@ -1,3 +1,5 @@
+tags: memory
+
 # string_substring
 
 Initializes a string with the data from a slice of another string slice.
@@ -17,3 +19,16 @@ bool string_substring(const String* str, size_t pos, size_t count, String* out_v
 
 **Returns:** true on success, false on allocation failure.
 
+## Example
+
+```c
+String str = string_create("Hello beautiful world");
+String out_value;
+
+string_substring(&str, 6, 9, &out_value);
+
+puts(string_data(&out_value)); // beautiful
+
+string_free_resources(&str);
+string_free_resources(&out_value);
+```

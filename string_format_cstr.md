@@ -1,3 +1,5 @@
+tags: modify, memory
+
 # string_format_cstr
 
 Formats a string using printf format specifiers.
@@ -16,3 +18,26 @@ String* string_format_cstr(String* result, const char* format, ...);
 
 **Returns:** result if the argument was non-null. Otherwise a newly allocated string that contains the format result. NULL on error.
 
+## Example
+
+### Function Allocates
+
+```c
+String* result = string_format_cstr(NULL, "%s %d", "Test Number:", 42);
+
+puts(string_data(result)); // Test Number: 42
+
+string_free(result);
+```
+
+### Caller Allocates
+
+```c
+String result = string_create("");
+
+string_format_cstr(NULL, "%s %d", "Test Number:", 42);
+
+puts(string_data(result)); // Test Number: 42
+
+string_free_resources(&result);
+```

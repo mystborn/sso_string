@@ -1,3 +1,5 @@
+tags: modify, memory
+
 # string_format_args_string
 
 Formats a string using printf format specifiers.
@@ -16,3 +18,47 @@ String* string_format_args_string(String* result, const String* format, va_list 
 
 **Returns:** result if the argument was non-null. Otherwise a newly allocated string that contains the format result. NULL on error.
 
+## Example
+
+### Function Allocates
+
+```c
+String format = string_create("%s %d");
+va_list argp;
+
+va_start(argp, /* Last arg name */);
+
+String* result = string_format_args_string(NULL, &format, argp);
+
+va_end(argp);
+
+puts(string_data(result));
+
+string_free(result);
+
+// Output if the variadic arguments were "Test Number: " and 42
+//
+// Test Number: 42
+```
+
+### Caller Allocates
+
+```c
+String format = string_create("%s %d");
+String result = string_create("");
+va_list argp;
+
+va_start(argp, /* Last arg name */);
+
+string_format_args_string(NULL, &format, argp);
+
+puts(string_data(result));
+
+va_end(argp);
+
+string_free_resources(&result);
+
+// Output if the variadic arguments were "Test Number:" and 42
+//
+// Test Number: 42
+```

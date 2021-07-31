@@ -1,3 +1,5 @@
+tags: modify
+
 # string_join_cstr_refs
 
 Joins an array of strings together into a single string with a common separator in between each of them.
@@ -15,3 +17,19 @@ bool string_join_cstr_refs(    String* str,    const char* separator,    const S
 | values |  | An array of string references to combine. |
 | value_count |  | The number of strings in the values array. |
 
+## Example
+
+```c
+String str = string_create("");
+
+String* values[] = { string_create_ref("apples), string_create_ref("oranges"), string_create_ref("bananas") };
+
+string_join_cstr_refs(&str, ", ", values, 3);
+
+puts(string_data(&str)); // apples, oranges, bananas
+
+string_free_resources(&str);
+string_free(values);
+string_free(values + 1);
+string_free(values + 2);
+```

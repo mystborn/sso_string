@@ -1,3 +1,5 @@
+tags: modify
+
 # string_replace_cstr
 
 Replaces a section of a string with the characters in a c-string.
@@ -17,3 +19,8 @@ bool string_replace_cstr(String* str, size_t pos, size_t count, const char* valu
 
 **Returns:** true on success, false on allocation failure.
 
+## Example
+
+```c
+String 
+```

@@ -1,3 +1,5 @@
+tags: memory, modify
+
 # string_format_time_cstr
 
 Formats a string based on a time value using strftime format specifiers.
@@ -16,3 +18,39 @@ String* string_format_time_cstr(String* result, const char* format, const struct
 
 **Returns:** result if the argument was non-null. Otherwise a newly allocated string that contains the time format result. NULL on error.
 
+## Example
+
+### Function Allocates
+
+```c
+struct tm time_value;
+time_value.tm_hour = 13;
+time_value.tm_min = 30;
+time_value.tm_sec = 2;
+
+
+String* result = string_format_time_cstr(NULL, "%T", &time_value);
+
+string_free(result);
+
+// Output:
+// 13:30:02
+```
+
+### Caller Allocates
+
+```c
+struct tm time_value;
+time_value.tm_hour = 13;
+time_value.tm_min = 30;
+time_value.tm_sec = 2;
+
+String result = string_create("");
+
+string_format_time_cstr(result, "%T", &time_value);
+
+string_free_resources(&result);
+
+// Output:
+// 13:30:02
+```

@@ -1,3 +1,5 @@
+tags: memory
+
 # string_split_cstr
 
 Splits a string into segments based on a separator.
@@ -20,3 +22,63 @@ String* string_split_cstr(    const String* str,    const char* separator,    St
 
 **Returns:** The value passed to results if results_count is a positive number. Otherwise, it's an array created by this function that will need to be manually freed. Either way, an array containing the split string segments. Returns NULL on error.
 
+## Example
+
+### Function Allocates
+
+```c
+String str = string_create("apples, oranges, bananas");
+int count;
+
+String* results = string_split_cstr(&str, ", ", NULL, STRING_SPLIT_ALLOCATE, &count, true, true);
+
+// We can free the string that the values came from before using them
+// without worry.
+string_free_resources(&str);
+
+for(int i = 0; i < count; i++) {
+    puts(string_data(results + i));
+}
+
+// The values can be freed using string_split_free, but for examples case
+// this is how to manually free the strings.
+
+for(int i = 0; i < count; i++) {
+    string_free_resources(results + i);
+}
+
+sso_string_free(results);
+
+// Output:
+// apples
+// oranges
+// bananas
+```
+
+### Caller Allocates
+
+```c
+String str = string_create("apples, oranges, bananas");
+String results[2];
+int count;
+
+// The results aren't initialized, so the last argument tells the function
+// to initialize them before setting them.
+string_split_string(&str, ", ", results, 2, &count, true, true);
+
+string_free_resources(&str);
+
+// Because the results array can only fit 2 results, the last string
+// (banana in this case) is ignored.
+
+for(int i = 0; i < count; i++) {
+    puts(string_data(results + i));
+}
+
+string_free_resources(results);
+string_free_resources(results + 1);
+
+// Output:
+// apples
+// oranges
+```

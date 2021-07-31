@@ -1,3 +1,5 @@
+tags: modify
+
 # string_pad_right
 
 Pads the end of a string with a character until it's at least the specified size.
@@ -16,3 +18,27 @@ bool string_pad_right(String* str, char value, size_t width);
 
 **Returns:** true on success, false on allocation failure.
 
+## Example
+
+```c
+String str = string_create("Hello");
+
+puts(&str); // Hello
+
+string_pad_right(&str, '0', 7);
+
+puts(&str); // Hello00
+
+string_free_resources(&str);
+
+str = string_create("Longer string");
+
+puts(&str); // Longer string
+
+// No padding will be done since the string length is > the pad length.
+string_pad_right(&str, '0', 7);
+
+puts(&str); // Longer string
+
+string_free_resources(&str);
+```

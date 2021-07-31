@@ -1,3 +1,5 @@
+tags: compare
+
 # string_ends_with_string
 
 Determines if a string ends with the characters in another string.
@@ -15,3 +17,20 @@ bool string_ends_with_string(const String* str, const String* value);
 
 **Returns:** true if the string ends with the value; false otherwise.
 
+## Example
+
+```c
+String str = string_create("Hello");
+String lo = string_create("lo");
+String lie = string_create("lie");
+
+bool result = string_ends_with_string(&str, &lo);
+
+puts(result ? "true" : "false"); // true
+
+result = string_ends_with_string(&str, &lie);
+
+puts(result ? "true" : "false"); // false
+
+string_free_resources(&str);
+```

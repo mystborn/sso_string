@@ -1,4 +1,4 @@
-tags: operator
+tags: compare
 
 # string_compare_cstr
 
@@ -22,13 +22,13 @@ int string_compare_cstr(const String* str, const char* value);
 ```c
 String str = string_create("Hello");
 
-bool result = string_compare_cstr(&str, "Hello");
+int result = string_compare_cstr(&str, "Hello");
 
-puts(result ? "true" : "false"); // true
+printf("%d\n", result); // 0
 
 result = string_compare_cstr(&str, "A totally different string");
 
-puts(result ? "true" : "false"); // false
+printf("%d\n", result); // -1
 
 string_free_resources(&str);
 ```
