@@ -6,6 +6,8 @@ check_location = get_option('check_location')
 include_files = include_directories(['include'])
 sources = [ './src/sso_string.c' ]
 
+compiler_args = ['/DSSO_STRING_BUILD']
+
 sso_string = static_library(
     'sso_string',
     sources,

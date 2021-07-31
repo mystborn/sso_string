@@ -35,9 +35,6 @@
 
     The type is small enough to pass by value, but you should not do that
     at all if you plan to modify the string in any way.
-
-    Essentially all bounds checking is done using assert, so if that is something desired
-    in a production environment, it will have to be implemented on the callers side.
 */
 
 
@@ -892,7 +889,7 @@ SSO_STRING_EXPORT bool string_pad_left(String* str, char value, size_t width);
 SSO_STRING_EXPORT bool string_pad_right(String* str, char value, size_t width);
 
 /**
-    Pads the beggining of a string with a unicode character until it's at 
+    Pads the beginning of a string with a unicode character until it's at 
     least the specified codepoints long.
 
     @param str The string to pad.
@@ -1150,7 +1147,7 @@ static inline bool string_join_string(
     const String* values,
     size_t value_count);
 
-    /**
+/**
     Joins an array of strings together into a single string with a 
     common separator in between each of them.
 
@@ -1225,6 +1222,8 @@ static inline bool string_join_cstr_refs(
     @return The value passed to results if results_count is a positive number. Otherwise, it's an array created 
             by this function that will need to be manually freed. Either way, an array containing the 
             split string segments. Returns NULL on error.
+    
+    @see STRING_SPLIT_ALLOCATE
 */
 static inline String* string_split_string(
     const String* str,
@@ -1253,6 +1252,8 @@ static inline String* string_split_string(
     @return The value passed to results if results_count is a positive number. Otherwise, it's an array created 
             by this function that will need to be manually freed. Either way, an array containing the 
             split string segments. Returns NULL on error.
+    
+    @see STRING_SPLIT_ALLOCATE
 */
 static inline String* string_split_cstr(
     const String* str,
@@ -1282,6 +1283,8 @@ static inline String* string_split_cstr(
     @return The value passed to results if results_count is a positive number. Otherwise, it's an array created 
             by this function that will need to be manually freed. Either way, an array containing the 
             split string segments. Returns NULL on error.
+    
+    @see STRING_SPLIT_ALLOCATE
 */
 static inline String** string_split_refs_string(
     const String* str,
@@ -1311,6 +1314,8 @@ static inline String** string_split_refs_string(
     @return The value passed to results if results_count is a positive number. Otherwise, it's an array created 
             by this function that will need to be manually freed. Either way, an array containing the 
             split string segments. Returns NULL on error.
+    
+    @see STRING_SPLIT_ALLOCATE
 */
 static inline String** string_split_refs_cstr(
     const String* str,
@@ -1449,13 +1454,16 @@ static inline size_t string_hash(String* str);
 
     @param str The string that will contain the line. Its contents will be overwritten.
     @param file The file to read a line from.
+    @param expect_carriage_return Determines if the function needs to account for carriage returns 
+                                  when repositioning the read location with ftell. Should be false 
+                                  on files without carriage returns and on binary files.
 
     @return true if the operation was a success and there is more data to read. 
             false if there is no more data or if there is an error. 
             Check if there is an error using feof/ferror. If neither are set, 
             there was an allocation error.
 */
-SSO_STRING_EXPORT bool string_file_read_line(String* str, FILE* file);
+SSO_STRING_EXPORT bool string_file_read_line(String* str, FILE* file, bool expect_carriage_return);
 
 /**
     Reads the entirety of a file from its current position into a string.

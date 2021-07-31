@@ -1693,7 +1693,7 @@ SSO_STRING_EXPORT String* string_format_time_cstr(String* result, const char* fo
         return NULL;
 }
 
-SSO_STRING_EXPORT bool string_file_read_line(String* str, FILE* file) {
+SSO_STRING_EXPORT bool string_file_read_line(String* str, FILE* file, bool expect_carriage_return) {
     // Todo: Potentially use the string contents as the buffer.
     #define SSO_STRING_FILE_BUFFER_SIZE 256
 
@@ -1731,7 +1731,9 @@ SSO_STRING_EXPORT bool string_file_read_line(String* str, FILE* file) {
                 if (!string_append_cstr_part(str, buffer, 0, (size_t)(end - buffer)))
                     return false;
 
-                if (fseek(file, current + (end - buffer) + 2, SEEK_SET) != 0)
+                long offset = current + (end - buffer) + expect_carriage_return ? 2 : 1;
+
+                if (fseek(file, offset, SEEK_SET) != 0)
                     return false;
 
                 return true;
