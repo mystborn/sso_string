@@ -1768,38 +1768,44 @@ static inline bool string_append_string_part(
     return sso_string_append_impl(str, string_data(value) + start, count);
 }
 
-static inline int sso_string_compare_impl(const String* str, size_t pos, const char* value, size_t length) {
+static inline int sso_string_compare_impl(const String* str, const char* value) {
     SSO_STRING_ASSERT_ARG(str);
     SSO_STRING_ASSERT_ARG(value);
 
+    return strcmp(string_data(str), value);
+}
+
+static inline int string_compare_cstr(const String* str, const char* value) {
+    return sso_string_compare_impl(str, value);
+}
+
+static inline int string_compare_string(const String* str, const String* value) {
+    return sso_string_compare_impl(str, string_data(value));
+}
+
+static inline int sso_string_compare_part_impl(const String* str, size_t pos, const char* value, size_t length) {
+    SSO_STRING_ASSERT_ARG(str);
+    SSO_STRING_ASSERT_ARG(value);
+
+    // (1)
     // It's valid to compare starting from the NULL terminating character.
     // The main motivation behind this is to make it valid to compare two
     // empty strings.
-    SSO_STRING_ASSERT_BOUNDS(string_size(str) >= pos);
-
-    size_t size = string_size(str) - pos;
-
-    if(size != length)
-        return size < length ? -1 : 1;
+    // Early exit if pos is zero, since that is always valid.
+    SSO_STRING_ASSERT_BOUNDS(pos == 0 || string_size(str) >= pos);
 
     return strncmp(string_data(str) + pos, value, length);
 }
 
-static inline int string_compare_cstr(const String* str, const char* value) {
-    return sso_string_compare_impl(str, 0, value, strlen(value));
-}
-
-static inline int string_compare_string(const String* str, const String* value) {
-    return sso_string_compare_impl(str, 0, string_data(value), string_size(value));
-}
-
 static inline int string_compare_part_cstr(const String* str, size_t pos, const char* value, size_t start, size_t length) {
-    SSO_STRING_ASSERT_BOUNDS(strlen(value) > start);
+    // See (1) in sso_string_compare_impl
+    SSO_STRING_ASSERT_BOUNDS(start == 0 || strlen(value) >= start);
     return sso_string_compare_impl(str, pos, value + start, length);
 }
 
 static inline int string_compare_part_string(const String* str, size_t pos, const String* value, size_t start, size_t length) {
-    SSO_STRING_ASSERT_BOUNDS(string_size(value) > start);
+    // See (1) in sso_string_compare_impl
+    SSO_STRING_ASSERT_BOUNDS(start == 0 || string_size(value) >= start);
     return sso_string_compare_impl(str, pos, string_data(value), length);
 }
 
@@ -1828,7 +1834,6 @@ static inline bool sso_string_starts_with_impl(const String* str, const char* va
 
     return strncmp(string_data(str), value, length) == 0;
 }
-
 
 static inline bool string_starts_with_cstr(const String* str, const char* value) {
     return sso_string_starts_with_impl(str, value, strlen(value));
