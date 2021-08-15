@@ -50,7 +50,7 @@ void doc_parts_free(DocParts* parts) {
 bool read_next_docstring(String* doc_string, FILE* file) {
     string_clear(doc_string);
     String line = string_create("");
-    while(string_file_read_line(&line, file, true)) {
+    while(string_file_read_line_buffered(&line, file, true)) {
         if(string_starts_with(&line, "/**")) {
             string_append(doc_string, &line);
             string_append(doc_string, "\n");
@@ -62,7 +62,7 @@ bool read_next_docstring(String* doc_string, FILE* file) {
         goto error;
 
     do {
-        if(!string_file_read_line(&line, file, true))
+        if(!string_file_read_line_buffered(&line, file, true))
             break;
 
         string_append(doc_string, &line);
@@ -88,7 +88,7 @@ bool read_function_prototype(String* prototype, FILE* file) {
     bool first_line = true;
     String line = string_create("");
     do {
-        string_file_read_line(&line, file, true);
+        string_file_read_line_buffered(&line, file, true);
         if(first_line) {
             first_line = false;
 
@@ -138,7 +138,7 @@ void extract_function_name(String* prototype, String* name) {
 }
 
 void read_tags(String* tags, FILE* file) {
-    if(string_file_read_line(tags, file, true)) {
+    if(string_file_read_line_buffered(tags, file, true)) {
         if(!string_starts_with(tags, "tags:"))
             string_clear(tags);
     }
@@ -147,7 +147,7 @@ void read_tags(String* tags, FILE* file) {
 void read_example(String* example, FILE* file) {
     String line = string_create("");
     bool found = false;
-    while(string_file_read_line(&line, file, true)) {
+    while(string_file_read_line_buffered(&line, file, true)) {
         if(found || string_starts_with(&line, "## Example")) {
             string_append(example, &line);
             string_append(example, "\n");

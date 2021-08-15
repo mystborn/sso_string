@@ -354,7 +354,7 @@ SSO_STRING_EXPORT Char32 string_u8_get(const String* str, size_t index);
 
     @return Thee unicode character starting at the specified byte index.
 
-    @remark This function can be used to easily iterate over a UTF-8 string.
+    @remarks This function can be used to easily iterate over a UTF-8 string.
 */
 SSO_STRING_EXPORT Char32 string_u8_get_with_size(const String* str, size_t index, int* out_size);
 
@@ -425,9 +425,9 @@ SSO_STRING_EXPORT bool string_u8_is_null_or_whitespace(const String* str);
 
     @return true on success, false on allocation failure.
 
-    @remark Mostly for internal use and for resizing the internal buffer of a string 
-            before passing it into a function that modifies a c-string. Make sure to 
-            use sso_string_set_size afterwards.
+    @remarks Mostly for internal use and for resizing the internal buffer of a string 
+             before passing it into a function that modifies a c-string. Make sure to 
+             use sso_string_set_size afterwards.
 */
 static inline bool string_reserve(String* str, size_t reserve);
 
@@ -1450,9 +1450,24 @@ SSO_STRING_EXPORT String* string_format_time_cstr(String* result, const char* fo
 static inline size_t string_hash(String* str);
 
 /**
-    Reads a single line of a file into a string.
+    Reads a single line of a file into a string. Slower than string_file_read_line_buffered, but can be
+    used on any file without knowing any details about it.
 
-    @param str The string that will contain the line. Its contents will be overwritten.
+    @param str The string that will contain the line. Its contents will be overwritten. Needs to be initialized.
+    @param file The file to read a line from.
+
+    @return true if the operation was a success and there is more data to read. 
+            false if there is no more data or if there is an error. 
+            Check if there is an error using feof/ferror. If neither are set, 
+            there was an allocation error.
+*/
+SSO_STRING_EXPORT bool string_file_read_line(String* str, FILE* file);
+
+/**
+    Reads a single line of a file into a string. This version is much faster than string_file_read_line,
+    but it requires knowing whether the line endings use carriage returns.
+
+    @param str The string that will contain the line. Its contents will be overwritten. Needs to be initialized.
     @param file The file to read a line from.
     @param expect_carriage_return Determines if the function needs to account for carriage returns 
                                   when repositioning the read location with ftell. Should be false 
@@ -1463,7 +1478,7 @@ static inline size_t string_hash(String* str);
             Check if there is an error using feof/ferror. If neither are set, 
             there was an allocation error.
 */
-SSO_STRING_EXPORT bool string_file_read_line(String* str, FILE* file, bool expect_carriage_return);
+SSO_STRING_EXPORT bool string_file_read_line_buffered(String* str, FILE* file, bool expect_carriage_return);
 
 /**
     Reads the entirety of a file from its current position into a string.
@@ -1506,9 +1521,9 @@ SSO_STRING_EXPORT bool string_file_read_all(String* str, FILE* file);
 /**
     Sets the number of bytes used by a string, not including any NULL-terminating characters.
 
-    @remark This is mostly for internal use, but it can be used by others 
-            to synchronize the length of a string with its internal representation 
-            after some operation modified the c-string directly.
+    @remarks This is mostly for internal use, but it can be used by others 
+             to synchronize the length of a string with its internal representation 
+             after some operation modified the c-string directly.
 */
 static inline void sso_string_set_size(String* str, size_t size);
 
@@ -1808,13 +1823,13 @@ static inline int sso_string_compare_part_impl(const String* str, size_t pos, co
 static inline int string_compare_part_cstr(const String* str, size_t pos, const char* value, size_t start, size_t length) {
     // See (1) in sso_string_compare_impl
     SSO_STRING_ASSERT_BOUNDS(start == 0 || strlen(value) >= start);
-    return sso_string_compare_impl(str, pos, value + start, length);
+    return sso_string_compare_part_impl(str, pos, value + start, length);
 }
 
 static inline int string_compare_part_string(const String* str, size_t pos, const String* value, size_t start, size_t length) {
     // See (1) in sso_string_compare_impl
     SSO_STRING_ASSERT_BOUNDS(start == 0 || string_size(value) >= start);
-    return sso_string_compare_impl(str, pos, string_data(value), length);
+    return sso_string_compare_part_impl(str, pos, string_data(value), length);
 }
 
 static inline bool string_equals_cstr(const String* str, const char* value) {
