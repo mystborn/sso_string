@@ -12,6 +12,12 @@
     running out of memory.
 */
 
+typedef enum Declaration {
+    DECLARATION_FUNCTION_PROTOTYPE,
+    DECLARATION_MACRO,
+    DECLARATION_NONE
+} Declaration;
+
 
 /**
     Defines the parts of a doc-string using in sso_string.
@@ -83,58 +89,105 @@ bool read_next_docstring(String* doc_string, FILE* file) {
         return false;
 }
 
-bool read_function_prototype(String* prototype, FILE* file) {
-    string_clear(prototype);
-    bool first_line = true;
-    String line = string_create("");
-    do {
-        string_file_read_line_buffered(&line, file, true);
-        if(first_line) {
-            first_line = false;
+bool read_function_prototype(String* prototype, String* line, FILE* file) {
+    while(!feof(file) && !ferror(file)) {
+        string_trim(line, " ");
+        string_append(prototype, line);
 
-            if (string_starts_with(&line, "SSO_STRING_EXPORT ")) {
-                string_trim_start(&line, "SSO_STRING_EXPORT ");
-            } else if (string_starts_with(&line, "static inline ")) {
-                string_trim_start(&line, "static inline ");
-            } else {
-                goto error;
-            }
-        }
-
-        string_append(prototype, &line);
-
-        if(string_ends_with(&line, ";"))
+        if(string_ends_with(line, ";"))
             break;
+
+        if(!string_ends_with(line, "("))
+            string_append(prototype, " ");
+        string_file_read_line_buffered(line, file, true);
     }
-    while(!feof(file) && !ferror(file));
 
     if(feof(file) || ferror(file))
-        goto error;
+        return false;
 
-    // Fix the function prototype so it's all on one line.
-    int count;
-    String* lines = string_split(prototype, "\n", NULL, STRING_SPLIT_ALLOCATE, &count, true, true);
-    string_clear(prototype);
+    return true;
+}
 
-    String separator = string_create(", ");
-    string_join(prototype, &separator, lines, count);
+bool read_macro(String* macro, String* line, FILE* file) {
+    bool first = true;
+    bool has_more_lines = false;
+    do {
+        has_more_lines = string_ends_with(line, "\\");
+        if(has_more_lines)
+            string_trim_end(line, "\\");
+        
+        string_trim(line, " ");
 
-    for(int i = 0; i < count; i++)
-        string_free_resources(lines + i);
-    free(lines);
+        if(first) {
+            first = false;
+        } else {
+            string_append(macro, "\n    ");
+        }
+
+        string_append(macro, line);
+
+        if(has_more_lines)
+            string_file_read_line_buffered(line, file, true);
+    }
+    while(has_more_lines && !feof(file) && !ferror(file));
+
+    if(feof(file) || ferror(file))
+        return false;
+
+    return true;
+}
+
+bool read_declaration(String* declaration, Declaration* declaration_type, FILE* file) {
+    string_clear(declaration);
+    String line = STRING_EMPTY;
+    string_file_read_line(&line, file, true);
+
+    if (string_starts_with(&line, "SSO_STRING_EXPORT ")) {
+        string_trim_start(&line, "SSO_STRING_EXPORT ");
+        *declaration_type = DECLARATION_FUNCTION_PROTOTYPE;
+    } else if (string_starts_with(&line, "static inline ")) {
+        string_trim_start(&line, "static inline ");
+        *declaration_type = DECLARATION_FUNCTION_PROTOTYPE;
+    } else if(string_starts_with(&line, "#define ")) {
+        *declaration_type = DECLARATION_MACRO;
+    } else {
+        *declaration_type = DECLARATION_NONE;
+    }
+
+    bool success;
+
+    switch(*declaration_type) {
+        case DECLARATION_FUNCTION_PROTOTYPE:
+            success = read_function_prototype(declaration, &line, file);
+            break;
+        case DECLARATION_MACRO:
+            success = read_macro(declaration, &line, file);
+            break;
+        default:
+            success = false;
+            break;
+    }
 
     string_free_resources(&line);
-    return true;
-
-    error:
-        string_free_resources(&line);
-        return false;
+    return success;
 }
 
 void extract_function_name(String* prototype, String* name) {
     size_t param_start = string_find(prototype, 0, "(");
     size_t name_start = string_rfind(prototype, string_size(prototype) - param_start, " ") + 1;
     string_substring(prototype, name_start, param_start - name_start, name);
+}
+
+void extract_macro_name(String* macro, String* name) {
+    size_t start = string_find(macro, 0, " ") + 1;
+    size_t space = string_find(macro, start, " ");
+    size_t newline = string_find(macro, start, "\n");
+    size_t param_start = string_find(macro, start, "(");
+
+    size_t end = SIZE_MAX;
+    end = min(space, min(newline, param_start));
+
+    string_substring(macro, start, end - start, name);
 }
 
 void read_tags(String* tags, FILE* file) {
@@ -230,7 +283,7 @@ DocParts* split_doc_parts(String* doc_string) {
     return parts;
 }
 
-void write_doc_file(String* doc_string, String* prototype) {
+void write_function_doc_file(String* doc_string, String* prototype) {
     String name = string_create("");
     String example = string_create("");
     String tags = string_create("");
@@ -305,6 +358,10 @@ void write_doc_file(String* doc_string, String* prototype) {
         fprintf(file, "**Returns:** %s\n\n", string_data(doc_parts->ret));
     }
 
+    if(doc_parts->remarks) {
+        fprintf(file, "### Remarks\n\n%s\n\n", string_data(doc_parts->remarks));
+    }
+
     if(doc_parts->see_also_count > 0) {
         fprintf(file, "### See Also\n\n");
         for(size_t i = 0; i < doc_parts->see_also_count; i++) {
@@ -317,8 +374,6 @@ void write_doc_file(String* doc_string, String* prototype) {
     if(string_size(&example) != 0) {
         fprintf(file, string_data(&example));
     }
-
-    fclose(file);
 
     error:
         string_free_resources(&name);
@@ -334,16 +389,114 @@ void write_doc_file(String* doc_string, String* prototype) {
             fclose(file);
 }
 
+void write_macro_doc_file(String* doc_string, String* macro) {
+    String name = string_create("");
+    String example = string_create("");
+    String tags = string_create("");
+    String* fname = NULL;
+    DocParts* doc_parts = NULL;
+    FILE* file = NULL;
+
+    extract_macro_name(macro, &name);
+    doc_parts = split_doc_parts(doc_string);
+
+    fname = string_format(NULL, "%s.md", string_data(&name));
+
+    file = fopen(string_data(fname), "r+");
+
+    if(file) {
+        read_tags(&tags, file);
+        read_example(&example, file);
+        fclose(file);
+        remove(string_data(fname));
+    }
+
+    file = fopen(string_data(fname), "w");
+    if(!file)
+        goto error;
+
+    if(!string_is_null_or_empty(&tags))
+        fprintf(file, "%s\n\n", string_data(&tags));
+    
+    fprintf(file, "# %s\n\n", string_data(&name));
+
+    if(doc_parts->brief)
+        fprintf(file, "%s\n\n", string_data(doc_parts->brief));
+
+    fprintf(file, "## Syntax\n\n```c\n%s\n```\n\n", string_data(macro));
+
+    if(doc_parts->params_count > 0) {
+        fprintf(file, "| Name | Description |\n");
+        fprintf(file, "| --- | --- |\n");
+        String param_name = string_create("");
+        String description = string_create("");
+        for(int i = 0; i < doc_parts->params_count; i++) {
+            string_clear(&param_name);
+            string_clear(&description);
+
+            // Remove @param from the string.
+            string_erase(doc_parts->params[i], 0, 7);
+
+            size_t name_end = string_find(doc_parts->params[i], 0, " ");
+            string_substring(doc_parts->params[i], 0, name_end, &param_name);
+            string_substring(doc_parts->params[i], name_end + 1, string_size(doc_parts->params[i]) - name_end - 1, &description);
+
+            fprintf(file, "| %s | %s |\n", string_data(&param_name), string_data(&description));
+        }
+
+        fprintf(file, "\n");
+    }
+
+    if(doc_parts->ret) {
+        fprintf(file, "**Returns:** %s\n\n", string_data(doc_parts->ret));
+    }
+
+    if(doc_parts->remarks) {
+        fprintf(file, "### Remarks\n\n%s\n\n", string_data(doc_parts->remarks));
+    }
+
+    if(doc_parts->see_also_count > 0) {
+        fprintf(file, "### See Also\n\n");
+        for(size_t i = 0; i < doc_parts->see_also_count; i++) {
+            const char* name = string_data(doc_parts->see_also[i]);
+            fprintf(file, "* [%s](%s.md)\n", name, name);
+        }
+        fprintf(file, "\n");
+    }
+
+    if(string_size(&example) != 0) {
+        fprintf(file, string_data(&example));
+    }
+
+    error:
+        string_free_resources(&name);
+        string_free(fname);
+        string_free_resources(&example);
+        doc_parts_free(doc_parts);
+
+        if(file)
+            fclose(file);
+}
+
 int main(void) {
     FILE* file = fopen(HEADER_LOCATION, "r");
     String doc_string = string_create("");
     String prototype = string_create("");
 
     while(read_next_docstring(&doc_string, file)) {
-        if(!read_function_prototype(&prototype, file))
+        Declaration declaration_type;
+        if(!read_declaration(&prototype, &declaration_type, file))
             continue;
 
-        write_doc_file(&doc_string, &prototype);
+        switch(declaration_type) {
+            case DECLARATION_FUNCTION_PROTOTYPE:
+                write_function_doc_file(&doc_string, &prototype);
+                break;
+            case DECLARATION_MACRO:
+                write_macro_doc_file(&doc_string, &prototype);
+                break;
+        }
+
     }
 
     string_free_resources(&doc_string);
