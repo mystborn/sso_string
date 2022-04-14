@@ -1570,6 +1570,11 @@ SSO_STRING_EXPORT String* string_format_args_string(String* result, const String
 #define SSO_STRING_FORMAT_BUFFER_SIZE 256
 
 SSO_STRING_EXPORT String* string_format_args_cstr(String* result, const char* format, va_list argp) {
+    // Define a stack allocated buffer so that we can avoid unnecessary
+    // allocations when possible. The buffer is a static thread_local
+    // one when available to avoid having to create it each call, 
+    // otherwise it just creates a local variable.
+
     #ifdef SSO_THREAD_LOCAL
 
     static SSO_THREAD_LOCAL char buffer[SSO_STRING_FORMAT_BUFFER_SIZE];
@@ -1611,7 +1616,7 @@ SSO_STRING_EXPORT String* string_format_args_cstr(String* result, const char* fo
             goto error;
 
         written = vsnprintf(
-            string_cstr(result),
+            string_cstr(result) + string_size(result),
             written + 1,
             format,
             argp);
@@ -1633,8 +1638,10 @@ SSO_STRING_EXPORT String* string_format_args_cstr(String* result, const char* fo
     error:
         if(original_size == SIZE_MAX)
             string_free(result);
-        else
+        else {
             string_cstr(result)[original_size] = '\0';
+            sso_string_set_size(result, original_size);
+        }
 
         return NULL;
 }
@@ -1723,10 +1730,14 @@ SSO_STRING_EXPORT void string_file_read_state_free(struct StringFileReadState* r
     sso_string_free(read_state);
 }
 
-static bool read_loaded_file_buffer(String* str, FILE* file, struct StringFileReadState* context) {
+static bool sso_string_read_loaded_file_buffer(String* str, FILE* file, struct StringFileReadState* context) {
+    // The starting index should be the index of the last new line character plus one so that
+    // the \n itself is skipped. new_line_index will be -1 when reading from the start of the
+    // buffer to account for this.
     int start = context->new_line_index + 1;
     char* end = memchr(context->buffer + start, '\n', context->max - start);
     if(!end) {
+        // No new line was found. Append the entire buffer from the starting index.
         if(!string_append_cstr_part(str, context->buffer, start, context->max - start)) {
             context->result = STRING_FILE_READ_RESULT_OUT_OF_MEMORY;
             return false;
@@ -1734,12 +1745,17 @@ static bool read_loaded_file_buffer(String* str, FILE* file, struct StringFileRe
 
         if(feof(file)) {
             context->result = STRING_FILE_READ_RESULT_EOF;
+
+            // Set new_line_index to -2 to make breaking out of the read loop easier
+            // since it checks if new_line_index == -1.
             context->new_line_index = -2;
         } else {
             context->new_line_index = -1;
         }
         
     } else {
+        // A new line was found. Append the buffer from the last new line to the next new line.
+        // If the line breaks were next to each other, str will be an empty string.
         int new_line_index = end - context->buffer;
         if(!string_append_cstr_part(str, context->buffer, start, new_line_index - start)) {
             context->result = STRING_FILE_READ_RESULT_OUT_OF_MEMORY;
@@ -1753,8 +1769,11 @@ static bool read_loaded_file_buffer(String* str, FILE* file, struct StringFileRe
 }
 
 SSO_STRING_EXPORT bool string_file_read_line(String* str, FILE* file, struct StringFileReadState* context) {
+    // Clear the string to get ready to read the next line of the file.
     string_clear(str);
 
+    // If the file has reached its end and the result has been set,
+    // there is nothing left to read and we can exit early.
     if(feof(file) && context->result != STRING_FILE_READ_RESULT_SUCCESS) {
         return false;
     }
@@ -1762,18 +1781,43 @@ SSO_STRING_EXPORT bool string_file_read_line(String* str, FILE* file, struct Str
     bool load_success = false;
 
     do {
+        // Read more data if the entire buffer has been read.
+        // Either there was no new line after the last read (context->new_line_index == -1)
+        // or the new line was at the end of the buffer.
         if(context->new_line_index == -1 || context->new_line_index + 1 >= context->max) {
             context->max = fread(context->buffer, 1, context->buffer_size, file);
+            
+            // If the buffer wasn't filled, make sure it was just because of EOF and
+            // not an error.
             if(context->max < context->buffer_size && ferror(file)) {
                 context->result = STRING_FILE_READ_RESULT_ERROR;
                 return false;
             }
+
+            // If no data was read, set the result to EOF and return.
+            // It may be possible that no data was read even though it wasn't
+            // the EOF (for example, when reading from a network stream), but
+            // for our cases describing it as EOF is good enough for now.
+            if(context->max == 0) {
+                context->result = STRING_FILE_READ_RESULT_EOF;
+
+                // Return load_success since if any data has been previously
+                // read it should count as a successful operation.
+                return load_success;
+            }
+
+            // Set the new_line_index to -1 to indicate that the read needs to start
+            // from the beginning of the buffer.
             context->new_line_index = -1;
         }
 
-        load_success = read_loaded_file_buffer(str, file, context);
+        load_success = sso_string_read_loaded_file_buffer(str, file, context);
     }
     while(load_success && context->new_line_index == -1);
+    // ^^^
+    // Check if new_line_index is -1 because that means the end of the buffer has been read
+    // without finding any new lines from the starting index and we need to read another chunk to
+    // find more.
 
     return load_success;
 }
