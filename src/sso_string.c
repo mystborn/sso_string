@@ -1693,7 +1693,7 @@ SSO_STRING_EXPORT String* string_format_time_cstr(String* result, const char* fo
         return NULL;
 }
 
-SSO_STRING_EXPORT struct StringFileReadState* string_file_read_state_create(size_t buffer_size) {
+SSO_STRING_EXPORT struct StringFileReadState* string_file_read_state_create(int buffer_size) {
     char* buffer = sso_string_malloc(buffer_size);
     if(!buffer)
         return NULL;
@@ -1709,7 +1709,7 @@ SSO_STRING_EXPORT struct StringFileReadState* string_file_read_state_create(size
     return read_state;
 }
 
-SSO_STRING_EXPORT void string_file_read_state_init(struct StringFileReadState* read_state, char* buffer, size_t buffer_size) {
+SSO_STRING_EXPORT void string_file_read_state_init(struct StringFileReadState* read_state, char* buffer, int buffer_size) {
     read_state->buffer = buffer;
     read_state->buffer_size = buffer_size;
     read_state->new_line_index = -1;

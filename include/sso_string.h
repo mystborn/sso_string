@@ -1517,7 +1517,7 @@ static inline size_t string_hash(String* str);
 
     @return A new StringFileReadState on success, NULL on allocation error. 
 */
-SSO_STRING_EXPORT struct StringFileReadState* string_file_read_state_create(size_t buffer_size);
+SSO_STRING_EXPORT struct StringFileReadState* string_file_read_state_create(int buffer_size);
 
 /**
     Initializes a StringFileReadState with the given buffer.
@@ -1526,7 +1526,7 @@ SSO_STRING_EXPORT struct StringFileReadState* string_file_read_state_create(size
     @param buffer The buffer used to store the content read from a file.
     @param buffer_size The size of the buffer.
 */
-SSO_STRING_EXPORT void string_file_read_state_init(struct StringFileReadState* read_state, char* buffer, size_t buffer_size);
+SSO_STRING_EXPORT void string_file_read_state_init(struct StringFileReadState* read_state, char* buffer, int buffer_size);
 
 /**
     Frees a StringFileReadState and its buffer.
@@ -1536,19 +1536,6 @@ SSO_STRING_EXPORT void string_file_read_state_init(struct StringFileReadState* r
     @remark If read_state is NULL, this is a no-op.
 */
 SSO_STRING_EXPORT void string_file_read_state_free(struct StringFileReadState* read_state);
-
-/**
-    Reads a single line of a file into a string.
-
-    @param str The string that will contain the line. Its contents will be overwritten. Needs to be initialized.
-    @param file The file to read a line from.
-
-    @return true if the operation was a success and there is more data to read. 
-            false if there is no more data or if there is an error. 
-            Check if there is an error using feof/ferror. If neither are set, 
-            there was an allocation error.
-*/
-SSO_STRING_EXPORT bool string_file_read_line(String* str, FILE* file);
 
 /**
     Reads a single line of a file into a string. This version is much faster than string_file_read_line,

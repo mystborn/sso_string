@@ -1,4 +1,5 @@
 #include <sso_string.h>
+#include <direct.h>
 
 /*
     A (really messy) program that will create all of the basic parts
@@ -485,6 +486,9 @@ int main(void) {
     char buffer[256];
     struct StringFileReadState read_state;
     string_file_read_state_init(&read_state, buffer, sizeof(buffer));
+
+    mkdir("./macros");
+    mkdir("./functions");
 
     while(read_next_docstring(&doc_string, file, &read_state)) {
         Declaration declaration_type;
