@@ -19,3 +19,7 @@ playground = executable('playground',
     include_directories: include_files,
     link_with: sso_string_shared,
     link_args: link_args)
+
+configure_file(input: 'test.txt',
+    output: 'test.txt',
+    copy: true)
