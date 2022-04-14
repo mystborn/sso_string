@@ -221,6 +221,67 @@ typedef union String {
 typedef uint32_t Char32;
 
 /**
+    Describes the result of trying to read a file into a string, 
+    specifically for string_file_read_line.
+ */
+enum StringFileReadResult {
+    /// The file read operation was successful with no errors.
+    STRING_FILE_READ_RESULT_SUCCESS,
+
+    /** 
+        The file has reached the end of the file. This is a successful
+        operation if the calling function returned true.
+    */
+    STRING_FILE_READ_RESULT_EOF,
+
+    /**
+        There was an issue pushing data to the end of a string
+        caused by running out of memory.
+    */
+    STRING_FILE_READ_RESULT_OUT_OF_MEMORY,
+
+    /**
+        There was an issue reading from the file. Get the cause by
+        calling ferror/perror/strerror.
+    */
+    STRING_FILE_READ_RESULT_ERROR
+};
+
+/**
+    Describes the current state of a file read operation.
+    
+    Primarily used by string_file_read_line.
+*/
+struct StringFileReadState {
+    /// The buffer that data from the file is read into.
+    char* buffer;
+
+    /// The size of the buffer.
+    int buffer_size;
+
+    /** 
+        The index of the last new line character that 
+        was encountered or -1 if there is no line break in the buffer.
+    */
+    int new_line_index;
+
+    /**
+        The number of characters previously read into buffer.
+    */
+    int max;
+
+    /**
+        The result of the last read operation. 
+        
+        @remark This will be set to STRING_FILE_READ_RESULT_EOF as soon as the 
+                last line is read, even though string_file_read_line will still 
+                return true. Reading from the file when this is not 
+                STRING_FILE_READ_RESULT_SUCCESS is ok, and will just return false.
+    */
+    enum StringFileReadResult result;
+};
+
+/**
     Initializes a string from a c-string.
 
     @param str A pointer to the string to initialize.
@@ -1450,8 +1511,34 @@ SSO_STRING_EXPORT String* string_format_time_cstr(String* result, const char* fo
 static inline size_t string_hash(String* str);
 
 /**
-    Reads a single line of a file into a string. Slower than string_file_read_line_buffered, but can be
-    used on any file without knowing any details about it.
+    Allocates and initializes a new StringFileReadState with the given buffer size.
+
+    @param buffer_size The size of the buffer that is used to stream in content from the file.
+
+    @return A new StringFileReadState on success, NULL on allocation error. 
+*/
+SSO_STRING_EXPORT struct StringFileReadState* string_file_read_state_create(size_t buffer_size);
+
+/**
+    Initializes a StringFileReadState with the given buffer.
+
+    @param read_state The StringFileReadState to initialize.
+    @param buffer The buffer used to store the content read from a file.
+    @param buffer_size The size of the buffer.
+*/
+SSO_STRING_EXPORT void string_file_read_state_init(struct StringFileReadState* read_state, char* buffer, size_t buffer_size);
+
+/**
+    Frees a StringFileReadState and its buffer.
+
+    @param read_state The StringFileReadState to free.
+
+    @remark If read_state is NULL, this is a no-op.
+*/
+SSO_STRING_EXPORT void string_file_read_state_free(struct StringFileReadState* read_state);
+
+/**
+    Reads a single line of a file into a string.
 
     @param str The string that will contain the line. Its contents will be overwritten. Needs to be initialized.
     @param file The file to read a line from.
@@ -1469,16 +1556,13 @@ SSO_STRING_EXPORT bool string_file_read_line(String* str, FILE* file);
 
     @param str The string that will contain the line. Its contents will be overwritten. Needs to be initialized.
     @param file The file to read a line from.
-    @param expect_carriage_return Determines if the function needs to account for carriage returns 
-                                  when repositioning the read location with ftell. Should be false 
-                                  on files without carriage returns and on binary files.
+    @param read_state The current state of the read operation.
 
-    @return true if the operation was a success and there is more data to read. 
-            false if there is no more data or if there is an error. 
-            Check if there is an error using feof/ferror. If neither are set, 
-            there was an allocation error.
+    @return true if any data was read into the string, false otherwise. On false, get the reason
+            through read_state->result, which can be used to check if it was just the end of the file
+            or if an error was experienced.
 */
-SSO_STRING_EXPORT bool string_file_read_line_buffered(String* str, FILE* file, bool expect_carriage_return);
+SSO_STRING_EXPORT bool string_file_read_line(String* str, FILE* file, struct StringFileReadState* read_state);
 
 /**
     Reads the entirety of a file from its current position into a string.
@@ -1492,7 +1576,7 @@ SSO_STRING_EXPORT bool string_file_read_line_buffered(String* str, FILE* file, b
 SSO_STRING_EXPORT bool string_file_read_all(String* str, FILE* file);
 
 // Internal Functions
-//
+//  
 // These can technically be called by the user, but should be avoided if possible.
 //
 // The string_set_size functions are especially useful when interfacing with an api
@@ -1520,6 +1604,9 @@ SSO_STRING_EXPORT bool string_file_read_all(String* str, FILE* file);
 
 /**
     Sets the number of bytes used by a string, not including any NULL-terminating characters.
+
+    @param str The string to set the size of.
+    @param size The size of the string, not including the NULL-terminating character.
 
     @remarks This is mostly for internal use, but it can be used by others 
              to synchronize the length of a string with its internal representation 

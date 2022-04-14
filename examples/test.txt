@@ -1,0 +1,9 @@
+This is a
+Hello World
+Next Line
+This is a super long line that will need to be spread across two calls to string_file_read_line even with a relatively large buffer. 252 characters is honestly more than I thought it would be. This is so darn long. Hello World. My name is Alexander Hamilton. Unfortunately this line needs to continue to extend just to make sure it gets read correctly. This should now be good enough.
+A
+Couple more
+Lines.
+
+Testing a blank line as well.
