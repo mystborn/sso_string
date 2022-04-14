@@ -53,10 +53,10 @@ void doc_parts_free(DocParts* parts) {
     free(parts);
 }
 
-bool read_next_docstring(String* doc_string, FILE* file) {
+bool read_next_docstring(String* doc_string, FILE* file, struct StringFileReadState* read_state) {
     string_clear(doc_string);
     String line = string_create("");
-    while(string_file_read_line(&line, file, true)) {
+    while(string_file_read_line(&line, file, read_state)) {
         if(string_starts_with(&line, "/**")) {
             string_append(doc_string, &line);
             string_append(doc_string, "\n");
@@ -68,7 +68,7 @@ bool read_next_docstring(String* doc_string, FILE* file) {
         goto error;
 
     do {
-        if(!string_file_read_line(&line, file, true))
+        if(!string_file_read_line(&line, file, read_state))
             break;
 
         string_append(doc_string, &line);
@@ -89,7 +89,7 @@ bool read_next_docstring(String* doc_string, FILE* file) {
         return false;
 }
 
-bool read_function_prototype(String* prototype, String* line, FILE* file) {
+bool read_function_prototype(String* prototype, String* line, FILE* file, struct StringFileReadState* read_state) {
     while(!feof(file) && !ferror(file)) {
         string_trim(line, " ");
         string_append(prototype, line);
@@ -99,7 +99,7 @@ bool read_function_prototype(String* prototype, String* line, FILE* file) {
 
         if(!string_ends_with(line, "("))
             string_append(prototype, " ");
-        string_file_read_line(line, file, true);
+        string_file_read_line(line, file, read_state);
     }
 
     if(feof(file) || ferror(file))
@@ -108,7 +108,7 @@ bool read_function_prototype(String* prototype, String* line, FILE* file) {
     return true;
 }
 
-bool read_macro(String* macro, String* line, FILE* file) {
+bool read_macro(String* macro, String* line, FILE* file, struct StringFileReadState* read_state) {
     bool first = true;
     bool has_more_lines = false;
     do {
@@ -127,7 +127,7 @@ bool read_macro(String* macro, String* line, FILE* file) {
         string_append(macro, line);
 
         if(has_more_lines)
-            string_file_read_line(line, file, true);
+            string_file_read_line(line, file, read_state);
     }
     while(has_more_lines && !feof(file) && !ferror(file));
 
@@ -137,10 +137,10 @@ bool read_macro(String* macro, String* line, FILE* file) {
     return true;
 }
 
-bool read_declaration(String* declaration, Declaration* declaration_type, FILE* file) {
+bool read_declaration(String* declaration, Declaration* declaration_type, FILE* file, struct StringFileReadState* read_state) {
     string_clear(declaration);
     String line = STRING_EMPTY;
-    string_file_read_line(&line, file, true);
+    string_file_read_line(&line, file, read_state);
 
     if (string_starts_with(&line, "SSO_STRING_EXPORT ")) {
         string_trim_start(&line, "SSO_STRING_EXPORT ");
@@ -158,10 +158,10 @@ bool read_declaration(String* declaration, Declaration* declaration_type, FILE* 
 
     switch(*declaration_type) {
         case DECLARATION_FUNCTION_PROTOTYPE:
-            success = read_function_prototype(declaration, &line, file);
+            success = read_function_prototype(declaration, &line, file, read_state);
             break;
         case DECLARATION_MACRO:
-            success = read_macro(declaration, &line, file);
+            success = read_macro(declaration, &line, file, read_state);
             break;
         default:
             success = false;
@@ -190,17 +190,17 @@ void extract_macro_name(String* macro, String* name) {
     string_substring(macro, start, end - start, name);
 }
 
-void read_tags(String* tags, FILE* file) {
-    if(string_file_read_line(tags, file, true)) {
+void read_tags(String* tags, FILE* file, struct StringFileReadState* read_state) {
+    if(string_file_read_line(tags, file, read_state)) {
         if(!string_starts_with(tags, "tags:"))
             string_clear(tags);
     }
 }
 
-void read_example(String* example, FILE* file) {
+void read_example(String* example, FILE* file, struct StringFileReadState* read_state) {
     String line = string_create("");
     bool found = false;
-    while(string_file_read_line(&line, file, true)) {
+    while(string_file_read_line(&line, file, read_state)) {
         if(found || string_starts_with(&line, "## Example")) {
             string_append(example, &line);
             string_append(example, "\n");
@@ -283,7 +283,7 @@ DocParts* split_doc_parts(String* doc_string) {
     return parts;
 }
 
-void write_function_doc_file(String* doc_string, String* prototype) {
+void write_function_doc_file(String* doc_string, String* prototype, struct StringFileReadState* read_state) {
     String name = string_create("");
     String example = string_create("");
     String tags = string_create("");
@@ -312,8 +312,8 @@ void write_function_doc_file(String* doc_string, String* prototype) {
     file = fopen(string_data(fname), "r+");
 
     if(file) {
-        read_tags(&tags, file);
-        read_example(&example, file);
+        read_tags(&tags, file, read_state);
+        read_example(&example, file, read_state);
         fclose(file);
         remove(string_data(fname));
     }
@@ -389,7 +389,7 @@ void write_function_doc_file(String* doc_string, String* prototype) {
             fclose(file);
 }
 
-void write_macro_doc_file(String* doc_string, String* macro) {
+void write_macro_doc_file(String* doc_string, String* macro, struct StringFileReadState* read_state) {
     String name = string_create("");
     String example = string_create("");
     String tags = string_create("");
@@ -405,8 +405,8 @@ void write_macro_doc_file(String* doc_string, String* macro) {
     file = fopen(string_data(fname), "r+");
 
     if(file) {
-        read_tags(&tags, file);
-        read_example(&example, file);
+        read_tags(&tags, file, read_state);
+        read_example(&example, file, read_state);
         fclose(file);
         remove(string_data(fname));
     }
@@ -482,18 +482,21 @@ int main(void) {
     FILE* file = fopen(HEADER_LOCATION, "r");
     String doc_string = string_create("");
     String prototype = string_create("");
+    char buffer[256];
+    struct StringFileReadState read_state;
+    string_file_read_state_init(&read_state, buffer, sizeof(buffer));
 
-    while(read_next_docstring(&doc_string, file)) {
+    while(read_next_docstring(&doc_string, file, &read_state)) {
         Declaration declaration_type;
-        if(!read_declaration(&prototype, &declaration_type, file))
+        if(!read_declaration(&prototype, &declaration_type, file, &read_state))
             continue;
 
         switch(declaration_type) {
             case DECLARATION_FUNCTION_PROTOTYPE:
-                write_function_doc_file(&doc_string, &prototype);
+                write_function_doc_file(&doc_string, &prototype, &read_state);
                 break;
             case DECLARATION_MACRO:
-                write_macro_doc_file(&doc_string, &prototype);
+                write_macro_doc_file(&doc_string, &prototype, &read_state);
                 break;
         }
 

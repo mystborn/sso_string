@@ -1693,55 +1693,89 @@ SSO_STRING_EXPORT String* string_format_time_cstr(String* result, const char* fo
         return NULL;
 }
 
-SSO_STRING_EXPORT bool string_file_read_line(String* str, FILE* file, bool expect_carriage_return) {
-    // Todo: Potentially use the string contents as the buffer.
-    #define SSO_STRING_FILE_BUFFER_SIZE 256
+SSO_STRING_EXPORT struct StringFileReadState* string_file_read_state_create(size_t buffer_size) {
+    char* buffer = sso_string_malloc(buffer_size);
+    if(!buffer)
+        return NULL;
 
-    #ifdef SSO_THREAD_LOCAL
-
-    static SSO_THREAD_LOCAL char buffer[SSO_STRING_FILE_BUFFER_SIZE];
-
-    #else
-
-    char buffer[SSO_STRING_FILE_BUFFER_SIZE];
-
-    #endif
-
-    string_clear(str);
-
-    while (!feof(file)) {
-        size_t current = ftell(file);
-
-        char* end;
-        do {
-            size_t read_size = fread(buffer, 1, SSO_STRING_FILE_BUFFER_SIZE, file);
-            if (read_size == 0 || (read_size != SSO_STRING_FILE_BUFFER_SIZE && ferror(file)))
-                return false;
-
-            end = strchr(buffer, '\n');
-            if (end && (size_t)(end - buffer) > read_size)
-                end = NULL;
-
-            if (!end) {
-                if (!string_append_cstr_part(str, buffer, 0, read_size))
-                    return false;
-                return true;
-            }
-            else {
-                if (!string_append_cstr_part(str, buffer, 0, (size_t)(end - buffer)))
-                    return false;
-
-                long offset = current + (end - buffer) + expect_carriage_return ? 2 : 1;
-
-                if (fseek(file, offset, SEEK_SET) != 0)
-                    return false;
-
-                return true;
-            }
-        } while (!end);
+    struct StringFileReadState* read_state = sso_string_malloc(sizeof(*read_state));
+    if(!read_state) {
+        sso_string_free(buffer);
+        return NULL;
     }
 
-    return false;
+    string_file_read_state_init(read_state, buffer, buffer_size);
+
+    return read_state;
+}
+
+SSO_STRING_EXPORT void string_file_read_state_init(struct StringFileReadState* read_state, char* buffer, size_t buffer_size) {
+    read_state->buffer = buffer;
+    read_state->buffer_size = buffer_size;
+    read_state->new_line_index = -1;
+    read_state->max = 0;
+    read_state->result = STRING_FILE_READ_RESULT_SUCCESS;
+}
+
+SSO_STRING_EXPORT void string_file_read_state_free(struct StringFileReadState* read_state) {
+    if(read_state)
+        sso_string_free(read_state->buffer);
+    sso_string_free(read_state);
+}
+
+static bool read_loaded_file_buffer(String* str, FILE* file, struct StringFileReadState* context) {
+    int start = context->new_line_index + 1;
+    char* end = memchr(context->buffer + start, '\n', context->max - start);
+    if(!end) {
+        if(!string_append_cstr_part(str, context->buffer, start, context->max - start)) {
+            context->result = STRING_FILE_READ_RESULT_OUT_OF_MEMORY;
+            return false;
+        }
+
+        if(feof(file)) {
+            context->result = STRING_FILE_READ_RESULT_EOF;
+            context->new_line_index = -2;
+        } else {
+            context->new_line_index = -1;
+        }
+        
+    } else {
+        int new_line_index = end - context->buffer;
+        if(!string_append_cstr_part(str, context->buffer, start, new_line_index - start)) {
+            context->result = STRING_FILE_READ_RESULT_OUT_OF_MEMORY;
+            return false;
+        }
+
+        context->new_line_index = new_line_index;
+    }
+
+    return true;
+}
+
+SSO_STRING_EXPORT bool string_file_read_line(String* str, FILE* file, struct StringFileReadState* context) {
+    string_clear(str);
+
+    if(feof(file) && context->result != STRING_FILE_READ_RESULT_SUCCESS) {
+        return false;
+    }
+
+    bool load_success = false;
+
+    do {
+        if(context->new_line_index == -1 || context->new_line_index + 1 >= context->max) {
+            context->max = fread(context->buffer, 1, context->buffer_size, file);
+            if(context->max < context->buffer_size && ferror(file)) {
+                context->result = STRING_FILE_READ_RESULT_ERROR;
+                return false;
+            }
+            context->new_line_index = -1;
+        }
+
+        load_success = read_loaded_file_buffer(str, file, context);
+    }
+    while(load_success && context->new_line_index == -1);
+
+    return load_success;
 }
 
 SSO_STRING_EXPORT bool string_file_read_all(String* str, FILE* file) {

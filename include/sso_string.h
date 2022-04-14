@@ -221,6 +221,67 @@ typedef union String {
 typedef uint32_t Char32;
 
 /**
+    Describes the result of trying to read a file into a string, 
+    specifically for string_file_read_line.
+ */
+enum StringFileReadResult {
+    /// The file read operation was successful with no errors.
+    STRING_FILE_READ_RESULT_SUCCESS,
+
+    /** 
+        The file has reached the end of the file. This is a successful
+        operation if the calling function returned true.
+    */
+    STRING_FILE_READ_RESULT_EOF,
+
+    /**
+        There was an issue pushing data to the end of a string
+        caused by running out of memory.
+    */
+    STRING_FILE_READ_RESULT_OUT_OF_MEMORY,
+
+    /**
+        There was an issue reading from the file. Get the cause by
+        calling ferror/perror/strerror.
+    */
+    STRING_FILE_READ_RESULT_ERROR
+};
+
+/**
+    Describes the current state of a file read operation.
+    
+    Primarily used by string_file_read_line.
+*/
+struct StringFileReadState {
+    /// The buffer that data from the file is read into.
+    char* buffer;
+
+    /// The size of the buffer.
+    int buffer_size;
+
+    /** 
+        The index of the last new line character that 
+        was encountered or -1 if there is no line break in the buffer.
+    */
+    int new_line_index;
+
+    /**
+        The number of characters previously read into buffer.
+    */
+    int max;
+
+    /**
+        The result of the last read operation. 
+        
+        @remark This will be set to STRING_FILE_READ_RESULT_EOF as soon as the 
+                last line is read, even though string_file_read_line will still 
+                return true. Reading from the file when this is not 
+                STRING_FILE_READ_RESULT_SUCCESS is ok, and will just return false.
+    */
+    enum StringFileReadResult result;
+};
+
+/**
     Initializes a string from a c-string.
 
     @param str A pointer to the string to initialize.
@@ -354,7 +415,7 @@ SSO_STRING_EXPORT Char32 string_u8_get(const String* str, size_t index);
 
     @return Thee unicode character starting at the specified byte index.
 
-    @remark This function can be used to easily iterate over a UTF-8 string.
+    @remarks This function can be used to easily iterate over a UTF-8 string.
 */
 SSO_STRING_EXPORT Char32 string_u8_get_with_size(const String* str, size_t index, int* out_size);
 
@@ -425,7 +486,7 @@ SSO_STRING_EXPORT bool string_u8_is_null_or_whitespace(const String* str);
 
     @return true on success, false on allocation failure.
 
-    @remark Mostly for internal use and for resizing the internal buffer of a string 
+    @remarks Mostly for internal use and for resizing the internal buffer of a string 
             before passing it into a function that modifies a c-string. Make sure to 
             use sso_string_set_size afterwards.
 */
@@ -1450,20 +1511,44 @@ SSO_STRING_EXPORT String* string_format_time_cstr(String* result, const char* fo
 static inline size_t string_hash(String* str);
 
 /**
+    Allocates and initializes a new StringFileReadState with the given buffer size.
+
+    @param buffer_size The size of the buffer that is used to stream in content from the file.
+
+    @return A new StringFileReadState on success, NULL on allocation error. 
+*/
+SSO_STRING_EXPORT struct StringFileReadState* string_file_read_state_create(size_t buffer_size);
+
+/**
+    Initializes a StringFileReadState with the given buffer.
+
+    @param read_state The StringFileReadState to initialize.
+    @param buffer The buffer used to store the content read from a file.
+    @param buffer_size The size of the buffer.
+*/
+SSO_STRING_EXPORT void string_file_read_state_init(struct StringFileReadState* read_state, char* buffer, size_t buffer_size);
+
+/**
+    Frees a StringFileReadState and its buffer.
+
+    @param read_state The StringFileReadState to free.
+
+    @remark If read_state is NULL, this is a no-op.
+*/
+SSO_STRING_EXPORT void string_file_read_state_free(struct StringFileReadState* read_state);
+
+/**
     Reads a single line of a file into a string.
 
     @param str The string that will contain the line. Its contents will be overwritten.
     @param file The file to read a line from.
-    @param expect_carriage_return Determines if the function needs to account for carriage returns 
-                                  when repositioning the read location with ftell. Should be false 
-                                  on files without carriage returns and on binary files.
+    @param read_state The current state of the read operation.
 
-    @return true if the operation was a success and there is more data to read. 
-            false if there is no more data or if there is an error. 
-            Check if there is an error using feof/ferror. If neither are set, 
-            there was an allocation error.
+    @return true if any data was read into the string, false otherwise. On false, get the reason
+            through read_state->result, which can be used to check if it was just the end of the file
+            or if an error was experienced.
 */
-SSO_STRING_EXPORT bool string_file_read_line(String* str, FILE* file, bool expect_carriage_return);
+SSO_STRING_EXPORT bool string_file_read_line(String* str, FILE* file, struct StringFileReadState* read_state);
 
 /**
     Reads the entirety of a file from its current position into a string.
@@ -1477,7 +1562,7 @@ SSO_STRING_EXPORT bool string_file_read_line(String* str, FILE* file, bool expec
 SSO_STRING_EXPORT bool string_file_read_all(String* str, FILE* file);
 
 // Internal Functions
-//
+//  
 // These can technically be called by the user, but should be avoided if possible.
 //
 // The string_set_size functions are especially useful when interfacing with an api
@@ -1506,9 +1591,12 @@ SSO_STRING_EXPORT bool string_file_read_all(String* str, FILE* file);
 /**
     Sets the number of bytes used by a string, not including any NULL-terminating characters.
 
-    @remark This is mostly for internal use, but it can be used by others 
-            to synchronize the length of a string with its internal representation 
-            after some operation modified the c-string directly.
+    @param str The string to set the size of.
+    @param size The size of the string, not including the NULL-terminating character.
+
+    @remarks This is mostly for internal use, but it can be used by others 
+             to synchronize the length of a string with its internal representation 
+             after some operation modified the c-string directly.
 */
 static inline void sso_string_set_size(String* str, size_t size);
 
@@ -1808,13 +1896,13 @@ static inline int sso_string_compare_part_impl(const String* str, size_t pos, co
 static inline int string_compare_part_cstr(const String* str, size_t pos, const char* value, size_t start, size_t length) {
     // See (1) in sso_string_compare_impl
     SSO_STRING_ASSERT_BOUNDS(start == 0 || strlen(value) >= start);
-    return sso_string_compare_impl(str, pos, value + start, length);
+    return sso_string_compare_part_impl(str, pos, value + start, length);
 }
 
 static inline int string_compare_part_string(const String* str, size_t pos, const String* value, size_t start, size_t length) {
     // See (1) in sso_string_compare_impl
     SSO_STRING_ASSERT_BOUNDS(start == 0 || string_size(value) >= start);
-    return sso_string_compare_impl(str, pos, string_data(value), length);
+    return sso_string_compare_part_impl(str, pos, string_data(value), length);
 }
 
 static inline bool string_equals_cstr(const String* str, const char* value) {
