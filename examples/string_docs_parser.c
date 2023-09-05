@@ -1,4 +1,5 @@
 #include <sso_string.h>
+#include <direct.h>
 
 /*
     A (really messy) program that will create all of the basic parts
@@ -307,7 +308,7 @@ void write_function_doc_file(String* doc_string, String* prototype, struct Strin
         string_erase(param_type_list + i, type_end, string_size(param_type_list + i) - type_end);
     }
 
-    fname = string_format(NULL, "%s.md", string_data(&name));
+    fname = string_format(NULL, "functions/%s.md", string_data(&name));
 
     file = fopen(string_data(fname), "r+");
 
@@ -400,7 +401,7 @@ void write_macro_doc_file(String* doc_string, String* macro, struct StringFileRe
     extract_macro_name(macro, &name);
     doc_parts = split_doc_parts(doc_string);
 
-    fname = string_format(NULL, "%s.md", string_data(&name));
+    fname = string_format(NULL, "macros/%s.md", string_data(&name));
 
     file = fopen(string_data(fname), "r+");
 
@@ -485,6 +486,9 @@ int main(void) {
     char buffer[256];
     struct StringFileReadState read_state;
     string_file_read_state_init(&read_state, buffer, sizeof(buffer));
+
+    mkdir("./macros");
+    mkdir("./functions");
 
     while(read_next_docstring(&doc_string, file, &read_state)) {
         Declaration declaration_type;

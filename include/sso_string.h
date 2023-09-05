@@ -495,8 +495,8 @@ SSO_STRING_EXPORT bool string_u8_is_null_or_whitespace(const String* str);
     @return true on success, false on allocation failure.
 
     @remarks Mostly for internal use and for resizing the internal buffer of a string 
-            before passing it into a function that modifies a c-string. Make sure to 
-            use sso_string_set_size afterwards.
+             before passing it into a function that modifies a c-string. Make sure to 
+             use sso_string_set_size afterwards.
 */
 static inline bool string_reserve(String* str, size_t reserve);
 
@@ -1525,7 +1525,7 @@ static inline size_t string_hash(String* str);
 
     @return A new StringFileReadState on success, NULL on allocation error. 
 */
-SSO_STRING_EXPORT struct StringFileReadState* string_file_read_state_create(size_t buffer_size);
+SSO_STRING_EXPORT struct StringFileReadState* string_file_read_state_create(int buffer_size);
 
 /**
     Initializes a StringFileReadState with the given buffer.
@@ -1534,7 +1534,7 @@ SSO_STRING_EXPORT struct StringFileReadState* string_file_read_state_create(size
     @param buffer The buffer used to store the content read from a file.
     @param buffer_size The size of the buffer.
 */
-SSO_STRING_EXPORT void string_file_read_state_init(struct StringFileReadState* read_state, char* buffer, size_t buffer_size);
+SSO_STRING_EXPORT void string_file_read_state_init(struct StringFileReadState* read_state, char* buffer, int buffer_size);
 
 /**
     Frees a StringFileReadState and its buffer.
@@ -1546,9 +1546,10 @@ SSO_STRING_EXPORT void string_file_read_state_init(struct StringFileReadState* r
 SSO_STRING_EXPORT void string_file_read_state_free(struct StringFileReadState* read_state);
 
 /**
-    Reads a single line of a file into a string.
+    Reads a single line of a file into a string. This version is much faster than string_file_read_line,
+    but it requires knowing whether the line endings use carriage returns.
 
-    @param str The string that will contain the line. Its contents will be overwritten.
+    @param str The string that will contain the line. Its contents will be overwritten. Needs to be initialized.
     @param file The file to read a line from.
     @param read_state The current state of the read operation.
 

@@ -9,7 +9,7 @@
     * Generic macros available for each.
 * `string_format_time` family
     * Generic macro available.
-* `string_file_read_line`
+* `string_file_read_line_buffered`
 * `string_file_read_all`
 * Optionally remove generic macros by defining `SSO_STRING_NO_GENERIC`.
 * Added support for custom allocation functions.
