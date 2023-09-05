@@ -449,6 +449,14 @@ static inline void string_set(String* str, size_t index, char value);
 */
 SSO_STRING_EXPORT bool string_u8_set(String* str, size_t index, Char32 value);
 
+SSO_STRING_EXPORT void string_upper(String* str);
+
+SSO_STRING_EXPORT void string_u8_upper(String* str);
+
+SSO_STRING_EXPORT void string_lower(String* str);
+
+SSO_STRING_EXPORT void string_u8_lower(String* str);
+
 /**
     Determines if a string has no characters.
 

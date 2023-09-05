@@ -24,6 +24,7 @@
 
 #include <sso_string.h>
 
+#include <ctype.h>
 #include <stdarg.h>
 #include <time.h>
 
@@ -298,6 +299,62 @@ SSO_STRING_EXPORT bool string_u8_set(String* str, size_t index, Char32 value) {
     sso_string_u8_set_underlying(data, value, index, new_codepoint);
 
     return true;
+}
+
+SSO_STRING_EXPORT void string_upper(String* str) {
+    SSO_STRING_ASSERT_ARG(str);
+
+    size_t size = string_size(str);
+
+    char* data = string_cstr(str);
+
+    for(size_t i = 0; i < size; i++) {
+        data[i] = toupper(data[i]);
+    }
+}
+
+SSO_STRING_EXPORT void string_u8_upper(String* str) {
+    SSO_STRING_ASSERT_ARG(str);
+
+    size_t size = string_size(str);
+    size_t index = 0;
+    int letter_size = 1;
+    char* data = string_cstr(str);
+
+    while(index < size) {
+        Char32 letter = string_u8_get_with_size(str, index, &letter_size);
+        letter = towupper(letter);
+        sso_string_u8_set_underlying(data, letter, index, letter_size);
+        index += letter_size;
+    }
+}
+
+SSO_STRING_EXPORT void string_lower(String* str) {
+    SSO_STRING_ASSERT_ARG(str);
+
+    size_t size = string_size(str);
+
+    char* data = string_cstr(str);
+
+    for(size_t i = 0; i < size; i++) {
+        data[i] = tolower(data[i]);
+    }
+}
+
+SSO_STRING_EXPORT void string_u8_lower(String* str) {
+    SSO_STRING_ASSERT_ARG(str);
+
+    size_t size = string_size(str);
+    size_t index = 0;
+    int letter_size = 1;
+    char* data = string_cstr(str);
+
+    while(index < size) {
+        Char32 letter = string_u8_get_with_size(str, index, &letter_size);
+        letter = towlower(letter);
+        sso_string_u8_set_underlying(data, letter, index, letter_size);
+        index += letter_size;
+    }
 }
 
 SSO_STRING_EXPORT bool string_u8_is_null_or_whitespace(const String* str) {
