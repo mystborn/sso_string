@@ -11,6 +11,7 @@
     * Generic macro available.
 * `string_file_read_line_buffered`
 * `string_file_read_all`
+* Case manipulation in the form of `string_upper`, `string_u8_upper`, `string_lower`, `string_u8_lower`.
 * Optionally remove generic macros by defining `SSO_STRING_NO_GENERIC`.
 * Added support for custom allocation functions.
     * Define `sso_string_malloc`, `sso_string_realloc`, and `sso_string_free` to the custom functions and they will be used instead of the standard library versions of `malloc`, `realloc`, and `free`.
@@ -25,7 +26,7 @@
     * This change was made to better match the rest of the API.
 * `string_append_cstr_part` and `string_append_string_part` changed to `string_append_part_cstr` and `string_append_part_string`.
     * This change was made to better match the rest of the API.
-* `string_push_back`, `string_pop_back`, `string_u8_push_back`, and `string_u8_push_back` removed `_back` form their name.
+* `string_push_back`, `string_pop_back`, `string_u8_push_back`, and `string_u8_push_back` removed `_back` from their name.
 
 ### Bug Fixes
 
