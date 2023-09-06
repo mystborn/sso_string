@@ -284,7 +284,7 @@ DocParts* split_doc_parts(String* doc_string) {
     return parts;
 }
 
-void write_function_doc_file(String* doc_string, String* prototype, struct StringFileReadState* read_state) {
+void write_function_doc_file(String* doc_string, String* prototype) {
     String name = string_create("");
     String example = string_create("");
     String tags = string_create("");
@@ -297,6 +297,9 @@ void write_function_doc_file(String* doc_string, String* prototype, struct Strin
     int param_count;
 
     extract_function_name(prototype, &name);
+    if(string_equals(&name, "string_swap")) {
+        puts("Breakpoint!");
+    }
     doc_parts = split_doc_parts(doc_string);
 
     size_t param_start = string_find(prototype, 0, "(") + 1;
@@ -313,8 +316,12 @@ void write_function_doc_file(String* doc_string, String* prototype, struct Strin
     file = fopen(string_data(fname), "r+");
 
     if(file) {
-        read_tags(&tags, file, read_state);
-        read_example(&example, file, read_state);
+        char buffer[256];
+        struct StringFileReadState read_state;
+        string_file_read_state_init(&read_state, buffer, sizeof(buffer));
+
+        read_tags(&tags, file, &read_state);
+        read_example(&example, file, &read_state);
         fclose(file);
         remove(string_data(fname));
     }
@@ -373,7 +380,7 @@ void write_function_doc_file(String* doc_string, String* prototype, struct Strin
     }
 
     if(string_size(&example) != 0) {
-        fprintf(file, string_data(&example));
+        fprintf(file, "%s", string_data(&example));
     }
 
     error:
@@ -390,7 +397,7 @@ void write_function_doc_file(String* doc_string, String* prototype, struct Strin
             fclose(file);
 }
 
-void write_macro_doc_file(String* doc_string, String* macro, struct StringFileReadState* read_state) {
+void write_macro_doc_file(String* doc_string, String* macro) {
     String name = string_create("");
     String example = string_create("");
     String tags = string_create("");
@@ -406,8 +413,12 @@ void write_macro_doc_file(String* doc_string, String* macro, struct StringFileRe
     file = fopen(string_data(fname), "r+");
 
     if(file) {
-        read_tags(&tags, file, read_state);
-        read_example(&example, file, read_state);
+        char buffer[256];
+        struct StringFileReadState read_state;
+        string_file_read_state_init(&read_state, buffer, sizeof(buffer));
+
+        read_tags(&tags, file, &read_state);
+        read_example(&example, file, &read_state);
         fclose(file);
         remove(string_data(fname));
     }
@@ -497,10 +508,10 @@ int main(void) {
 
         switch(declaration_type) {
             case DECLARATION_FUNCTION_PROTOTYPE:
-                write_function_doc_file(&doc_string, &prototype, &read_state);
+                write_function_doc_file(&doc_string, &prototype);
                 break;
             case DECLARATION_MACRO:
-                write_macro_doc_file(&doc_string, &prototype, &read_state);
+                write_macro_doc_file(&doc_string, &prototype);
                 break;
         }
 

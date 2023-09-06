@@ -1598,6 +1598,8 @@ SSO_STRING_EXPORT bool string_file_read_all(String* str, FILE* file);
     @remarks This is mostly for internal use, but it can be used by others 
              to synchronize the length of a string with its internal representation 
              after some operation modified the c-string directly.
+
+             This does not set the NULL-terminating character.
 */
 static inline void sso_string_set_size(String* str, size_t size);
 

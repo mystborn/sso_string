@@ -1654,7 +1654,7 @@ START_TEST(string_is_null_or_whitespace_u8_space) {
     String str = STRING_EMPTY;
     string_u8_push(&str, ' '); // ascii space
     string_u8_push(&str, L'\xA0'); // no-break space
-    string_u8_push(&str, L'\x180E'); // mongolian vowel separator
+    string_u8_push(&str, L'\u2009'); // thin space
     ck_assert(string_u8_is_null_or_whitespace(&str));
     string_free_resources(&str);
 }

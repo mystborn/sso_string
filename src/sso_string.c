@@ -312,8 +312,8 @@ SSO_STRING_EXPORT bool string_u8_is_null_or_whitespace(const String* str) {
         Char32 next = string_u8_get_with_size(str, i, &cp);
 
         // These are the UTF-8 whitespace codepoints as defined by Wikipedia.
-        // Includes the related characters that aren't necessarily traditional whitespace
-        // characters (such as the zero width space '\u200B').
+        // Does NOT include the related characters that aren't necessarily traditional 
+        // whitespace characters (such as the zero width space '\u200B').
         switch(next) {
             case 9:
             case 10:
@@ -324,7 +324,6 @@ SSO_STRING_EXPORT bool string_u8_is_null_or_whitespace(const String* str) {
             case 133:
             case 160:
             case 5760:
-            case 6158:
             case 8192:
             case 8193:
             case 8194:
@@ -336,15 +335,11 @@ SSO_STRING_EXPORT bool string_u8_is_null_or_whitespace(const String* str) {
             case 8200:
             case 8201:
             case 8202:
-            case 8203:
-            case 8204:
-            case 8205:
             case 8232:
             case 8233:
+            case 8239:
             case 8287:
-            case 8288:
             case 12288:
-            case 65279:
                 break;
             default:
                 return false;

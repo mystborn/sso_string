@@ -26,6 +26,7 @@
 * `string_append_cstr_part` and `string_append_string_part` changed to `string_append_part_cstr` and `string_append_part_string`.
     * This change was made to better match the rest of the API.
 * `string_push_back`, `string_pop_back`, `string_u8_push_back`, and `string_u8_push_back` removed `_back` form their name.
+* `string_u8_is_null_or_whitespace` now only detects UTF8 characters with the White_Space=yes property.
 
 ### Bug Fixes
 
