@@ -11,6 +11,7 @@
     * Generic macro available.
 * `string_file_read_line_buffered`
 * `string_file_read_all`
+* Case manipulation in the form of `string_upper`, `string_u8_upper`, `string_lower`, `string_u8_lower`.
 * Optionally remove generic macros by defining `SSO_STRING_NO_GENERIC`.
 * Added support for custom allocation functions.
     * Define `sso_string_malloc`, `sso_string_realloc`, and `sso_string_free` to the custom functions and they will be used instead of the standard library versions of `malloc`, `realloc`, and `free`.
