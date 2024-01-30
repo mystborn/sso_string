@@ -1,8 +1,6 @@
 #include <check.h>
 
-#include <stdio.h>
-#include <locale.h>
-
+#include "./test_macros.h"
 #include "../include/sso_string.h"
 
 static String small;
@@ -12,15 +10,19 @@ static String large;
 #define HELLO_SIZE 5
 #define KANA "こんにちは"
 #define KANA_SIZE 15
-#define KANA_WIDE L"\u3053\u3093\u306B\u3061\x306F";
+#define KANA_WIDE L"\u3053\u3093\u306B\u3061\u306F"
 #define ALPHABET "abcdefghijklmnopqrstuvwxyz"
-#define ALPHABET_SIZE 20
+#define ALPHABET_SIZE 26
 #define MIXED "hこeんlいlちoは"
 #define MIXED_SIZE 20
 #define ALL_CODEPOINTS { 0x0001, 0x007F, 0x00080, 0x007FF, 0x00800, 0x0FFFF, 0x10000, 0x10FFFF }
 #define ALL_CODEPOINTS_SIZE 20
 
 #define ARRAY_SIZE(arr) (sizeof(arr) / sizeof(arr[0]))
+
+bool test_malloc_fail = false;
+bool test_assert_arg_fail = false;
+bool test_assert_bounds_fail = false;
 
 static void string_start(void) {
     string_init(&small, "hello");
@@ -30,6 +32,9 @@ static void string_start(void) {
 static void string_reset(void) {
     string_free_resources(&small);
     string_free_resources(&large);
+    test_malloc_fail = false;
+    test_assert_arg_fail = false;
+    test_assert_bounds_fail = false;
 }
 
 START_TEST(string_small_has_small_flag) {
@@ -2168,6 +2173,221 @@ START_TEST(string_hash_verify) {
 }
 END_TEST
 
+START_TEST(string_create_ref_fail_oom) {
+    test_malloc_fail = true;
+    ck_assert(!string_create_ref(ALPHABET));
+}
+END_TEST 
+
+START_TEST(string_init_fail_null_arg) {
+    string_init(NULL, NULL);
+    ck_assert(test_assert_arg_fail);
+}
+END_TEST
+
+START_TEST(string_init_fail_oom) {
+    test_malloc_fail = true;
+    String str;
+    ck_assert(!string_init(&str, ALPHABET));
+}
+END_TEST
+
+START_TEST(string_init_size_fail_null_arg) {
+    string_init_size(NULL, "Hello", 6);
+    ck_assert(test_assert_arg_fail);
+}
+END_TEST
+
+START_TEST(string_init_size_fail_oob) {
+    String str;
+    string_init_size(&str, "Hello", 6);
+    ck_assert(test_assert_bounds_fail);
+}
+END_TEST
+
+START_TEST(string_init_size_fail_oom) {
+    test_malloc_fail = true;
+    String str;
+    ck_assert(!string_init_size(&str, ALPHABET, ALPHABET_SIZE));
+}
+END_TEST
+
+START_TEST(string_u8_codepoints_fail_null_arg) {
+    string_u8_codepoints(NULL);
+    ck_assert(test_assert_arg_fail);
+}
+END_TEST
+
+START_TEST(string_u8_get_fail_null_arg) {
+    string_u8_get(NULL, 0);
+    ck_assert(test_assert_arg_fail);
+} 
+END_TEST
+
+START_TEST(string_u8_get_with_size_fail_null_arg) {
+    string_u8_get_with_size(NULL, 9, NULL);
+    ck_assert(test_assert_arg_fail);
+}
+END_TEST
+
+START_TEST(string_u8_codepoint_size_fail_null_arg) {
+    string_u8_codepoint_size(NULL, 0);
+    ck_assert(test_assert_arg_fail);
+}
+END_TEST
+
+START_TEST(string_u8_set_fail_null_arg) {
+    string_u8_set(NULL, 0, 'M');
+    ck_assert(test_assert_arg_fail);
+}
+END_TEST
+
+START_TEST(string_u8_set_fail_oom) {
+    test_malloc_fail = true;
+    String str = string_create("");
+    while(string_size(&str) <= string_capacity(&str)) {
+        ck_assert(string_push(&str, 'a'));
+    }
+
+    ck_assert(!string_u8_set(&str, 0, KANA_WIDE[0]));
+}
+END_TEST
+
+START_TEST(string_upper_fail_null_arg) {
+    string_upper(NULL);
+    ck_assert(test_assert_arg_fail);
+}
+END_TEST
+
+START_TEST(string_u8_upper_fail_null_arg) {
+    string_u8_upper(NULL);
+    ck_assert(test_assert_arg_fail);
+}
+END_TEST
+
+START_TEST(string_lower_fail_null_arg) {
+    string_u8_lower(NULL);
+    ck_assert(test_assert_arg_fail);
+}
+END_TEST
+
+START_TEST(string_reserve_fail_null_arg) {
+    string_reserve(NULL, 1000);
+    ck_assert(test_assert_arg_fail);
+}
+END_TEST
+
+START_TEST(string_reserve_fail_short_to_long_oom) {
+    test_malloc_fail = true;
+    ck_assert(!string_reserve(&small, string_capacity(&small) + 3));
+}
+END_TEST
+
+START_TEST(string_reserve_fail_long_to_long_oom) {
+    test_malloc_fail = true;
+    ck_assert(!string_reserve(&large, string_capacity(&large) + 3));
+}
+END_TEST
+
+START_TEST(string_insert_fail_null_str) {
+    string_insert_cstr(NULL, "moo", 0);
+    ck_assert(test_assert_arg_fail);
+}
+END_TEST
+
+START_TEST(string_insert_fail_null_value) {
+    String str = string_create("");
+    string_insert_cstr(&str, NULL, 0);
+    ck_assert(test_assert_arg_fail);
+}
+END_TEST
+
+START_TEST(string_insert_fail_oob) {
+    String str = string_create("Hello");
+    string_insert_cstr(&str, "Hello", 10);
+    ck_assert(test_assert_bounds_fail);
+}
+END_TEST
+
+START_TEST(string_insert_part_fail_value_oob) {
+    string_insert_part_cstr(&small, "Hello", 0, 0, 6);
+    ck_assert(test_assert_bounds_fail);
+    test_assert_bounds_fail = false;
+    string_insert_part_cstr(&small, "Hello", 0, 5, 1);
+    ck_assert(test_assert_bounds_fail);
+}
+END_TEST
+
+START_TEST(string_erase_fail_null_str) {
+    string_erase(NULL, 0, 0);
+    ck_assert(test_assert_arg_fail);
+}
+END_TEST
+
+START_TEST(string_erase_fail_oob) {
+    string_erase(&small, 0, 6);
+    ck_assert(test_assert_bounds_fail);
+    string_erase(&small, 5, 1);
+    ck_assert(test_assert_bounds_fail);
+}
+END_TEST
+
+START_TEST(string_push_fail_null_arg) {
+    string_push(NULL, '0');
+    ck_assert(test_assert_arg_fail);
+}
+END_TEST
+
+START_TEST(string_push_fail_short_to_long_oom) {
+    test_malloc_fail = true;
+    while(string_size(&small) <= string_capacity(&small)) {
+        ck_assert(string_push(&small, 'a'));
+    }
+
+    ck_assert(!string_push(&small, 'a'));
+}
+END_TEST
+
+START_TEST(string_push_fail_long_to_long_oom) {
+    test_malloc_fail = true;
+    while(string_size(&large) <= string_capacity(&large)) {
+        ck_assert(string_push(&large, 'a'));
+    }
+
+    ck_assert(!string_push(&large, 'a'));
+}
+END_TEST
+
+START_TEST(string_u8_push_fail_null_arg) {
+    string_u8_push(NULL, 'a');
+    ck_assert(test_assert_arg_fail);
+}
+END_TEST
+
+START_TEST(string_pop_fail_null_arg) {
+    string_pop(NULL);
+    ck_assert(test_assert_arg_fail);
+}
+END_TEST
+
+START_TEST(string_u8_pop_fail_null_arg) {
+    string_u8_pop(NULL);
+    ck_assert(test_assert_arg_fail);
+}
+END_TEST
+
+START_TEST(string_append_fail_null_str) {
+    string_append_cstr(NULL, "hello");
+    ck_assert(test_assert_arg_fail);
+}
+END_TEST
+
+START_TEST(string_append_fail_null_value) {
+    string_append_cstr(&small, NULL);
+    ck_assert(test_assert_arg_fail);
+}
+END_TEST
+
 int main(void) {
     int number_failed;
 
@@ -2358,6 +2578,13 @@ int main(void) {
     tcase_add_test(tc, string_format_time_cstr_append);
     tcase_add_test(tc, string_hash_verify);
 
+    tcase_add_test(tc, string_init_fail_null_arg);
+    tcase_add_test(tc, string_init_fail_oom);
+    tcase_add_test(tc, string_init_size_fail_null_arg);
+    tcase_add_test(tc, string_init_size_fail_oob);
+    tcase_add_test(tc, string_init_size_fail_oom);
+    tcase_add_test(tc, string_u8_codepoints_fail_null_arg);
+    tcase_add_test(tc, string_u8_get_with_size_fail_null_arg);
 
     suite_add_tcase(s, tc);
 

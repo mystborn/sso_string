@@ -22,6 +22,12 @@
     SOFTWARE.
 */
 
+#ifdef SSO_STRING_MACROS
+
+#include SSO_STRING_MACROS
+
+#endif
+
 #include <sso_string.h>
 
 #include <ctype.h>
@@ -531,6 +537,7 @@ SSO_STRING_EXPORT bool sso_string_insert_impl(String* str, const char* value, si
 
 SSO_STRING_EXPORT void string_erase(String* str, size_t index, size_t count) {
     SSO_STRING_ASSERT_ARG(str);
+    SSO_STRING_ASSERT_BOUNDS(index + count <= string_size(str));
     if(count == 0)
         return;
 

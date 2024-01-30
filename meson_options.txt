@@ -1,1 +1,4 @@
 option('check_location', type: 'string', description: 'The location of the unit testing library Check. Leave blank to exclude tests.', value: '')
+option('alloc_header', type: 'string', description: 'The primary header that imports the custom alloc functions')
+option('alloc_headers', type: 'array', description: 'A list of headers to include', value: [])
+option('alloc_sources', type: 'array', description: 'A list of sources to include so that the alloc headers can have the necessary source files.', value: [])

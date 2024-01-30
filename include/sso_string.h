@@ -126,7 +126,7 @@
 
     @see assert
 */
-#define SSO_STRING_ASSERT_ARG assert
+#define SSO_STRING_ASSERT_ARG(condition) assert(condition)
 #endif
 
 #ifndef SSO_STRING_ASSERT_BOUNDS
@@ -137,7 +137,7 @@
 
     @see assert
 */
-#define SSO_STRING_ASSERT_BOUNDS assert
+#define SSO_STRING_ASSERT_BOUNDS(condition) assert(condition)
 #endif
 
 // Users can define sso_string_malloc, sso_string_realloc, and sso_string
@@ -209,11 +209,17 @@ typedef union String {
     struct sso_string_short s;
 } String;
 
-/*
+/**
     Creates an empty string l-value through a compound literal. 
     Only use with compilers that support compound literals.
 */
 #define STRING_EMPTY (String){ .s={.size=0, .data={'\0'}} }
+
+/**
+    Creates an empty string that can be used to initialize
+    static string variables.
+*/
+#define STRING_EMPTY_STATIC { .s={.size=0, .data={'\0'}} }
 
 /**
     A numeric representation of a unicode character/codepoint.
@@ -1244,7 +1250,7 @@ static inline bool string_join_cstr(
     @param values An array of string references to combine.
     @param value_count The number of strings in the values array.
 */
-static inline bool string_join_refs(
+static inline bool string_join_refs_string(
     String* str,
     const String* separator,
     const String** values,
@@ -1261,7 +1267,7 @@ static inline bool string_join_refs(
     @param values An array of string references to combine.
     @param value_count The number of strings in the values array.
 */
-static inline bool string_join_cstr_refs(
+static inline bool string_join_refs_cstr(
     String* str,
     const char* separator,
     const String** values,

@@ -2,16 +2,25 @@ project('sso_string', 'c')
 
 c_comp = meson.get_compiler('c')
 check_location = get_option('check_location')
+alloc_header = get_option('alloc_header')
+alloc_headers = get_option('alloc_headers')
+alloc_sources = get_option('alloc_sources')
+dirs_to_include = ['include'] + alloc_headers
 
-include_files = include_directories(['include'])
-sources = [ './src/sso_string.c' ]
+include_files = include_directories(dirs_to_include)
+sources = [ './src/sso_string.c' ] + alloc_sources
 
 compiler_args = ['/DSSO_STRING_BUILD']
+
+if alloc_header != ''
+    compiler_args += ['/DSSO_STRING_MACROS="' + alloc_header + '"']
+endif
+
 
 sso_string = static_library(
     'sso_string',
     sources,
-    c_args: ['/DSSO_STRING_BUILD'],
+    c_args: compiler_args,
     include_directories: include_files,
     install: true,
     name_suffix: 'lib',
@@ -21,7 +30,7 @@ sso_string = static_library(
 sso_string_shared = shared_library(
     'sso_string',
     sources,
-    c_args: ['/DSSO_STRING_BUILD'],
+    c_args: compiler_args,
     version: '1.1.0',
     include_directories: include_files,
     install: true,
@@ -34,10 +43,11 @@ sso_string_dep = declare_dependency(
 )
 
 if check_location != ''
-    test_inc = include_directories(['include', check_location + '/include'])
-    subdir('tests')
-elif c_comp.compiles('#include <check.h>')
-    test_inc = include_files
+    dirs_to_include += 'tests'
+    if check_location != 'true'
+        dirs_to_include += check_location + '/include'
+    endif
+    test_inc = include_directories(dirs_to_include)
     subdir('tests')
 endif
 
