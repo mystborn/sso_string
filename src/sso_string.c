@@ -165,21 +165,13 @@ SSO_STRING_EXPORT Char32 string_u8_get(const String* str, size_t index) {
     }
 }
 
-SSO_STRING_EXPORT Char32 string_u8_get_with_size(const String* str, size_t index, int* out_size) {
-    SSO_STRING_ASSERT_ARG(str);
+SSO_STRING_EXPORT Char32 sso_string_u8_next(const char* cstr, int* out_size) {
+    const unsigned char* data = cstr;
 
-    if(!out_size)
-        return string_u8_get(str, index);
-
-    size_t size = string_size(str);
-    if(index >= size) {
+    if(*data == 0) {
         *out_size = 0;
-        return '\0';
-    }
-
-    const unsigned char* data = (unsigned char*)string_data(str) + index;
-
-    if(*data  <= U8_SINGLE) {
+        return 0;
+    } else if(*data  <= U8_SINGLE) {
         *out_size = 1;
         return *data;
     } else if(*data < U8_DOUBLE) {
@@ -192,6 +184,21 @@ SSO_STRING_EXPORT Char32 string_u8_get_with_size(const String* str, size_t index
         *out_size = 4;
         return (((*data) & ~U8_QUAD) << 18) | (((*(data + 1)) & 0x3f) << 12) | (((*(data + 2)) & 0x3f) << 6) | ((*(data + 3)) & 0x3f);
     }
+}
+
+SSO_STRING_EXPORT Char32 string_u8_get_with_size(const String* str, size_t index, int* out_size) {
+    SSO_STRING_ASSERT_ARG(str);
+
+    if(!out_size)
+        return string_u8_get(str, index);
+
+    size_t size = string_size(str);
+    if(index >= size) {
+        *out_size = 0;
+        return '\0';
+    }
+
+    return sso_string_u8_next(string_data(str) + index, out_size);
 }
 
 SSO_STRING_EXPORT int string_u8_codepoint_size(const String* str, size_t index) {

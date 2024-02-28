@@ -1666,7 +1666,7 @@ SSO_STRING_EXPORT String** sso_string_split_refs_impl(
     int* results_filled,
     bool skip_empty,
     bool allocate_results);
-
+SSO_STRING_EXPORT Char32 sso_string_u8_next(const char* cstr, int* out_size);
 
 // The following functions have a size small enough to be inlined, so they are defined here in the header.
 
